@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Unity House – Panel mieszkańca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="logo">Unity House</div>
+      <nav class="topbar-nav">
+        <button id="btn-show-login" class="btn ghost">Zaloguj</button>
+        <button id="btn-show-signup" class="btn primary">Załóż konto</button>
+        <button id="btn-logout" class="btn ghost hidden">Wyloguj</button>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="card auth-card" id="auth-card">
+        <h1>Panel mieszkańca</h1>
+        <p class="muted">
+          Zgłaszaj usterki, załączaj zdjęcia, śledź status spraw – wszystko w jednym miejscu.
+        </p>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="login">Logowanie</button>
+          <button class="tab" data-tab="signup">Rejestracja</button>
+        </div>
+
+        <div class="tab-content" id="tab-login">
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="login-email" placeholder="twoj@email.pl" />
+          </label>
+          <label class="field">
+            <span>Hasło</span>
+            <input type="password" id="login-password" placeholder="••••••••" />
+          </label>
+          <button id="btn-login" class="btn primary full">Zaloguj</button>
+        </div>
+
+        <div class="tab-content hidden" id="tab-signup">
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="signup-email" placeholder="twoj@email.pl" />
+          </label>
+          <label class="field">
+            <span>Hasło</span>
+            <input type="password" id="signup-password" placeholder="min. 6 znaków" />
+          </label>
+          <button id="btn-signup" class="btn primary full">Załóż konto</button>
+        </div>
+
+        <div id="auth-message" class="message hidden"></div>
+      </section>
+
+      <section class="card main-card hidden" id="main-card">
+        <header class="card-header">
+          <div>
+            <h2>Twoje zgłoszenia</h2>
+            <p class="muted">Dodawaj zgłoszenia, załączaj pliki, śledź status.</p>
+          </div>
+          <button id="btn-new-ticket" class="btn primary">Nowe zgłoszenie</button>
+        </header>
+
+        <div id="ticket-form" class="ticket-form hidden">
+          <label class="field">
+            <span>Tytuł zgłoszenia</span>
+            <input type="text" id="ticket-title" placeholder="Np. Uszkodzona klamka w drzwiach" />
+          </label>
+          <label class="field">
+            <span>Opis</span>
+            <textarea id="ticket-description" rows="3" placeholder="Opisz krótko problem..."></textarea>
+          </label>
+          <label class="field">
+            <span>Załączniki</span>
+            <input type="file" id="ticket-attachments" multiple />
+            <small class="muted">Możesz dodać zdjęcia lub dokumenty.</small>
+          </label>
+          <div class="form-actions">
+            <button id="btn-cancel-ticket" class="btn ghost">Anuluj</button>
+            <button id="btn-save-ticket" class="btn primary">Zapisz zgłoszenie</button>
+          </div>
+          <div id="ticket-form-message" class="message hidden"></div>
+        </div>
+
+        <div id="tickets-list" class="tickets-list">
+          <!-- Lista zgłoszeń ładowana z Supabase -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
