@@ -196,10 +196,22 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
-// Wylogowanie
+// WYLOGOWANIE — POPRAWIONA WERSJA
 btnLogout.addEventListener("click", async () => {
   await client.auth.signOut();
+
+  // reset widoku
   setAuthView(false);
+
+  // schowanie paneli admina
+  adminPanel.classList.add("hidden");
+  adminWspolnoty.classList.add("hidden");
+
+  // schowanie wyboru wspólnoty
+  selectWspolnota.classList.add("hidden");
+
+  // schowanie formularza zgłoszenia
+  ticketForm.classList.add("hidden");
 });
 
 // PANEL ADMINA
