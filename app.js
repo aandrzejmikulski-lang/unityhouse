@@ -246,14 +246,14 @@ async function loadWspolnoty() {
   const { data } = await client.from("wspolnoty").select("*");
   wspolnotyList.innerHTML = "";
   (data || []).forEach((w) => {
-    wspolnotyList.innerHTML += `<div><strong>${w.name}</strong><hr></div>`;
+    wspolnotyList.innerHTML += `<div><strong>${w.nazwa}</strong><hr></div>`;
   });
 }
 
 btnAddWspolnota.addEventListener("click", async () => {
   const name = newWspolnotaName.value.trim();
   if (!name) return;
-  await client.from("wspolnoty").insert({ name });
+  await client.from("wspolnoty").insert({ nazwa: name });
   newWspolnotaName.value = "";
   loadWspolnoty();
 });
@@ -269,11 +269,10 @@ async function showWspolnotaSelector() {
   (data || []).forEach((w) => {
     const opt = document.createElement("option");
     opt.value = w.id;
-    opt.textContent = w.nazwa; // ← poprawione
+    opt.textContent = w.nazwa;
     selectWspolnotaDropdown.appendChild(opt);
   });
 }
-
 
 btnSaveWspolnota.addEventListener("click", async () => {
   const wspolnotaId = selectWspolnotaDropdown.value;
@@ -366,7 +365,8 @@ async function loadTickets() {
   let query = client.from("tickets").select("*").order("created_at", { ascending: false });
 
   if (profile.role === "user") query = query.eq("user_id", profile.id);
-  if (profile.role === "admin") query = query.eq("wspolnota_id", profile.wspolnota_id);
+  if (profile.role === "admin" && profile.wspolnota_id)
+    query = query.eq("wspolnota_id", profile.wspolnota_id);
 
   const { data } = await query;
 
