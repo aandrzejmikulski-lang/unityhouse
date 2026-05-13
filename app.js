@@ -1,4 +1,4 @@
-// app.js
+// app.js – KROK 13 (podgląd zgłoszenia + załączniki)
 
 // Elementy DOM
 const authCard = document.getElementById("auth-card");
@@ -33,22 +33,31 @@ const btnSaveTicket = document.getElementById("btn-save-ticket");
 const ticketFormMessage = document.getElementById("ticket-form-message");
 const ticketsList = document.getElementById("tickets-list");
 
-// 🔥 PANEL ADMINA
+// PANEL ADMINA
 const btnAdminPanel = document.getElementById("btn-admin-panel");
 const adminPanel = document.getElementById("admin-panel");
 const pendingUsersList = document.getElementById("pending-users-list");
 
-// 🔥 WSPÓLNOTY
+// WSPÓLNOTY
 const btnAdminWspolnoty = document.getElementById("btn-admin-wspolnoty");
 const adminWspolnoty = document.getElementById("admin-wspolnoty");
 const newWspolnotaName = document.getElementById("new-wspolnota-name");
 const btnAddWspolnota = document.getElementById("btn-add-wspolnota");
 const wspolnotyList = document.getElementById("wspolnoty-list");
 
-// 🔥 WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA
+// WYBÓR WSPÓLNOTY
 const selectWspolnota = document.getElementById("select-wspolnota");
 const selectWspolnotaDropdown = document.getElementById("select-wspolnota-dropdown");
 const btnSaveWspolnota = document.getElementById("btn-save-wspolnota");
+
+// MODAL SZCZEGÓŁÓW ZGŁOSZENIA
+const ticketModal = document.getElementById("ticket-modal");
+const modalClose = document.getElementById("modal-close");
+const modalTitle = document.getElementById("modal-title");
+const modalDescription = document.getElementById("modal-description");
+const modalStatus = document.getElementById("modal-status");
+const modalDate = document.getElementById("modal-date");
+const modalAttachments = document.getElementById("modal-attachments");
 
 // Helpery UI
 function showMessage(el, text, type = "success") {
@@ -112,7 +121,7 @@ btnShowSignup.addEventListener("click", () => {
   hideMessage(authMessage);
 });
 
-// 🔥 REJESTRACJA
+// REJESTRACJA
 btnSignup.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -160,7 +169,7 @@ btnSignup.addEventListener("click", async () => {
   }
 });
 
-// 🔥 LOGOWANIE
+// LOGOWANIE
 btnLogin.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -217,13 +226,13 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
-// 🔥 PANEL ADMINA
+// PANEL ADMINA
 btnAdminPanel.addEventListener("click", () => {
   adminPanel.classList.toggle("hidden");
   loadPendingUsers();
 });
 
-// 🔥 FUNKCJA: ładowanie oczekujących mieszkańców
+// ŁADOWANIE OCZEKUJĄCYCH MIESZKAŃCÓW
 async function loadPendingUsers() {
   pendingUsersList.innerHTML = "Ładowanie...";
 
@@ -269,15 +278,15 @@ async function loadPendingUsers() {
       loadPendingUsers();
     });
   });
-});
+}
 
-// 🔥 PANEL WSPÓLNOT
+// PANEL WSPÓLNOT
 btnAdminWspolnoty.addEventListener("click", () => {
   adminWspolnoty.classList.toggle("hidden");
   loadWspolnoty();
 });
 
-// 🔥 ŁADOWANIE WSPÓLNOT
+// ŁADOWANIE WSPÓLNOT
 async function loadWspolnoty() {
   wspolnotyList.innerHTML = "Ładowanie...";
 
@@ -309,7 +318,7 @@ async function loadWspolnoty() {
   });
 }
 
-// 🔥 DODAWANIE WSPÓLNOTY
+// DODAWANIE WSPÓLNOTY
 btnAddWspolnota.addEventListener("click", async () => {
   const name = newWspolnotaName.value.trim();
 
@@ -321,7 +330,7 @@ btnAddWspolnota.addEventListener("click", async () => {
   loadWspolnoty();
 });
 
-// 🔥 WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA
+// WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA
 async function showWspolnotaSelector() {
   setAuthView(true);
   mainCard.classList.add("hidden");
@@ -354,7 +363,7 @@ btnSaveWspolnota.addEventListener("click", async () => {
   mainCard.classList.remove("hidden");
 });
 
-// 🔥 ZAPIS ZGŁOSZENIA DO SUPABASE
+// ZAPIS ZGŁOSZENIA DO SUPABASE
 btnSaveTicket.addEventListener("click", async () => {
   hideMessage(ticketFormMessage);
 
@@ -412,7 +421,7 @@ btnSaveTicket.addEventListener("click", async () => {
   loadTickets();
 });
 
-// 🔥 ŁADOWANIE ZGŁOSZEŃ Z BAZY
+// ŁADOWANIE ZGŁOSZEŃ Z BAZY
 async function loadTickets() {
   ticketsList.innerHTML = "Ładowanie...";
 
@@ -476,9 +485,86 @@ async function loadTickets() {
     item.appendChild(header);
     item.appendChild(meta);
 
+    // 🔥 kliknięcie otwiera szczegóły
+    item.addEventListener("click", () => {
+      openTicketDetails(t);
+    });
+
     ticketsList.appendChild(item);
   });
 }
+
+// MODAL – SZCZEGÓŁY ZGŁOSZENIA
+function openTicketDetails(ticket) {
+  modalTitle.textContent = ticket.title;
+  modalDescription.textContent = ticket.description || "Brak opisu.";
+  modalStatus.textContent = ticket.status === "open" ? "Otwarte" : "Zamknięte";
+  modalDate.textContent = new Date(ticket.created_at).toLocaleString();
+
+  renderAttachments(ticket.attachments || []);
+
+  ticketModal.classList.remove("hidden");
+}
+
+function renderAttachments(attachments) {
+  modalAttachments.innerHTML = "";
+
+  if (!attachments || attachments.length === 0) {
+    modalAttachments.innerHTML = "<p>Brak załączników.</p>";
+    return;
+  }
+
+  attachments.forEach((path) => {
+    const { data } = client.storage.from("attachments").getPublicUrl(path);
+    const url = data.publicUrl;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "attachment-item";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = path;
+    img.className = "attachment-thumb";
+
+    img.addEventListener("click", () => {
+      window.open(url, "_blank");
+    });
+
+    wrapper.appendChild(img);
+    modalAttachments.appendChild(wrapper);
+  });
+}
+
+// Zamykanie modala
+modalClose.addEventListener("click", () => {
+  ticketModal.classList.add("hidden");
+});
+
+ticketModal.addEventListener("click", (e) => {
+  if (e.target === ticketModal) {
+    ticketModal.classList.add("hidden");
+  }
+});
+
+// Wylogowanie
+btnLogout.addEventListener("click", async () => {
+  await client.auth.signOut();
+  setAuthView(false);
+});
+
+// Formularz zgłoszenia – UI
+btnNewTicket.addEventListener("click", () => {
+  ticketForm.classList.remove("hidden");
+  hideMessage(ticketFormMessage);
+});
+
+btnCancelTicket.addEventListener("click", () => {
+  ticketForm.classList.add("hidden");
+  ticketTitle.value = "";
+  ticketDescription.value = "";
+  ticketAttachments.value = "";
+  hideMessage(ticketFormMessage);
+});
 
 // Sprawdzenie sesji przy starcie
 (async () => {
