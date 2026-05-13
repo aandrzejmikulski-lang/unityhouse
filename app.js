@@ -33,10 +33,22 @@ const btnSaveTicket = document.getElementById("btn-save-ticket");
 const ticketFormMessage = document.getElementById("ticket-form-message");
 const ticketsList = document.getElementById("tickets-list");
 
-// 🔥 PANEL ADMINA – NOWE ELEMENTY
+// 🔥 PANEL ADMINA
 const btnAdminPanel = document.getElementById("btn-admin-panel");
 const adminPanel = document.getElementById("admin-panel");
 const pendingUsersList = document.getElementById("pending-users-list");
+
+// 🔥 WSPÓLNOTY
+const btnAdminWspolnoty = document.getElementById("btn-admin-wspolnoty");
+const adminWspolnoty = document.getElementById("admin-wspolnoty");
+const newWspolnotaName = document.getElementById("new-wspolnota-name");
+const btnAddWspolnota = document.getElementById("btn-add-wspolnota");
+const wspolnotyList = document.getElementById("wspolnoty-list");
+
+// 🔥 WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA
+const selectWspolnota = document.getElementById("select-wspolnota");
+const selectWspolnotaDropdown = document.getElementById("select-wspolnota-dropdown");
+const btnSaveWspolnota = document.getElementById("btn-save-wspolnota");
 
 // Helpery UI
 function showMessage(el, text, type = "success") {
@@ -128,7 +140,6 @@ btnSignup.addEventListener("click", async () => {
     return;
   }
 
-  // 🔥 KROK 7 — uzupełnienie profilu
   await client
     .from("profiles")
     .update({
@@ -176,7 +187,6 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  // 🔥 BLOKADA NIEZATWIERDZONYCH
   const { data: profile } = await client
     .from("profiles")
     .select("*")
@@ -189,11 +199,17 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  // 🔥 SPRAWDZANIE ROLI ADMINA
   if (profile.role === "admin") {
     btnAdminPanel.classList.remove("hidden");
+    btnAdminWspolnoty.classList.remove("hidden");
   } else {
     btnAdminPanel.classList.add("hidden");
+    btnAdminWspolnoty.classList.add("hidden");
+  }
+
+  if (profile.role === "user" && !profile.wspolnota_id) {
+    showWspolnotaSelector();
+    return;
   }
 
   showMessage(authMessage, "Zalogowano pomyślnie.", "success");
@@ -201,7 +217,7 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
-// 🔥 PANEL ADMINA – otwieranie
+// 🔥 PANEL ADMINA
 btnAdminPanel.addEventListener("click", () => {
   adminPanel.classList.toggle("hidden");
   loadPendingUsers();
@@ -253,7 +269,90 @@ async function loadPendingUsers() {
       loadPendingUsers();
     });
   });
+});
+
+// 🔥 PANEL WSPÓLNOT
+btnAdminWspolnoty.addEventListener("click", () => {
+  adminWspolnoty.classList.toggle("hidden");
+  loadWspolnoty();
+});
+
+// 🔥 ŁADOWANIE WSPÓLNOT
+async function loadWspolnoty() {
+  wspolnotyList.innerHTML = "Ładowanie...";
+
+  const { data, error } = await client
+    .from("wspolnoty")
+    .select("*")
+    .order("id", { ascending: true });
+
+  if (error) {
+    wspolnotyList.innerHTML = "Błąd ładowania.";
+    return;
+  }
+
+  if (data.length === 0) {
+    wspolnotyList.innerHTML = "<p>Brak wspólnot.</p>";
+    return;
+  }
+
+  wspolnotyList.innerHTML = "";
+
+  data.forEach((w) => {
+    const item = document.createElement("div");
+    item.className = "wspolnota-item";
+    item.innerHTML = `
+      <strong>${w.name}</strong> <small>(ID: ${w.id})</small>
+      <hr>
+    `;
+    wspolnotyList.appendChild(item);
+  });
 }
+
+// 🔥 DODAWANIE WSPÓLNOTY
+btnAddWspolnota.addEventListener("click", async () => {
+  const name = newWspolnotaName.value.trim();
+
+  if (!name) return alert("Podaj nazwę wspólnoty.");
+
+  await client.from("wspolnoty").insert({ name });
+
+  newWspolnotaName.value = "";
+  loadWspolnoty();
+});
+
+// 🔥 WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA
+async function showWspolnotaSelector() {
+  setAuthView(true);
+  mainCard.classList.add("hidden");
+  selectWspolnota.classList.remove("hidden");
+
+  const { data } = await client.from("wspolnoty").select("*");
+
+  selectWspolnotaDropdown.innerHTML = "";
+  data.forEach((w) => {
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    opt.textContent = w.name;
+    selectWspolnotaDropdown.appendChild(opt);
+  });
+}
+
+btnSaveWspolnota.addEventListener("click", async () => {
+  const wspolnotaId = selectWspolnotaDropdown.value;
+
+  const {
+    data: { session },
+  } = await client.auth.getSession();
+
+  await client
+    .from("profiles")
+    .update({ wspolnota_id: wspolnotaId })
+    .eq("id", session.user.id);
+
+  selectWspolnota.classList.add("hidden");
+  mainCard.classList.remove("hidden");
+});
 
 // Wylogowanie
 btnLogout.addEventListener("click", async () => {
@@ -345,7 +444,24 @@ async function loadTickets() {
   } = await client.auth.getSession();
 
   if (session) {
+    const { data: profile } = await client
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
     setAuthView(true);
+
+    if (profile.role === "admin") {
+      btnAdminPanel.classList.remove("hidden");
+      btnAdminWspolnoty.classList.remove("hidden");
+    }
+
+    if (profile.role === "user" && !profile.wspolnota_id) {
+      showWspolnotaSelector();
+      return;
+    }
+
     loadTickets();
   } else {
     setAuthView(false);
