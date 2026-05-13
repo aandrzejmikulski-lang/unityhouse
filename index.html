@@ -31,32 +31,30 @@
           <button class="tab" data-tab="signup">Rejestracja</button>
         </div>
 
-        <!-- 🔵 LOGOWANIE -->
         <div class="tab-content" id="tab-login">
           <label class="field">
             <span>Email</span>
-            <input type="email" id="login-email" placeholder="twoj@email.pl" />
+            <input type="email" id="login-email" />
           </label>
           <label class="field">
             <span>Hasło</span>
-            <input type="password" id="login-password" placeholder="••••••••" />
+            <input type="password" id="login-password" />
           </label>
           <button id="btn-login" class="btn primary full">Zaloguj</button>
         </div>
 
-        <!-- 🟢 REJESTRACJA -->
         <div class="tab-content hidden" id="tab-signup">
           <label class="field">
             <span>Imię i nazwisko</span>
-            <input type="text" id="signup-fullname" placeholder="Jan Kowalski" />
+            <input type="text" id="signup-fullname" />
           </label>
           <label class="field">
             <span>Email</span>
-            <input type="email" id="signup-email" placeholder="twoj@email.pl" />
+            <input type="email" id="signup-email" />
           </label>
           <label class="field">
             <span>Hasło</span>
-            <input type="password" id="signup-password" placeholder="min. 6 znaków" />
+            <input type="password" id="signup-password" />
           </label>
           <button id="btn-signup" class="btn primary full">Załóż konto</button>
         </div>
@@ -77,16 +75,15 @@
         <div id="ticket-form" class="ticket-form hidden">
           <label class="field">
             <span>Tytuł zgłoszenia</span>
-            <input type="text" id="ticket-title" placeholder="Np. Uszkodzona klamka w drzwiach" />
+            <input type="text" id="ticket-title" />
           </label>
           <label class="field">
             <span>Opis</span>
-            <textarea id="ticket-description" rows="3" placeholder="Opisz krótko problem..."></textarea>
+            <textarea id="ticket-description" rows="3"></textarea>
           </label>
           <label class="field">
             <span>Załączniki</span>
             <input type="file" id="ticket-attachments" multiple />
-            <small class="muted">Możesz dodać zdjęcia lub dokumenty.</small>
           </label>
           <div class="form-actions">
             <button id="btn-cancel-ticket" class="btn ghost">Anuluj</button>
@@ -97,12 +94,10 @@
 
         <div id="tickets-list" class="tickets-list"></div>
 
-        <!-- 🔥 PRZYCISK PANELU ADMINA -->
         <button id="btn-admin-panel" class="btn ghost hidden" style="margin-top:20px;">
           Panel administratora
         </button>
 
-        <!-- 🔥 PRZYCISK WSPÓLNOT -->
         <button id="btn-admin-wspolnoty" class="btn ghost hidden" style="margin-top:10px;">
           Zarządzaj wspólnotami
         </button>
@@ -123,7 +118,7 @@
 
         <div class="field">
           <span>Nazwa nowej wspólnoty</span>
-          <input type="text" id="new-wspolnota-name" placeholder="Np. Wspólnota Młyńska 12" />
+          <input type="text" id="new-wspolnota-name" />
         </div>
         <button id="btn-add-wspolnota" class="btn primary" style="margin-top:10px;">
           Dodaj wspólnotę
@@ -133,7 +128,7 @@
         <div id="wspolnoty-list"></div>
       </section>
 
-      <!-- 🔥 WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA -->
+      <!-- 🔥 WYBÓR WSPÓLNOTY -->
       <section class="card hidden" id="select-wspolnota" style="margin-top:20px;">
         <h2>Wybierz wspólnotę</h2>
         <p class="muted">Aby korzystać z systemu, wybierz swoją wspólnotę.</p>
@@ -148,10 +143,25 @@
         </button>
       </section>
 
+      <!-- 🔥 MODAL SZCZEGÓŁÓW ZGŁOSZENIA -->
+      <div id="ticket-modal" class="modal hidden">
+        <div class="modal-content">
+          <button id="modal-close" class="modal-close">×</button>
+
+          <h2 id="modal-title"></h2>
+          <p id="modal-description" class="muted"></p>
+
+          <p><strong>Status:</strong> <span id="modal-status"></span></p>
+          <p><strong>Data:</strong> <span id="modal-date"></span></p>
+
+          <h3>Załączniki</h3>
+          <div id="modal-attachments" class="attachments-grid"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 
-  <!-- 🔥 SUPABASE -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -161,8 +171,6 @@
     );
   </script>
 
-  <!-- 🔥 LOGIKA APLIKACJI -->
   <script src="app.js"></script>
-
 </body>
 </html>
