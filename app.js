@@ -84,11 +84,13 @@ function setAuthView(isLoggedIn) {
     btnShowLogin.classList.remove("hidden");
     btnShowSignup.classList.remove("hidden");
 
-    // 🔥 FIX — reset uprawnień admina
+    // reset uprawnień admina
     btnAdminPanel.classList.add("hidden");
     btnAdminWspolnoty.classList.add("hidden");
     adminPanel.classList.add("hidden");
     adminWspolnoty.classList.add("hidden");
+    ticketForm.classList.add("hidden");
+    btnNewTicket.classList.remove("hidden");
   }
 }
 
@@ -182,11 +184,13 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  // 🔥 FIX — reset admina przed sprawdzeniem roli
+  // reset admina przed sprawdzeniem roli
   btnAdminPanel.classList.add("hidden");
   btnAdminWspolnoty.classList.add("hidden");
   adminPanel.classList.add("hidden");
   adminWspolnoty.classList.add("hidden");
+  ticketForm.classList.add("hidden");
+  btnNewTicket.classList.remove("hidden");
 
   if (!profile.approved) {
     showMessage(authMessage, "Twoje konto czeka na zatwierdzenie.", "error");
@@ -197,6 +201,9 @@ btnLogin.addEventListener("click", async () => {
   if (profile.role === "admin") {
     btnAdminPanel.classList.remove("hidden");
     btnAdminWspolnoty.classList.remove("hidden");
+    // admin nie zgłasza
+    btnNewTicket.classList.add("hidden");
+    ticketForm.classList.add("hidden");
   }
 
   if (profile.role === "user" && !profile.wspolnota_id) {
@@ -383,6 +390,14 @@ async function loadTickets() {
     .eq("id", session.session.user.id)
     .single();
 
+  // admin nie zgłasza
+  if (profile.role === "admin") {
+    btnNewTicket.classList.add("hidden");
+    ticketForm.classList.add("hidden");
+  } else {
+    btnNewTicket.classList.remove("hidden");
+  }
+
   // ADMIN WIDZI WSZYSTKO
   let query = client.from("tickets").select("*").order("created_at", { ascending: false });
 
@@ -489,12 +504,30 @@ ticketModal.addEventListener("click", (e) => {
       return;
     }
 
-    setAuthView(true);
-
-    // 🔥 FIX — reset admina przed sprawdzeniem roli
+    // reset UI
     btnAdminPanel.classList.add("hidden");
     btnAdminWspolnoty.classList.add("hidden");
     adminPanel.classList.add("hidden");
     adminWspolnoty.classList.add("hidden");
+    ticketForm.classList.add("hidden");
+    btnNewTicket.classList.remove("hidden");
 
-    if (profile.role
+    setAuthView(true);
+
+    if (profile.role === "admin") {
+      btnAdminPanel.classList.remove("hidden");
+      btnAdminWspolnoty.classList.remove("hidden");
+      btnNewTicket.classList.add("hidden");
+      ticketForm.classList.add("hidden");
+    }
+
+    if (profile.role === "user" && !profile.wspolnota_id) {
+      showWspolnotaSelector();
+      return;
+    }
+
+    loadTickets();
+  } else {
+    setAuthView(false);
+  }
+})();
