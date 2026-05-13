@@ -95,15 +95,17 @@
           <div id="ticket-form-message" class="message hidden"></div>
         </div>
 
-        <div id="tickets-list" class="tickets-list">
-          <!-- Lista zgłoszeń ładowana z Supabase -->
-        </div>
+        <div id="tickets-list" class="tickets-list"></div>
 
         <!-- 🔥 PRZYCISK PANELU ADMINA -->
         <button id="btn-admin-panel" class="btn ghost hidden" style="margin-top:20px;">
           Panel administratora
         </button>
 
+        <!-- 🔥 PRZYCISK WSPÓLNOT -->
+        <button id="btn-admin-wspolnoty" class="btn ghost hidden" style="margin-top:10px;">
+          Zarządzaj wspólnotami
+        </button>
       </section>
 
       <!-- 🔥 PANEL ADMINA -->
@@ -113,6 +115,37 @@
 
         <h3>Oczekujący mieszkańcy</h3>
         <div id="pending-users-list"></div>
+      </section>
+
+      <!-- 🔥 PANEL WSPÓLNOT -->
+      <section class="card hidden" id="admin-wspolnoty" style="margin-top:20px;">
+        <h2>Wspólnoty</h2>
+
+        <div class="field">
+          <span>Nazwa nowej wspólnoty</span>
+          <input type="text" id="new-wspolnota-name" placeholder="Np. Wspólnota Młyńska 12" />
+        </div>
+        <button id="btn-add-wspolnota" class="btn primary" style="margin-top:10px;">
+          Dodaj wspólnotę
+        </button>
+
+        <h3 style="margin-top:20px;">Lista wspólnot</h3>
+        <div id="wspolnoty-list"></div>
+      </section>
+
+      <!-- 🔥 WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA -->
+      <section class="card hidden" id="select-wspolnota" style="margin-top:20px;">
+        <h2>Wybierz wspólnotę</h2>
+        <p class="muted">Aby korzystać z systemu, wybierz swoją wspólnotę.</p>
+
+        <div class="field">
+          <span>Wspólnota</span>
+          <select id="select-wspolnota-dropdown"></select>
+        </div>
+
+        <button id="btn-save-wspolnota" class="btn primary" style="margin-top:10px;">
+          Zapisz
+        </button>
       </section>
 
     </main>
