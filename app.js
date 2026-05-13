@@ -1,3 +1,6 @@
+// 🔥 Wymuszenie logowania przy każdym wejściu
+await client.auth.signOut();
+
 // app.js – KROK 14 (zmiana statusu zgłoszenia)
 
 // Elementy DOM
