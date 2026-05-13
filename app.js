@@ -258,7 +258,7 @@ btnAddWspolnota.addEventListener("click", async () => {
   loadWspolnoty();
 });
 
-// WYBÓR WSPÓLNOTY
+// WYBÓR WSPÓLNOTY — JEDYNA POPRAWNA WERSJA
 async function showWspolnotaSelector() {
   setAuthView(true);
   mainCard.classList.add("hidden");
@@ -270,38 +270,6 @@ async function showWspolnotaSelector() {
     const opt = document.createElement("option");
     opt.value = w.id;
     opt.textContent = w.name;
-    selectWspolnotaDropdown.appendChild(opt);
-  });
-}
-
-btnSaveWspolnota.addEventListener("click", async () => {
-  const wspolnotaId = selectWspolnotaDropdown.value;
-  const { data: session } = await client.auth.getSession();
-
-  if (!session.session) return;
-
-  await client
-    .from("profiles")
-    .update({ wspolnota_id: wspolnotaId })
-    .eq("id", session.session.user.id);
-
-  selectWspolnota.classList.add("hidden");
-  mainCard.classList.remove("hidden");
-  loadTickets();
-});
-
-// WYBÓR WSPÓLNOTY
-async function showWspolnotaSelector() {
-  setAuthView(true);
-  mainCard.classList.add("hidden");
-  selectWspolnota.classList.remove("hidden");
-
-  const { data } = await client.from("wspolnoty").select("*");
-  selectWspolnotaDropdown.innerHTML = "";
-  (data || []).forEach((w) => {
-    const opt = document.createElement("option");
-    opt.value = w.id;
-    opt.textContent = w.nazwa;
     selectWspolnotaDropdown.appendChild(opt);
   });
 }
