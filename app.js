@@ -196,22 +196,19 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
-// WYLOGOWANIE — POPRAWIONA WERSJA
+// WYLOGOWANIE
 btnLogout.addEventListener("click", async () => {
   await client.auth.signOut();
 
-  // reset widoku
   setAuthView(false);
 
-  // schowanie paneli admina
   adminPanel.classList.add("hidden");
   adminWspolnoty.classList.add("hidden");
-
-  // schowanie wyboru wspólnoty
   selectWspolnota.classList.add("hidden");
-
-  // schowanie formularza zgłoszenia
   ticketForm.classList.add("hidden");
+
+  loginEmail.value = "";
+  loginPassword.value = "";
 });
 
 // PANEL ADMINA
@@ -270,7 +267,7 @@ btnAddWspolnota.addEventListener("click", async () => {
   loadWspolnoty();
 });
 
-// WYBÓR WSPÓLNOTY — JEDYNA POPRAWNA WERSJA
+// WYBÓR WSPÓLNOTY
 async function showWspolnotaSelector() {
   setAuthView(true);
   mainCard.classList.add("hidden");
@@ -374,11 +371,12 @@ async function loadTickets() {
     .eq("id", session.session.user.id)
     .single();
 
+  // ADMIN WIDZI WSZYSTKO
   let query = client.from("tickets").select("*").order("created_at", { ascending: false });
 
-  if (profile.role === "user") query = query.eq("user_id", profile.id);
-  if (profile.role === "admin" && profile.wspolnota_id)
-    query = query.eq("wspolnota_id", profile.wspolnota_id);
+  if (profile.role === "user") {
+    query = query.eq("user_id", profile.id);
+  }
 
   const { data } = await query;
 
