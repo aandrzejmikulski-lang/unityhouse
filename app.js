@@ -1,4 +1,4 @@
-// app.js – KROK 13 (podgląd zgłoszenia + załączniki)
+// app.js – KROK 14 (zmiana statusu zgłoszenia)
 
 // Elementy DOM
 const authCard = document.getElementById("auth-card");
@@ -58,6 +58,7 @@ const modalDescription = document.getElementById("modal-description");
 const modalStatus = document.getElementById("modal-status");
 const modalDate = document.getElementById("modal-date");
 const modalAttachments = document.getElementById("modal-attachments");
+const modalToggleStatus = document.getElementById("modal-toggle-status");
 
 // Helpery UI
 function showMessage(el, text, type = "success") {
@@ -105,22 +106,6 @@ tabs.forEach((tab) => {
   });
 });
 
-btnShowLogin.addEventListener("click", () => {
-  tabs.forEach((t) => t.classList.remove("active"));
-  document.querySelector('.tab[data-tab="login"]').classList.add("active");
-  tabLogin.classList.remove("hidden");
-  tabSignup.classList.add("hidden");
-  hideMessage(authMessage);
-});
-
-btnShowSignup.addEventListener("click", () => {
-  tabs.forEach((t) => t.classList.remove("active"));
-  document.querySelector('.tab[data-tab="signup"]').classList.add("active");
-  tabSignup.classList.remove("hidden");
-  tabLogin.classList.add("hidden");
-  hideMessage(authMessage);
-});
-
 // REJESTRACJA
 btnSignup.addEventListener("click", async () => {
   hideMessage(authMessage);
@@ -136,37 +121,18 @@ btnSignup.addEventListener("click", async () => {
 
   btnSignup.disabled = true;
 
-  const { data, error } = await client.auth.signUp({
-    email,
-    password,
-  });
+  const { data, error } = await client.auth.signUp({ email, password });
 
   btnSignup.disabled = false;
 
   if (error) {
-    console.error(error);
     showMessage(authMessage, `Błąd rejestracji: ${error.message}`, "error");
     return;
   }
 
-  await client
-    .from("profiles")
-    .update({
-      full_name: fullName
-    })
-    .eq("id", data.user.id);
+  await client.from("profiles").update({ full_name: fullName }).eq("id", data.user.id);
 
-  if (data.user && !data.session) {
-    showMessage(
-      authMessage,
-      "Konto utworzone. Sprawdź email i potwierdź rejestrację.",
-      "success"
-    );
-  } else {
-    showMessage(authMessage, "Konto utworzone i zalogowane.", "success");
-    setAuthView(true);
-    loadTickets();
-  }
+  showMessage(authMessage, "Konto utworzone. Sprawdź email.", "success");
 });
 
 // LOGOWANIE
@@ -176,34 +142,17 @@ btnLogin.addEventListener("click", async () => {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
 
-  if (!email || !password) {
-    showMessage(authMessage, "Podaj email i hasło.", "error");
-    return;
-  }
-
-  btnLogin.disabled = true;
-
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  btnLogin.disabled = false;
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
 
   if (error) {
-    console.error(error);
     showMessage(authMessage, `Błąd logowania: ${error.message}`, "error");
     return;
   }
 
-  const { data: profile } = await client
-    .from("profiles")
-    .select("*")
-    .eq("id", data.user.id)
-    .single();
+  const { data: profile } = await client.from("profiles").select("*").eq("id", data.user.id).single();
 
   if (!profile.approved) {
-    showMessage(authMessage, "Twoje konto czeka na zatwierdzenie przez administratora.", "error");
+    showMessage(authMessage, "Twoje konto czeka na zatwierdzenie.", "error");
     await client.auth.signOut();
     return;
   }
@@ -211,9 +160,6 @@ btnLogin.addEventListener("click", async () => {
   if (profile.role === "admin") {
     btnAdminPanel.classList.remove("hidden");
     btnAdminWspolnoty.classList.remove("hidden");
-  } else {
-    btnAdminPanel.classList.add("hidden");
-    btnAdminWspolnoty.classList.add("hidden");
   }
 
   if (profile.role === "user" && !profile.wspolnota_id) {
@@ -221,7 +167,6 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  showMessage(authMessage, "Zalogowano pomyślnie.", "success");
   setAuthView(true);
   loadTickets();
 });
@@ -232,53 +177,33 @@ btnAdminPanel.addEventListener("click", () => {
   loadPendingUsers();
 });
 
-// ŁADOWANIE OCZEKUJĄCYCH MIESZKAŃCÓW
+// ŁADOWANIE OCZEKUJĄCYCH
 async function loadPendingUsers() {
-  pendingUsersList.innerHTML = "Ładowanie...";
-
-  const { data, error } = await client
+  const { data } = await client
     .from("profiles")
-    .select("id, full_name, approved, role")
+    .select("id, full_name")
     .eq("approved", false)
     .eq("role", "user");
-
-  if (error) {
-    pendingUsersList.innerHTML = "Błąd ładowania.";
-    return;
-  }
-
-  if (data.length === 0) {
-    pendingUsersList.innerHTML = "<p>Brak oczekujących mieszkańców.</p>";
-    return;
-  }
 
   pendingUsersList.innerHTML = "";
 
   data.forEach((u) => {
-    const item = document.createElement("div");
-    item.className = "pending-user-item";
-    item.innerHTML = `
-      <strong>${u.full_name || "(bez imienia)"}</strong><br>
-      <small>ID: ${u.id}</small><br>
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <strong>${u.full_name}</strong><br>
       <button class="btn-approve" data-id="${u.id}">Zatwierdź</button>
       <hr>
     `;
-    pendingUsersList.appendChild(item);
+    pendingUsersList.appendChild(div);
   });
 
   document.querySelectorAll(".btn-approve").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      const userId = btn.dataset.id;
-
-      await client
-        .from("profiles")
-        .update({ approved: true })
-        .eq("id", userId);
-
+      await client.from("profiles").update({ approved: true }).eq("id", btn.dataset.id);
       loadPendingUsers();
     });
   });
-}
+});
 
 // PANEL WSPÓLNOT
 btnAdminWspolnoty.addEventListener("click", () => {
@@ -286,58 +211,29 @@ btnAdminWspolnoty.addEventListener("click", () => {
   loadWspolnoty();
 });
 
-// ŁADOWANIE WSPÓLNOT
 async function loadWspolnoty() {
-  wspolnotyList.innerHTML = "Ładowanie...";
-
-  const { data, error } = await client
-    .from("wspolnoty")
-    .select("*")
-    .order("id", { ascending: true });
-
-  if (error) {
-    wspolnotyList.innerHTML = "Błąd ładowania.";
-    return;
-  }
-
-  if (data.length === 0) {
-    wspolnotyList.innerHTML = "<p>Brak wspólnot.</p>";
-    return;
-  }
-
+  const { data } = await client.from("wspolnoty").select("*");
   wspolnotyList.innerHTML = "";
-
   data.forEach((w) => {
-    const item = document.createElement("div");
-    item.className = "wspolnota-item";
-    item.innerHTML = `
-      <strong>${w.name}</strong> <small>(ID: ${w.id})</small>
-      <hr>
-    `;
-    wspolnotyList.appendChild(item);
+    wspolnotyList.innerHTML += `<div><strong>${w.name}</strong><hr></div>`;
   });
 }
 
-// DODAWANIE WSPÓLNOTY
 btnAddWspolnota.addEventListener("click", async () => {
   const name = newWspolnotaName.value.trim();
-
-  if (!name) return alert("Podaj nazwę wspólnoty.");
-
+  if (!name) return;
   await client.from("wspolnoty").insert({ name });
-
   newWspolnotaName.value = "";
   loadWspolnoty();
 });
 
-// WYBÓR WSPÓLNOTY PRZEZ MIESZKAŃCA
+// WYBÓR WSPÓLNOTY
 async function showWspolnotaSelector() {
   setAuthView(true);
   mainCard.classList.add("hidden");
   selectWspolnota.classList.remove("hidden");
 
   const { data } = await client.from("wspolnoty").select("*");
-
   selectWspolnotaDropdown.innerHTML = "";
   data.forEach((w) => {
     const opt = document.createElement("option");
@@ -349,61 +245,34 @@ async function showWspolnotaSelector() {
 
 btnSaveWspolnota.addEventListener("click", async () => {
   const wspolnotaId = selectWspolnotaDropdown.value;
+  const { data: session } = await client.auth.getSession();
 
-  const {
-    data: { session },
-  } = await client.auth.getSession();
-
-  await client
-    .from("profiles")
-    .update({ wspolnota_id: wspolnotaId })
-    .eq("id", session.user.id);
+  await client.from("profiles").update({ wspolnota_id: wspolnotaId }).eq("id", session.session.user.id);
 
   selectWspolnota.classList.add("hidden");
   mainCard.classList.remove("hidden");
+  loadTickets();
 });
 
-// ZAPIS ZGŁOSZENIA DO SUPABASE
+// ZAPIS ZGŁOSZENIA
 btnSaveTicket.addEventListener("click", async () => {
-  hideMessage(ticketFormMessage);
-
   const title = ticketTitle.value.trim();
   const description = ticketDescription.value.trim();
   const files = ticketAttachments.files;
 
-  if (!title) {
-    showMessage(ticketFormMessage, "Podaj tytuł zgłoszenia.", "error");
-    return;
-  }
-
-  const {
-    data: { session },
-  } = await client.auth.getSession();
-
-  const { data: profile } = await client
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  const { data: session } = await client.auth.getSession();
+  const { data: profile } = await client.from("profiles").select("*").eq("id", session.session.user.id).single();
 
   let uploadedFiles = [];
 
-  if (files.length > 0) {
-    for (const file of files) {
-      const filePath = `${session.user.id}/${Date.now()}-${file.name}`;
-
-      const { error: uploadError } = await client.storage
-        .from("attachments")
-        .upload(filePath, file);
-
-      if (!uploadError) {
-        uploadedFiles.push(filePath);
-      }
-    }
+  for (const file of files) {
+    const filePath = `${session.session.user.id}/${Date.now()}-${file.name}`;
+    await client.storage.from("attachments").upload(filePath, file);
+    uploadedFiles.push(filePath);
   }
 
   await client.from("tickets").insert({
-    user_id: session.user.id,
+    user_id: session.session.user.id,
     wspolnota_id: profile.wspolnota_id,
     title,
     description,
@@ -411,91 +280,43 @@ btnSaveTicket.addEventListener("click", async () => {
     status: "open",
   });
 
-  ticketTitle.value = "";
-  ticketDescription.value = "";
-  ticketAttachments.value = "";
   ticketForm.classList.add("hidden");
-
-  showMessage(ticketFormMessage, "Zgłoszenie zapisane.", "success");
-
   loadTickets();
 });
 
-// ŁADOWANIE ZGŁOSZEŃ Z BAZY
+// ŁADOWANIE ZGŁOSZEŃ
 async function loadTickets() {
-  ticketsList.innerHTML = "Ładowanie...";
+  ticketsList.innerHTML = "";
 
-  const {
-    data: { session },
-  } = await client.auth.getSession();
-
-  const { data: profile } = await client
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  const { data: session } = await client.auth.getSession();
+  const { data: profile } = await client.from("profiles").select("*").eq("id", session.session.user.id).single();
 
   let query = client.from("tickets").select("*").order("created_at", { ascending: false });
 
-  if (profile.role === "user") {
-    query = query.eq("user_id", session.user.id);
-  }
+  if (profile.role === "user") query = query.eq("user_id", profile.id);
+  if (profile.role === "admin") query = query.eq("wspolnota_id", profile.wspolnota_id);
 
-  if (profile.role === "admin") {
-    query = query.eq("wspolnota_id", profile.wspolnota_id);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    ticketsList.innerHTML = "Błąd ładowania zgłoszeń.";
-    return;
-  }
-
-  if (data.length === 0) {
-    ticketsList.innerHTML = "<p>Brak zgłoszeń.</p>";
-    return;
-  }
-
-  ticketsList.innerHTML = "";
+  const { data } = await query;
 
   data.forEach((t) => {
-    const item = document.createElement("div");
-    item.className = "ticket-item";
-
-    const header = document.createElement("div");
-    header.className = "ticket-header";
-
-    const title = document.createElement("div");
-    title.className = "ticket-title";
-    title.textContent = t.title;
-
-    const badge = document.createElement("span");
-    badge.className =
-      "badge " + (t.status === "open" ? "badge-open" : "badge-closed");
-    badge.textContent = t.status === "open" ? "Otwarte" : "Zamknięte";
-
-    header.appendChild(title);
-    header.appendChild(badge);
-
-    const meta = document.createElement("div");
-    meta.className = "ticket-meta";
-    meta.textContent = `Utworzone: ${new Date(t.created_at).toLocaleString()}`;
-
-    item.appendChild(header);
-    item.appendChild(meta);
-
-    // 🔥 kliknięcie otwiera szczegóły
-    item.addEventListener("click", () => {
-      openTicketDetails(t);
-    });
-
-    ticketsList.appendChild(item);
+    const div = document.createElement("div");
+    div.className = "ticket-item";
+    div.innerHTML = `
+      <div class="ticket-header">
+        <div class="ticket-title">${t.title}</div>
+        <span class="badge ${t.status === "open" ? "badge-open" : "badge-closed"}">
+          ${t.status === "open" ? "Otwarte" : "Zamknięte"}
+        </span>
+      </div>
+      <div class="ticket-meta">Utworzone: ${new Date(t.created_at).toLocaleString()}</div>
+    `;
+    div.addEventListener("click", () => openTicketDetails(t, profile.role));
+    ticketsList.appendChild(div);
   });
 }
 
-// MODAL – SZCZEGÓŁY ZGŁOSZENIA
-function openTicketDetails(ticket) {
+// MODAL SZCZEGÓŁÓW
+function openTicketDetails(ticket, role) {
   modalTitle.textContent = ticket.title;
   modalDescription.textContent = ticket.description || "Brak opisu.";
   modalStatus.textContent = ticket.status === "open" ? "Otwarte" : "Zamknięte";
@@ -503,13 +324,24 @@ function openTicketDetails(ticket) {
 
   renderAttachments(ticket.attachments || []);
 
+  // 🔥 przycisk zmiany statusu tylko dla admina
+  if (role === "admin") {
+    modalToggleStatus.classList.remove("hidden");
+    modalToggleStatus.textContent =
+      ticket.status === "open" ? "Oznacz jako zamknięte" : "Oznacz jako otwarte";
+
+    modalToggleStatus.onclick = () => toggleTicketStatus(ticket);
+  } else {
+    modalToggleStatus.classList.add("hidden");
+  }
+
   ticketModal.classList.remove("hidden");
 }
 
 function renderAttachments(attachments) {
   modalAttachments.innerHTML = "";
 
-  if (!attachments || attachments.length === 0) {
+  if (attachments.length === 0) {
     modalAttachments.innerHTML = "<p>Brak załączników.</p>";
     return;
   }
@@ -518,65 +350,45 @@ function renderAttachments(attachments) {
     const { data } = client.storage.from("attachments").getPublicUrl(path);
     const url = data.publicUrl;
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "attachment-item";
-
     const img = document.createElement("img");
     img.src = url;
-    img.alt = path;
     img.className = "attachment-thumb";
+    img.onclick = () => window.open(url, "_blank");
 
-    img.addEventListener("click", () => {
-      window.open(url, "_blank");
-    });
-
-    wrapper.appendChild(img);
-    modalAttachments.appendChild(wrapper);
+    modalAttachments.appendChild(img);
   });
 }
 
+// 🔥 ZMIANA STATUSU
+async function toggleTicketStatus(ticket) {
+  const newStatus = ticket.status === "open" ? "closed" : "open";
+
+  await client.from("tickets").update({ status: newStatus }).eq("id", ticket.id);
+
+  ticket.status = newStatus;
+
+  modalStatus.textContent = newStatus === "open" ? "Otwarte" : "Zamknięte";
+  modalToggleStatus.textContent =
+    newStatus === "open" ? "Oznacz jako zamknięte" : "Oznacz jako otwarte";
+
+  loadTickets();
+}
+
 // Zamykanie modala
-modalClose.addEventListener("click", () => {
-  ticketModal.classList.add("hidden");
-});
-
+modalClose.addEventListener("click", () => ticketModal.classList.add("hidden"));
 ticketModal.addEventListener("click", (e) => {
-  if (e.target === ticketModal) {
-    ticketModal.classList.add("hidden");
-  }
-});
-
-// Wylogowanie
-btnLogout.addEventListener("click", async () => {
-  await client.auth.signOut();
-  setAuthView(false);
-});
-
-// Formularz zgłoszenia – UI
-btnNewTicket.addEventListener("click", () => {
-  ticketForm.classList.remove("hidden");
-  hideMessage(ticketFormMessage);
-});
-
-btnCancelTicket.addEventListener("click", () => {
-  ticketForm.classList.add("hidden");
-  ticketTitle.value = "";
-  ticketDescription.value = "";
-  ticketAttachments.value = "";
-  hideMessage(ticketFormMessage);
+  if (e.target === ticketModal) ticketModal.classList.add("hidden");
 });
 
 // Sprawdzenie sesji przy starcie
 (async () => {
-  const {
-    data: { session },
-  } = await client.auth.getSession();
+  const { data: session } = await client.auth.getSession();
 
-  if (session) {
+  if (session.session) {
     const { data: profile } = await client
       .from("profiles")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("id", session.session.user.id)
       .single();
 
     setAuthView(true);
