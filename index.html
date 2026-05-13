@@ -18,6 +18,8 @@
     </header>
 
     <main class="layout">
+
+      <!-- 🔥 PANEL LOGOWANIA / REJESTRACJI -->
       <section class="card auth-card" id="auth-card">
         <h1>Panel mieszkańca</h1>
         <p class="muted">
@@ -29,6 +31,7 @@
           <button class="tab" data-tab="signup">Rejestracja</button>
         </div>
 
+        <!-- 🔵 LOGOWANIE -->
         <div class="tab-content" id="tab-login">
           <label class="field">
             <span>Email</span>
@@ -41,7 +44,12 @@
           <button id="btn-login" class="btn primary full">Zaloguj</button>
         </div>
 
+        <!-- 🟢 REJESTRACJA -->
         <div class="tab-content hidden" id="tab-signup">
+          <label class="field">
+            <span>Imię i nazwisko</span>
+            <input type="text" id="signup-fullname" placeholder="Jan Kowalski" />
+          </label>
           <label class="field">
             <span>Email</span>
             <input type="email" id="signup-email" placeholder="twoj@email.pl" />
@@ -56,6 +64,7 @@
         <div id="auth-message" class="message hidden"></div>
       </section>
 
+      <!-- 🔥 PANEL MIESZKAŃCA -->
       <section class="card main-card hidden" id="main-card">
         <header class="card-header">
           <div>
@@ -89,19 +98,38 @@
         <div id="tickets-list" class="tickets-list">
           <!-- Lista zgłoszeń ładowana z Supabase -->
         </div>
+
+        <!-- 🔥 PRZYCISK PANELU ADMINA -->
+        <button id="btn-admin-panel" class="btn ghost hidden" style="margin-top:20px;">
+          Panel administratora
+        </button>
+
       </section>
+
+      <!-- 🔥 PANEL ADMINA -->
+      <section class="card hidden" id="admin-panel" style="margin-top:20px;">
+        <h2>Panel administratora</h2>
+        <p class="muted">Zatwierdzaj mieszkańców i zarządzaj dostępem.</p>
+
+        <h3>Oczekujący mieszkańcy</h3>
+        <div id="pending-users-list"></div>
+      </section>
+
     </main>
   </div>
-<script type="module">
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  window.client = createClient(
-    "https://vswonxgsaqnhzsmzexzh.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
-  );
-</script>
+  <!-- 🔥 SUPABASE -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-<script src="app.js"></script>
-  
+    window.client = createClient(
+      "https://vswonxgsaqnhzsmzexzh.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
+    );
+  </script>
+
+  <!-- 🔥 LOGIKA APLIKACJI -->
+  <script src="app.js"></script>
+
 </body>
 </html>
