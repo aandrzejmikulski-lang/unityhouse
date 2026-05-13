@@ -1,4 +1,4 @@
- // app.js
+// app.js
 
 // Elementy DOM
 const authCard = document.getElementById("auth-card");
@@ -18,7 +18,7 @@ const btnLogin = document.getElementById("btn-login");
 
 const signupEmail = document.getElementById("signup-email");
 const signupPassword = document.getElementById("signup-password");
-const signupFullName = document.getElementById("signup-fullname"); // 🔥 NOWE
+const signupFullName = document.getElementById("signup-fullname");
 const btnSignup = document.getElementById("btn-signup");
 
 const authMessage = document.getElementById("auth-message");
@@ -32,6 +32,11 @@ const btnCancelTicket = document.getElementById("btn-cancel-ticket");
 const btnSaveTicket = document.getElementById("btn-save-ticket");
 const ticketFormMessage = document.getElementById("ticket-form-message");
 const ticketsList = document.getElementById("tickets-list");
+
+// 🔥 PANEL ADMINA – NOWE ELEMENTY
+const btnAdminPanel = document.getElementById("btn-admin-panel");
+const adminPanel = document.getElementById("admin-panel");
+const pendingUsersList = document.getElementById("pending-users-list");
 
 // Helpery UI
 function showMessage(el, text, type = "success") {
@@ -184,10 +189,71 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
+  // 🔥 SPRAWDZANIE ROLI ADMINA
+  if (profile.role === "admin") {
+    btnAdminPanel.classList.remove("hidden");
+  } else {
+    btnAdminPanel.classList.add("hidden");
+  }
+
   showMessage(authMessage, "Zalogowano pomyślnie.", "success");
   setAuthView(true);
   loadTickets();
 });
+
+// 🔥 PANEL ADMINA – otwieranie
+btnAdminPanel.addEventListener("click", () => {
+  adminPanel.classList.toggle("hidden");
+  loadPendingUsers();
+});
+
+// 🔥 FUNKCJA: ładowanie oczekujących mieszkańców
+async function loadPendingUsers() {
+  pendingUsersList.innerHTML = "Ładowanie...";
+
+  const { data, error } = await client
+    .from("profiles")
+    .select("id, full_name, approved, role")
+    .eq("approved", false)
+    .eq("role", "user");
+
+  if (error) {
+    pendingUsersList.innerHTML = "Błąd ładowania.";
+    return;
+  }
+
+  if (data.length === 0) {
+    pendingUsersList.innerHTML = "<p>Brak oczekujących mieszkańców.</p>";
+    return;
+  }
+
+  pendingUsersList.innerHTML = "";
+
+  data.forEach((u) => {
+    const item = document.createElement("div");
+    item.className = "pending-user-item";
+    item.innerHTML = `
+      <strong>${u.full_name || "(bez imienia)"}</strong><br>
+      <small>ID: ${u.id}</small><br>
+      <button class="btn-approve" data-id="${u.id}">Zatwierdź</button>
+      <hr>
+    `;
+    pendingUsersList.appendChild(item);
+  });
+
+  document.querySelectorAll(".btn-approve").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const userId = btn.dataset.id;
+
+      await client
+        .from("profiles")
+        .update({ approved: true })
+        .eq("id", userId);
+
+      loadPendingUsers();
+    });
+  });
+}
 
 // Wylogowanie
 btnLogout.addEventListener("click", async () => {
