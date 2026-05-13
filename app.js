@@ -108,4 +108,157 @@ btnSignup.addEventListener("click", async () => {
 
   btnSignup.disabled = true;
 
-  const { data
+  const { data, error } = await client.auth.signUp({
+    email,
+    password,
+  });
+
+  btnSignup.disabled = false;
+
+  if (error) {
+    console.error(error);
+    showMessage(authMessage, `Błąd rejestracji: ${error.message}`, "error");
+    return;
+  }
+
+  if (data.user && !data.session) {
+    showMessage(
+      authMessage,
+      "Konto utworzone. Sprawdź email i potwierdź rejestrację.",
+      "success"
+    );
+  } else {
+    showMessage(authMessage, "Konto utworzone i zalogowane.", "success");
+    setAuthView(true);
+    loadTickets();
+  }
+});
+
+// Logowanie
+btnLogin.addEventListener("click", async () => {
+  hideMessage(authMessage);
+
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value.trim();
+
+  if (!email || !password) {
+    showMessage(authMessage, "Podaj email i hasło.", "error");
+    return;
+  }
+
+  btnLogin.disabled = true;
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  btnLogin.disabled = false;
+
+  if (error) {
+    console.error(error);
+    showMessage(authMessage, `Błąd logowania: ${error.message}`, "error");
+    return;
+  }
+
+  showMessage(authMessage, "Zalogowano pomyślnie.", "success");
+  setAuthView(true);
+  loadTickets();
+});
+
+// Wylogowanie
+btnLogout.addEventListener("click", async () => {
+  await client.auth.signOut();
+  setAuthView(false);
+});
+
+// Formularz zgłoszenia
+btnNewTicket.addEventListener("click", () => {
+  ticketForm.classList.remove("hidden");
+  hideMessage(ticketFormMessage);
+});
+
+btnCancelTicket.addEventListener("click", () => {
+  ticketForm.classList.add("hidden");
+  ticketTitle.value = "";
+  ticketDescription.value = "";
+  ticketAttachments.value = "";
+  hideMessage(ticketFormMessage);
+});
+
+btnSaveTicket.addEventListener("click", async () => {
+  hideMessage(ticketFormMessage);
+
+  const title = ticketTitle.value.trim();
+  const description = ticketDescription.value.trim();
+
+  if (!title) {
+    showMessage(ticketFormMessage, "Podaj tytuł zgłoszenia.", "error");
+    return;
+  }
+
+  showMessage(ticketFormMessage, "Zgłoszenie zostanie zapisane (logika później).", "success");
+});
+
+// Ładowanie zgłoszeń
+async function loadTickets() {
+  ticketsList.innerHTML = "";
+
+  const demoTickets = [
+    {
+      id: 1,
+      title: "Uszkodzona klamka w drzwiach wejściowych",
+      status: "open",
+      created_at: "2026-05-13 10:15",
+    },
+    {
+      id: 2,
+      title: "Przepalona żarówka na klatce 3B",
+      status: "closed",
+      created_at: "2026-05-12 18:40",
+    },
+  ];
+
+  demoTickets.forEach((t) => {
+    const item = document.createElement("div");
+    item.className = "ticket-item";
+
+    const header = document.createElement("div");
+    header.className = "ticket-header";
+
+    const title = document.createElement("div");
+    title.className = "ticket-title";
+    title.textContent = t.title;
+
+    const badge = document.createElement("span");
+    badge.className =
+      "badge " + (t.status === "open" ? "badge-open" : "badge-closed");
+    badge.textContent = t.status === "open" ? "Otwarte" : "Zamknięte";
+
+    header.appendChild(title);
+    header.appendChild(badge);
+
+    const meta = document.createElement("div");
+    meta.className = "ticket-meta";
+    meta.textContent = `Utworzone: ${t.created_at}`;
+
+    item.appendChild(header);
+    item.appendChild(meta);
+
+    ticketsList.appendChild(item);
+  });
+}
+
+// Sprawdzenie sesji przy starcie
+(async () => {
+  const {
+    data: { session },
+  } = await client.auth.getSession();
+
+  if (session) {
+    setAuthView(true);
+    loadTickets();
+  } else {
+    setAuthView(false);
+  }
+})();
