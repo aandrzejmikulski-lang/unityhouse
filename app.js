@@ -1,4 +1,7 @@
-// Elementy DOM
+// =========================
+// ELEMENTY DOM
+// =========================
+
 const authCard = document.getElementById("auth-card");
 const mainCard = document.getElementById("main-card");
 
@@ -31,7 +34,7 @@ const btnSaveTicket = document.getElementById("btn-save-ticket");
 const ticketFormMessage = document.getElementById("ticket-form-message");
 const ticketsList = document.getElementById("tickets-list");
 
-// PANEL ADMINA
+// ADMIN
 const btnAdminPanel = document.getElementById("btn-admin-panel");
 const adminPanel = document.getElementById("admin-panel");
 const pendingUsersList = document.getElementById("pending-users-list");
@@ -49,7 +52,7 @@ const selectWspolnota = document.getElementById("select-wspolnota");
 const selectWspolnotaDropdown = document.getElementById("select-wspolnota-dropdown");
 const btnSaveWspolnota = document.getElementById("btn-save-wspolnota");
 
-// MODAL SZCZEGÓŁÓW ZGŁOSZENIA
+// MODAL
 const ticketModal = document.getElementById("ticket-modal");
 const modalClose = document.getElementById("modal-close");
 const modalTitle = document.getElementById("modal-title");
@@ -59,7 +62,11 @@ const modalDate = document.getElementById("modal-date");
 const modalAttachments = document.getElementById("modal-attachments");
 const modalToggleStatus = document.getElementById("modal-toggle-status");
 
-// Helpery UI
+
+// =========================
+// HELPERY UI
+// =========================
+
 function showMessage(el, text, type = "success") {
   el.textContent = text;
   el.classList.remove("hidden", "error", "success");
@@ -94,7 +101,11 @@ function setAuthView(isLoggedIn) {
   }
 }
 
-// Przełączanie zakładek
+
+// =========================
+// PRZEŁĄCZANIE ZAKŁADEK
+// =========================
+
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     tabs.forEach((t) => t.classList.remove("active"));
@@ -112,7 +123,11 @@ tabs.forEach((tab) => {
   });
 });
 
+
+// =========================
 // REJESTRACJA
+// =========================
+
 btnSignup.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -142,7 +157,11 @@ btnSignup.addEventListener("click", async () => {
   showMessage(authMessage, "Konto utworzone. Sprawdź email.", "success");
 });
 
+
+// =========================
 // LOGOWANIE
+// =========================
+
 btnLogin.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -179,20 +198,32 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
+
+// =========================
 // WYLOGOWANIE
+// =========================
+
 btnLogout.addEventListener("click", async () => {
   await client.auth.signOut();
   setAuthView(false);
 });
 
+
+// =========================
 // PANEL ADMINA
+// =========================
+
 btnAdminPanel.addEventListener("click", () => {
   adminPanel.classList.toggle("hidden");
   loadPendingUsers();
   loadTickets();
 });
 
+
+// =========================
 // OCZEKUJĄCY MIESZKAŃCY
+// =========================
+
 async function loadPendingUsers() {
   const { data } = await client
     .from("profiles")
@@ -216,10 +247,294 @@ async function loadPendingUsers() {
   });
 }
 
-// WSPÓLNOTY
+
+// =========================
+// PANEL WSPÓLNOT
+// =========================
+
 btnAdminWspolnoty.addEventListener("click", () => {
   adminWspolnoty.classList.toggle("hidden");
   loadWspolnoty();
 });
 
-async
+async function loadWspolnoty() {
+  const { data } = await client.from("wspolnoty").select("*");
+  wspolnotyList.innerHTML = "";
+  (data || []).forEach((w) => {
+    wspolnotyList.innerHTML += `<div><strong>${w.name}</strong><hr></div>`;
+  });
+}
+
+btnAddWspolnota.addEventListener("click", async () => {
+  const name = newWspolnotaName.value.trim();
+  if (!name) return;
+  await client.from("wspolnoty").insert({ name });
+  newWspolnotaName.value = "";
+  loadWspolnoty();
+});
+
+
+// =========================
+// WYBÓR WSPÓLNOTY
+// =========================
+
+async function showWspolnotaSelector() {
+  setAuthView(true);
+  mainCard.classList.add("hidden");
+  selectWspolnota.classList.remove("hidden");
+
+  const { data } = await client.from("wspolnoty").select("*");
+  selectWspolnotaDropdown.innerHTML = "";
+  (data || []).forEach((w) => {
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    opt.textContent = w.name;
+    selectWspolnotaDropdown.appendChild(opt);
+  });
+}
+
+btnSaveWspolnota.addEventListener("click", async () => {
+  const wspolnotaId = selectWspolnotaDropdown.value;
+  const { data: session } = await client.auth.getSession();
+
+  if (!session.session) return;
+
+  await client
+    .from("profiles")
+    .update({ wspolnota_id: wspolnotaId })
+    .eq("id", session.session.user.id);
+
+  selectWspolnota.classList.add("hidden");
+  mainCard.classList.remove("hidden");
+  loadTickets();
+});
+
+
+// =========================
+// ZAPIS ZGŁOSZENIA
+// =========================
+
+btnSaveTicket.addEventListener("click", async () => {
+  const title = ticketTitle.value.trim();
+  const description = ticketDescription.value.trim();
+  const files = ticketAttachments.files;
+
+  if (!title) {
+    showMessage(ticketFormMessage, "Podaj tytuł zgłoszenia.", "error");
+    return;
+  }
+
+  const { data: session } = await client.auth.getSession();
+  if (!session.session) {
+    showMessage(ticketFormMessage, "Brak sesji użytkownika.", "error");
+    return;
+  }
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.session.user.id)
+    .single();
+
+  let uploadedFiles = [];
+
+  for (const file of files) {
+    const filePath = `${session.session.user.id}/${Date.now()}-${file.name}`;
+    await client.storage.from("attachments").upload(filePath, file);
+    uploadedFiles.push(filePath);
+  }
+
+  await client.from("tickets").insert({
+    user_id: session.session.user.id,
+    wspolnota_id: profile.wspolnota_id,
+    title,
+    description,
+    attachments: uploadedFiles,
+    status: "open",
+  });
+
+  ticketForm.classList.add("hidden");
+  ticketTitle.value = "";
+  ticketDescription.value = "";
+  ticketAttachments.value = "";
+  hideMessage(ticketFormMessage);
+  loadTickets();
+});
+
+btnNewTicket.addEventListener("click", () => {
+  ticketForm.classList.toggle("hidden");
+  hideMessage(ticketFormMessage);
+});
+
+btnCancelTicket.addEventListener("click", () => {
+  ticketForm.classList.add("hidden");
+  hideMessage(ticketFormMessage);
+});
+
+
+// =========================
+// ŁADOWANIE ZGŁOSZEŃ
+// =========================
+
+async function loadTickets(filter = "all") {
+  ticketsList.innerHTML = "";
+  adminTickets.innerHTML = "";
+
+  const { data: session } = await client.auth.getSession();
+  if (!session.session) return;
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.session.user.id)
+    .single();
+
+  let query = client.from("tickets").select("*").order("created_at", { ascending: false });
+
+  if (profile.role === "user") {
+    query = query.eq("user_id", profile.id);
+  }
+
+  if (filter === "open") query = query.eq("status", "open");
+  if (filter === "closed") query = query.eq("status", "closed");
+
+  const { data } = await query;
+
+  // ADMIN – FILTRY
+  if (profile.role === "admin") {
+    adminTickets.innerHTML = `
+      <div style="margin-bottom:10px;">
+        <span class="filter-link" data-filter="all">Wszystkie</span> |
+        <span class="filter-link" data-filter="open">Otwarte</span> |
+        <span class="filter-link" data-filter="closed">Zamknięte</span>
+      </div>
+    `;
+
+    document.querySelectorAll(".filter-link").forEach((el) => {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => loadTickets(el.dataset.filter));
+    });
+
+    (data || []).forEach((t) => {
+      const div = document.createElement("div");
+      div.className = "ticket-item";
+      div.innerHTML = `
+        <div class="ticket-header">
+          <div class="ticket-title">${t.title}</div>
+          <span class="badge ${t.status === "open" ? "badge-open" : "badge-closed"}">
+            ${t.status === "open" ? "Otwarte" : "Zamknięte"}
+          </span>
+        </div>
+        <div class="ticket-meta">Utworzone: ${new Date(t.created_at).toLocaleString()}</div>
+      `;
+      div.addEventListener("click", () => openTicketDetails(t, profile.role));
+      adminTickets.appendChild(div);
+    });
+
+    return;
+  }
+
+  // MIESZKANIEC
+  (data || []).forEach((t) => {
+    const div = document.createElement("div");
+    div.className = "ticket-item";
+    div.innerHTML = `
+      <div class="ticket-header">
+        <div class="ticket-title">${t.title}</div>
+        <span class="badge ${t.status === "open" ? "badge-open" : "badge-closed"}">
+          ${t.status === "open" ? "Otwarte" : "Zamknięte"}
+        </span>
+      </div>
+      <div class="ticket-meta">Utworzone: ${new Date(t.created_at).toLocaleString()}</div>
+    `;
+    div.addEventListener("click", () => openTicketDetails(t, profile.role));
+    ticketsList.appendChild(div);
+  });
+}
+
+
+// =========================
+// MODAL SZCZEGÓŁÓW
+// =========================
+
+function openTicketDetails(ticket, role) {
+  modalTitle.textContent = ticket.title;
+  modalDescription.textContent = ticket.description || "Brak opisu.";
+  modalStatus.textContent = ticket.status === "open" ? "Otwarte" : "Zamknięte";
+  modalDate.textContent = new Date(ticket.created_at).toLocaleString();
+
+  renderAttachments(ticket.attachments || []);
+
+  if (role === "admin") {
+    modalToggleStatus.classList.remove("hidden");
+    modalToggleStatus.textContent =
+      ticket.status === "open" ? "Oznacz jako zamknięte" : "Oznacz jako otwarte";
+
+    modalToggleStatus.onclick = () => toggleTicketStatus(ticket);
+  } else {
+    modalToggleStatus.classList.add("hidden");
+  }
+
+  ticketModal.classList.remove("hidden");
+}
+
+function renderAttachments(attachments) {
+  modalAttachments.innerHTML = "";
+
+  if (!attachments.length) {
+    modalAttachments.innerHTML = "<p>Brak załączników.</p>";
+    return;
+  }
+
+  attachments.forEach((path) => {
+    const { data } = client.storage.from("attachments").getPublicUrl(path);
+    const url = data.publicUrl;
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "attachment-thumb";
+    img.onclick = () => window.open(url, "_blank");
+
+    modalAttachments.appendChild(img);
+  });
+}
+
+
+// =========================
+// ZMIANA STATUSU
+// =========================
+
+async function toggleTicketStatus(ticket) {
+  const newStatus = ticket.status === "open" ? "closed" : "open";
+
+  await client.from("tickets").update({ status: newStatus }).eq("id", ticket.id);
+
+  ticket.status = newStatus;
+
+  modalStatus.textContent = newStatus === "open" ? "Otwarte" : "Zamknięte";
+  modalToggleStatus.textContent =
+    newStatus === "open" ? "Oznacz jako zamknięte" : "Oznacz jako otwarte";
+
+  loadTickets();
+}
+
+
+// =========================
+// ZAMYKANIE MODALA
+// =========================
+
+modalClose.addEventListener("click", () => ticketModal.classList.add("hidden"));
+ticketModal.addEventListener("click", (e) => {
+  if (e.target === ticketModal) ticketModal.classList.add("hidden");
+});
+
+
+// =========================
+// AUTO-LOGIN NA START
+// =========================
+
+(async () => {
+  const { data: session } = await client.auth.getSession();
+
+  if (session.session) {
+    const { data: profile } = await
