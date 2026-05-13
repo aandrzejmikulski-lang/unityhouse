@@ -527,8 +527,6 @@ modalClose.addEventListener("click", () => ticketModal.classList.add("hidden"));
 ticketModal.addEventListener("click", (e) => {
   if (e.target === ticketModal) ticketModal.classList.add("hidden");
 });
-
-
 // =========================
 // AUTO-LOGIN NA START
 // =========================
@@ -536,5 +534,52 @@ ticketModal.addEventListener("click", (e) => {
 (async () => {
   const { data: session } = await client.auth.getSession();
 
-  if (session.session) {
-    const { data: profile } = await
+  if (!session.session) {
+    setAuthView(false);
+    return;
+  }
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.session.user.id)
+    .single();
+
+  // jeśli konto niezatwierdzone – traktuj jak wylogowanego
+  if (!profile || !profile.approved) {
+    await client.auth.signOut();
+    setAuthView(false);
+    return;
+  }
+
+  // użytkownik zalogowany
+  setAuthView(true);
+
+  if (profile.role === "admin") {
+    btnAdminPanel.classList.remove("hidden");
+    btnAdminWspolnoty.classList.remove("hidden");
+    btnNewTicket.classList.add("hidden");
+    ticketForm.classList.add("hidden");
+  }
+
+  // jeśli brak wspólnoty – pokaż wybór
+  if (!profile.wspolnota_id) {
+    mainCard.classList.add("hidden");
+    selectWspolnota.classList.remove("hidden");
+    const { data: wsp } = await client.from("wspolnoty").select("*");
+    selectWspolnotaDropdown.innerHTML = "";
+    (wsp || []).forEach((w) => {
+      const opt = document.createElement("option");
+      opt.value = w.id;
+      opt.textContent = w.name;
+      selectWspolnotaDropdown.appendChild(opt);
+    });
+    return;
+  }
+
+  // normalne ładowanie zgłoszeń
+  loadTickets();
+})();
+
+
+
