@@ -119,11 +119,7 @@ btnSignup.addEventListener("click", async () => {
     return;
   }
 
-  btnSignup.disabled = true;
-
   const { data, error } = await client.auth.signUp({ email, password });
-
-  btnSignup.disabled = false;
 
   if (error) {
     showMessage(authMessage, `Błąd rejestracji: ${error.message}`, "error");
@@ -203,7 +199,7 @@ async function loadPendingUsers() {
       loadPendingUsers();
     });
   });
-});
+}
 
 // PANEL WSPÓLNOT
 btnAdminWspolnoty.addEventListener("click", () => {
@@ -324,7 +320,6 @@ function openTicketDetails(ticket, role) {
 
   renderAttachments(ticket.attachments || []);
 
-  // 🔥 przycisk zmiany statusu tylko dla admina
   if (role === "admin") {
     modalToggleStatus.classList.remove("hidden");
     modalToggleStatus.textContent =
@@ -359,7 +354,7 @@ function renderAttachments(attachments) {
   });
 }
 
-// 🔥 ZMIANA STATUSU
+// ZMIANA STATUSU
 async function toggleTicketStatus(ticket) {
   const newStatus = ticket.status === "open" ? "closed" : "open";
 
