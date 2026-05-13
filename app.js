@@ -246,16 +246,48 @@ async function loadWspolnoty() {
   const { data } = await client.from("wspolnoty").select("*");
   wspolnotyList.innerHTML = "";
   (data || []).forEach((w) => {
-    wspolnotyList.innerHTML += `<div><strong>${w.nazwa}</strong><hr></div>`;
+    wspolnotyList.innerHTML += `<div><strong>${w.name}</strong><hr></div>`;
   });
 }
 
 btnAddWspolnota.addEventListener("click", async () => {
   const name = newWspolnotaName.value.trim();
   if (!name) return;
-  await client.from("wspolnoty").insert({ nazwa: name });
+  await client.from("wspolnoty").insert({ name });
   newWspolnotaName.value = "";
   loadWspolnoty();
+});
+
+// WYBÓR WSPÓLNOTY
+async function showWspolnotaSelector() {
+  setAuthView(true);
+  mainCard.classList.add("hidden");
+  selectWspolnota.classList.remove("hidden");
+
+  const { data } = await client.from("wspolnoty").select("*");
+  selectWspolnotaDropdown.innerHTML = "";
+  (data || []).forEach((w) => {
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    opt.textContent = w.name;
+    selectWspolnotaDropdown.appendChild(opt);
+  });
+}
+
+btnSaveWspolnota.addEventListener("click", async () => {
+  const wspolnotaId = selectWspolnotaDropdown.value;
+  const { data: session } = await client.auth.getSession();
+
+  if (!session.session) return;
+
+  await client
+    .from("profiles")
+    .update({ wspolnota_id: wspolnotaId })
+    .eq("id", session.session.user.id);
+
+  selectWspolnota.classList.add("hidden");
+  mainCard.classList.remove("hidden");
+  loadTickets();
 });
 
 // WYBÓR WSPÓLNOTY
