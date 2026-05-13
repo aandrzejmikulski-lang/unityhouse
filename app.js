@@ -1,8 +1,6 @@
 // 🔥 Wymuszenie logowania przy każdym wejściu
 await client.auth.signOut();
 
-// app.js – KROK 14 (zmiana statusu zgłoszenia)
-
 // Elementy DOM
 const authCard = document.getElementById("auth-card");
 const mainCard = document.getElementById("main-card");
@@ -109,7 +107,7 @@ tabs.forEach((tab) => {
   });
 });
 
-// REJESTRACJA
+// REJESTRACJA — NAPRAWIONA
 btnSignup.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -129,7 +127,14 @@ btnSignup.addEventListener("click", async () => {
     return;
   }
 
-  await client.from("profiles").update({ full_name: fullName }).eq("id", data.user.id);
+  // 🔥 POPRAWIONE — ZAWSZE TWORZY PROFIL
+  await client.from("profiles").insert({
+    id: data.user.id,
+    full_name: fullName,
+    role: "user",
+    approved: false,
+    wspolnota_id: null
+  });
 
   showMessage(authMessage, "Konto utworzone. Sprawdź email.", "success");
 });
@@ -148,7 +153,11 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  const { data: profile } = await client.from("profiles").select("*").eq("id", data.user.id).single();
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", data.user.id)
+    .single();
 
   if (!profile.approved) {
     showMessage(authMessage, "Twoje konto czeka na zatwierdzenie.", "error");
@@ -246,7 +255,10 @@ btnSaveWspolnota.addEventListener("click", async () => {
   const wspolnotaId = selectWspolnotaDropdown.value;
   const { data: session } = await client.auth.getSession();
 
-  await client.from("profiles").update({ wspolnota_id: wspolnotaId }).eq("id", session.session.user.id);
+  await client
+    .from("profiles")
+    .update({ wspolnota_id: wspolnotaId })
+    .eq("id", session.session.user.id);
 
   selectWspolnota.classList.add("hidden");
   mainCard.classList.remove("hidden");
@@ -260,7 +272,11 @@ btnSaveTicket.addEventListener("click", async () => {
   const files = ticketAttachments.files;
 
   const { data: session } = await client.auth.getSession();
-  const { data: profile } = await client.from("profiles").select("*").eq("id", session.session.user.id).single();
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.session.user.id)
+    .single();
 
   let uploadedFiles = [];
 
@@ -288,7 +304,11 @@ async function loadTickets() {
   ticketsList.innerHTML = "";
 
   const { data: session } = await client.auth.getSession();
-  const { data: profile } = await client.from("profiles").select("*").eq("id", session.session.user.id).single();
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.session.user.id)
+    .single();
 
   let query = client.from("tickets").select("*").order("created_at", { ascending: false });
 
