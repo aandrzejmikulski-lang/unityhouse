@@ -1,6 +1,3 @@
-// 🔥 Wymuszenie logowania przy każdym wejściu
-await client.auth.signOut();
-
 // Elementy DOM
 const authCard = document.getElementById("auth-card");
 const mainCard = document.getElementById("main-card");
@@ -107,7 +104,7 @@ tabs.forEach((tab) => {
   });
 });
 
-// REJESTRACJA — NAPRAWIONA
+// REJESTRACJA — z upsert
 btnSignup.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -127,8 +124,12 @@ btnSignup.addEventListener("click", async () => {
     return;
   }
 
-  // 🔥 POPRAWIONE — ZAWSZE TWORZY PROFIL
-  await client.from("profiles").insert({
+  if (!data.user) {
+    showMessage(authMessage, "Błąd rejestracji: brak użytkownika w odpowiedzi.", "error");
+    return;
+  }
+
+  await client.from("profiles").upsert({
     id: data.user.id,
     full_name: fullName,
     role: "user",
@@ -146,6 +147,11 @@ btnLogin.addEventListener("click", async () => {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
 
+  if (!email || !password) {
+    showMessage(authMessage, "Podaj email i hasło.", "error");
+    return;
+  }
+
   const { data, error } = await client.auth.signInWithPassword({ email, password });
 
   if (error) {
@@ -153,11 +159,22 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  const { data: profile } = await client
+  if (!data.session || !data.user) {
+    showMessage(authMessage, "Błąd logowania: brak sesji.", "error");
+    return;
+  }
+
+  const { data: profile, error: profileError } = await client
     .from("profiles")
     .select("*")
     .eq("id", data.user.id)
     .single();
+
+  if (profileError || !profile) {
+    showMessage(authMessage, "Brak profilu użytkownika. Skontaktuj się z administratorem.", "error");
+    await client.auth.signOut();
+    return;
+  }
 
   if (!profile.approved) {
     showMessage(authMessage, "Twoje konto czeka na zatwierdzenie.", "error");
@@ -179,6 +196,12 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
+// Wylogowanie
+btnLogout.addEventListener("click", async () => {
+  await client.auth.signOut();
+  setAuthView(false);
+});
+
 // PANEL ADMINA
 btnAdminPanel.addEventListener("click", () => {
   adminPanel.classList.toggle("hidden");
@@ -195,7 +218,7 @@ async function loadPendingUsers() {
 
   pendingUsersList.innerHTML = "";
 
-  data.forEach((u) => {
+  (data || []).forEach((u) => {
     const div = document.createElement("div");
     div.innerHTML = `
       <strong>${u.full_name}</strong><br>
@@ -222,7 +245,7 @@ btnAdminWspolnoty.addEventListener("click", () => {
 async function loadWspolnoty() {
   const { data } = await client.from("wspolnoty").select("*");
   wspolnotyList.innerHTML = "";
-  data.forEach((w) => {
+  (data || []).forEach((w) => {
     wspolnotyList.innerHTML += `<div><strong>${w.name}</strong><hr></div>`;
   });
 }
@@ -243,7 +266,7 @@ async function showWspolnotaSelector() {
 
   const { data } = await client.from("wspolnoty").select("*");
   selectWspolnotaDropdown.innerHTML = "";
-  data.forEach((w) => {
+  (data || []).forEach((w) => {
     const opt = document.createElement("option");
     opt.value = w.id;
     opt.textContent = w.name;
@@ -254,6 +277,8 @@ async function showWspolnotaSelector() {
 btnSaveWspolnota.addEventListener("click", async () => {
   const wspolnotaId = selectWspolnotaDropdown.value;
   const { data: session } = await client.auth.getSession();
+
+  if (!session.session) return;
 
   await client
     .from("profiles")
@@ -271,7 +296,17 @@ btnSaveTicket.addEventListener("click", async () => {
   const description = ticketDescription.value.trim();
   const files = ticketAttachments.files;
 
+  if (!title) {
+    showMessage(ticketFormMessage, "Podaj tytuł zgłoszenia.", "error");
+    return;
+  }
+
   const { data: session } = await client.auth.getSession();
+  if (!session.session) {
+    showMessage(ticketFormMessage, "Brak sesji użytkownika.", "error");
+    return;
+  }
+
   const { data: profile } = await client
     .from("profiles")
     .select("*")
@@ -296,7 +331,22 @@ btnSaveTicket.addEventListener("click", async () => {
   });
 
   ticketForm.classList.add("hidden");
+  ticketTitle.value = "";
+  ticketDescription.value = "";
+  ticketAttachments.value = "";
+  hideMessage(ticketFormMessage);
   loadTickets();
+});
+
+// Pokaż/ukryj formularz zgłoszenia
+btnNewTicket.addEventListener("click", () => {
+  ticketForm.classList.toggle("hidden");
+  hideMessage(ticketFormMessage);
+});
+
+btnCancelTicket.addEventListener("click", () => {
+  ticketForm.classList.add("hidden");
+  hideMessage(ticketFormMessage);
 });
 
 // ŁADOWANIE ZGŁOSZEŃ
@@ -304,6 +354,8 @@ async function loadTickets() {
   ticketsList.innerHTML = "";
 
   const { data: session } = await client.auth.getSession();
+  if (!session.session) return;
+
   const { data: profile } = await client
     .from("profiles")
     .select("*")
@@ -317,7 +369,7 @@ async function loadTickets() {
 
   const { data } = await query;
 
-  data.forEach((t) => {
+  (data || []).forEach((t) => {
     const div = document.createElement("div");
     div.className = "ticket-item";
     div.innerHTML = `
@@ -359,7 +411,7 @@ function openTicketDetails(ticket, role) {
 function renderAttachments(attachments) {
   modalAttachments.innerHTML = "";
 
-  if (attachments.length === 0) {
+  if (!attachments.length) {
     modalAttachments.innerHTML = "<p>Brak załączników.</p>";
     return;
   }
@@ -408,6 +460,11 @@ ticketModal.addEventListener("click", (e) => {
       .select("*")
       .eq("id", session.session.user.id)
       .single();
+
+    if (!profile) {
+      setAuthView(false);
+      return;
+    }
 
     setAuthView(true);
 
