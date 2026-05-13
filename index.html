@@ -167,6 +167,7 @@
     </main>
   </div>
 
+  <!-- 🔥 Supabase client -->
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -176,6 +177,8 @@
     );
   </script>
 
-  <script src="app.js"></script>
+  <!-- 🔥 app.js jako MODULE (to naprawia błąd client is not defined) -->
+  <script type="module" src="app.js"></script>
+
 </body>
 </html>
