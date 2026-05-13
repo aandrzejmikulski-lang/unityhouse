@@ -83,6 +83,12 @@ function setAuthView(isLoggedIn) {
     btnLogout.classList.add("hidden");
     btnShowLogin.classList.remove("hidden");
     btnShowSignup.classList.remove("hidden");
+
+    // 🔥 FIX — reset uprawnień admina
+    btnAdminPanel.classList.add("hidden");
+    btnAdminWspolnoty.classList.add("hidden");
+    adminPanel.classList.add("hidden");
+    adminWspolnoty.classList.add("hidden");
   }
 }
 
@@ -175,6 +181,12 @@ btnLogin.addEventListener("click", async () => {
     await client.auth.signOut();
     return;
   }
+
+  // 🔥 FIX — reset admina przed sprawdzeniem roli
+  btnAdminPanel.classList.add("hidden");
+  btnAdminWspolnoty.classList.add("hidden");
+  adminPanel.classList.add("hidden");
+  adminWspolnoty.classList.add("hidden");
 
   if (!profile.approved) {
     showMessage(authMessage, "Twoje konto czeka na zatwierdzenie.", "error");
@@ -479,18 +491,10 @@ ticketModal.addEventListener("click", (e) => {
 
     setAuthView(true);
 
-    if (profile.role === "admin") {
-      btnAdminPanel.classList.remove("hidden");
-      btnAdminWspolnoty.classList.remove("hidden");
-    }
+    // 🔥 FIX — reset admina przed sprawdzeniem roli
+    btnAdminPanel.classList.add("hidden");
+    btnAdminWspolnoty.classList.add("hidden");
+    adminPanel.classList.add("hidden");
+    adminWspolnoty.classList.add("hidden");
 
-    if (profile.role === "user" && !profile.wspolnota_id) {
-      showWspolnotaSelector();
-      return;
-    }
-
-    loadTickets();
-  } else {
-    setAuthView(false);
-  }
-})();
+    if (profile.role
