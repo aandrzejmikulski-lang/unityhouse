@@ -269,10 +269,11 @@ async function showWspolnotaSelector() {
   (data || []).forEach((w) => {
     const opt = document.createElement("option");
     opt.value = w.id;
-    opt.textContent = w.name;
+    opt.textContent = w.nazwa; // ← poprawione
     selectWspolnotaDropdown.appendChild(opt);
   });
 }
+
 
 btnSaveWspolnota.addEventListener("click", async () => {
   const wspolnotaId = selectWspolnotaDropdown.value;
