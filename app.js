@@ -1,4 +1,4 @@
-// app.js
+ // app.js
 
 // Elementy DOM
 const authCard = document.getElementById("auth-card");
@@ -18,6 +18,7 @@ const btnLogin = document.getElementById("btn-login");
 
 const signupEmail = document.getElementById("signup-email");
 const signupPassword = document.getElementById("signup-password");
+const signupFullName = document.getElementById("signup-fullname"); // 🔥 NOWE
 const btnSignup = document.getElementById("btn-signup");
 
 const authMessage = document.getElementById("auth-message");
@@ -94,15 +95,16 @@ btnShowSignup.addEventListener("click", () => {
   hideMessage(authMessage);
 });
 
-// Rejestracja
+// 🔥 REJESTRACJA
 btnSignup.addEventListener("click", async () => {
   hideMessage(authMessage);
 
   const email = signupEmail.value.trim();
   const password = signupPassword.value.trim();
+  const fullName = signupFullName.value.trim();
 
-  if (!email || !password) {
-    showMessage(authMessage, "Podaj email i hasło.", "error");
+  if (!email || !password || !fullName) {
+    showMessage(authMessage, "Podaj imię i nazwisko, email i hasło.", "error");
     return;
   }
 
@@ -121,6 +123,14 @@ btnSignup.addEventListener("click", async () => {
     return;
   }
 
+  // 🔥 KROK 7 — uzupełnienie profilu
+  await client
+    .from("profiles")
+    .update({
+      full_name: fullName
+    })
+    .eq("id", data.user.id);
+
   if (data.user && !data.session) {
     showMessage(
       authMessage,
@@ -134,7 +144,7 @@ btnSignup.addEventListener("click", async () => {
   }
 });
 
-// Logowanie
+// 🔥 LOGOWANIE
 btnLogin.addEventListener("click", async () => {
   hideMessage(authMessage);
 
@@ -158,6 +168,19 @@ btnLogin.addEventListener("click", async () => {
   if (error) {
     console.error(error);
     showMessage(authMessage, `Błąd logowania: ${error.message}`, "error");
+    return;
+  }
+
+  // 🔥 BLOKADA NIEZATWIERDZONYCH
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", data.user.id)
+    .single();
+
+  if (!profile.approved) {
+    showMessage(authMessage, "Twoje konto czeka na zatwierdzenie przez administratora.", "error");
+    await client.auth.signOut();
     return;
   }
 
