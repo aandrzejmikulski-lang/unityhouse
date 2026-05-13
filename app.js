@@ -354,60 +354,103 @@ btnSaveWspolnota.addEventListener("click", async () => {
   mainCard.classList.remove("hidden");
 });
 
-// Wylogowanie
-btnLogout.addEventListener("click", async () => {
-  await client.auth.signOut();
-  setAuthView(false);
-});
-
-// Formularz zgłoszenia
-btnNewTicket.addEventListener("click", () => {
-  ticketForm.classList.remove("hidden");
-  hideMessage(ticketFormMessage);
-});
-
-btnCancelTicket.addEventListener("click", () => {
-  ticketForm.classList.add("hidden");
-  ticketTitle.value = "";
-  ticketDescription.value = "";
-  ticketAttachments.value = "";
-  hideMessage(ticketFormMessage);
-});
-
+// 🔥 ZAPIS ZGŁOSZENIA DO SUPABASE
 btnSaveTicket.addEventListener("click", async () => {
   hideMessage(ticketFormMessage);
 
   const title = ticketTitle.value.trim();
   const description = ticketDescription.value.trim();
+  const files = ticketAttachments.files;
 
   if (!title) {
     showMessage(ticketFormMessage, "Podaj tytuł zgłoszenia.", "error");
     return;
   }
 
-  showMessage(ticketFormMessage, "Zgłoszenie zostanie zapisane (logika później).", "success");
+  const {
+    data: { session },
+  } = await client.auth.getSession();
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+  let uploadedFiles = [];
+
+  if (files.length > 0) {
+    for (const file of files) {
+      const filePath = `${session.user.id}/${Date.now()}-${file.name}`;
+
+      const { error: uploadError } = await client.storage
+        .from("attachments")
+        .upload(filePath, file);
+
+      if (!uploadError) {
+        uploadedFiles.push(filePath);
+      }
+    }
+  }
+
+  await client.from("tickets").insert({
+    user_id: session.user.id,
+    wspolnota_id: profile.wspolnota_id,
+    title,
+    description,
+    attachments: uploadedFiles,
+    status: "open",
+  });
+
+  ticketTitle.value = "";
+  ticketDescription.value = "";
+  ticketAttachments.value = "";
+  ticketForm.classList.add("hidden");
+
+  showMessage(ticketFormMessage, "Zgłoszenie zapisane.", "success");
+
+  loadTickets();
 });
 
-// Ładowanie zgłoszeń
+// 🔥 ŁADOWANIE ZGŁOSZEŃ Z BAZY
 async function loadTickets() {
+  ticketsList.innerHTML = "Ładowanie...";
+
+  const {
+    data: { session },
+  } = await client.auth.getSession();
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+  let query = client.from("tickets").select("*").order("created_at", { ascending: false });
+
+  if (profile.role === "user") {
+    query = query.eq("user_id", session.user.id);
+  }
+
+  if (profile.role === "admin") {
+    query = query.eq("wspolnota_id", profile.wspolnota_id);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    ticketsList.innerHTML = "Błąd ładowania zgłoszeń.";
+    return;
+  }
+
+  if (data.length === 0) {
+    ticketsList.innerHTML = "<p>Brak zgłoszeń.</p>";
+    return;
+  }
+
   ticketsList.innerHTML = "";
 
-  const demoTickets = [
-    {
-      id: 1,
-      title: "Uszkodzona klamka w drzwiach wejściowych",
-      status: "open",
-      created_at: "2026-05-13 10:15",
-    },
-    {
-      id: 2,
-      title: "Przepalona żarówka na klatce 3B",
-      status: "closed",
-      created_at: "2026-05-12 18:40",
-    },
-  ];
-
-  demoTickets.forEach((t) => {
+  data.forEach((t) => {
     const item = document.createElement("div");
     item.className = "ticket-item";
 
@@ -428,7 +471,7 @@ async function loadTickets() {
 
     const meta = document.createElement("div");
     meta.className = "ticket-meta";
-    meta.textContent = `Utworzone: ${t.created_at}`;
+    meta.textContent = `Utworzone: ${new Date(t.created_at).toLocaleString()}`;
 
     item.appendChild(header);
     item.appendChild(meta);
