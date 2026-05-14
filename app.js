@@ -193,6 +193,29 @@ btnLogin.addEventListener("click", async () => {
 
   setAuthView(true);
 
+  if (profile.role === "admin") {
+    mainCard.classList.add("hidden");
+    adminPanel.classList.remove("hidden");
+
+    btnAdminPanel.classList.remove("hidden");
+    btnAdminWspolnoty.classList.remove("hidden");
+
+    return;
+  }
+
+  loadTickets();
+});
+
+// =========================
+// WYLOGOWANIE
+// =========================
+
+btnLogout.addEventListener("click", async () => {
+  await client.auth.signOut();
+  setAuthView(false);
+});
+
+
   // ADMIN
   if (profile.role === "admin") {
     mainCard.classList.add("hidden");
