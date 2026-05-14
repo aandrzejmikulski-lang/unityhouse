@@ -13,6 +13,14 @@ const client = supabase.createClient(
 );
 console.log("Supabase client:", client);
 // =====================================
+//  TEST PRZYCISKU LOGOWANIA
+// =====================================
+
+document.getElementById("btnLogin").addEventListener("click", () => {
+  console.log("KLIK DZIAŁA");
+});
+
+// =====================================
 //  ELEMENTY UI
 // =====================================
 
