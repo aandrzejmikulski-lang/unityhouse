@@ -208,24 +208,6 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
-  // ukryj panel logowania
-  setAuthView(true);
-
-  // ADMIN
-  if (profile.role === "admin") {
-    mainCard.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
-
-    btnAdminPanel.classList.remove("hidden");
-    btnAdminWspolnoty.classList.remove("hidden");
-
- tak ma to wygladac?
-   
-btnLogout.addEventListener("click", async () => {
-  await client.auth.signOut();
-  setAuthView(false);
-});
-
 
 // =========================
 // PANEL ADMINA
