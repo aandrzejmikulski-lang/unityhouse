@@ -11,127 +11,130 @@
     <header class="topbar">
       <div class="logo">Unity House</div>
       <nav class="topbar-nav">
-        <button id="btn-show-login" class="btn ghost">Zaloguj</button>
-        <button id="btn-show-signup" class="btn primary">Załóż konto</button>
+        <button id="btnLoginTop" class="btn ghost">Zaloguj</button>
+        <button id="btnRegisterTop" class="btn primary">Załóż konto</button>
 
-        <!-- 🔥 DODANE: PRZYCISKI ADMINA (wymagane przez app.js) -->
-        <button id="btn-admin-panel" class="btn ghost hidden">Panel admina</button>
-        <button id="btn-admin-wspolnoty" class="btn ghost hidden">Wspólnoty</button>
-
-        <button id="btn-logout" class="btn ghost hidden">Wyloguj</button>
+        <button id="btnLogoutTop" class="btn ghost hidden">Wyloguj</button>
       </nav>
     </header>
 
     <main class="layout">
 
       <!-- 🔥 PANEL LOGOWANIA / REJESTRACJI -->
-      <section class="card auth-card" id="auth-card">
+      <section class="card auth-card" id="loginCard">
         <h1>Panel mieszkańca</h1>
         <p class="muted">
           Zgłaszaj usterki, załączaj zdjęcia, śledź status spraw – wszystko w jednym miejscu.
         </p>
 
         <div class="tabs">
-          <button class="tab active" data-tab="login">Logowanie</button>
-          <button class="tab" data-tab="signup">Rejestracja</button>
+          <button class="tab active" id="goToLogin">Logowanie</button>
+          <button class="tab" id="goToRegister">Rejestracja</button>
         </div>
 
-        <div class="tab-content" id="tab-login">
+        <div id="loginForm">
           <label class="field">
             <span>Email</span>
-            <input type="email" id="login-email" />
+            <input type="email" id="loginEmail" />
           </label>
           <label class="field">
             <span>Hasło</span>
-            <input type="password" id="login-password" />
+            <input type="password" id="loginPassword" />
           </label>
-          <button id="btn-login" class="btn primary full">Zaloguj</button>
+          <button id="btnLogin" class="btn primary full">Zaloguj</button>
+          <div id="loginMessage" class="message hidden"></div>
         </div>
 
-        <div class="tab-content hidden" id="tab-signup">
+        <div id="registerCard" class="hidden">
           <label class="field">
             <span>Imię i nazwisko</span>
-            <input type="text" id="signup-fullname" />
+            <input type="text" id="registerFullname" />
           </label>
           <label class="field">
             <span>Email</span>
-            <input type="email" id="signup-email" />
+            <input type="email" id="registerEmail" />
           </label>
           <label class="field">
             <span>Hasło</span>
-            <input type="password" id="signup-password" />
+            <input type="password" id="registerPassword" />
           </label>
-          <button id="btn-signup" class="btn primary full">Załóż konto</button>
+          <button id="btnRegister" class="btn primary full">Załóż konto</button>
+          <div id="registerMessage" class="message hidden"></div>
         </div>
-
-        <div id="auth-message" class="message hidden"></div>
       </section>
 
       <!-- 🔥 PANEL MIESZKAŃCA -->
-      <section class="card main-card hidden" id="main-card">
+      <section class="card hidden" id="mainCard">
         <header class="card-header">
           <div>
             <h2>Twoje zgłoszenia</h2>
             <p class="muted">Dodawaj zgłoszenia, załączaj pliki, śledź status.</p>
           </div>
-          <button id="btn-new-ticket" class="btn primary">Nowe zgłoszenie</button>
+          <button id="btnAddTicket" class="btn primary">Nowe zgłoszenie</button>
         </header>
 
-        <div id="tickets-list"></div>
+        <div id="ticketList"></div>
       </section>
-
       <!-- 🔥 PANEL ADMINA -->
-      <section class="card hidden" id="admin-panel">
+      <section class="card hidden" id="adminPanel">
         <h2>Panel administratora</h2>
-        <div id="pending-users-list"></div>
-        <div id="admin-tickets"></div>
+        <h3>Oczekujący użytkownicy</h3>
+        <div id="pendingUsersList"></div>
+
+        <h3>Zgłoszenia wspólnoty</h3>
+        <div id="adminTickets"></div>
+
+        <h3>Wszyscy użytkownicy</h3>
+        <div id="allUsersList"></div>
       </section>
 
       <!-- 🔥 PANEL WSPÓLNOT -->
-      <section class="card hidden" id="admin-wspolnoty">
+      <section class="card hidden" id="adminWspolnoty">
         <h2>Wspólnoty</h2>
-        <input type="text" id="new-wspolnota-name" placeholder="Nazwa wspólnoty" />
-        <button id="btn-add-wspolnota" class="btn primary">Dodaj</button>
-        <div id="wspolnoty-list"></div>
+        <input type="text" id="newWspolnotaName" placeholder="Nazwa wspólnoty" />
+        <button id="btnAddWspolnota" class="btn primary">Dodaj</button>
+        <div id="wspolnotyList"></div>
       </section>
 
       <!-- 🔥 WYBÓR WSPÓLNOTY -->
-      <section class="card hidden" id="select-wspolnota">
+      <section class="card hidden" id="selectWspolnota">
         <h2>Wybierz wspólnotę</h2>
-        <select id="select-wspolnota-dropdown"></select>
-        <button id="btn-save-wspolnota" class="btn primary">Zapisz</button>
+        <select id="wspolnotaDropdown"></select>
+        <button id="btnSaveWspolnota" class="btn primary">Zapisz</button>
+        <div id="wspolnotaMessage" class="message hidden"></div>
       </section>
 
       <!-- 🔥 FORMULARZ ZGŁOSZENIA -->
-      <section class="card hidden" id="ticket-form">
+      <section class="card hidden" id="ticketForm">
         <h2>Nowe zgłoszenie</h2>
         <label class="field">
           <span>Tytuł</span>
-          <input type="text" id="ticket-title" />
+          <input type="text" id="ticketTitle" />
         </label>
         <label class="field">
           <span>Opis</span>
-          <textarea id="ticket-description"></textarea>
+          <textarea id="ticketDesc"></textarea>
         </label>
         <label class="field">
-          <span>Załączniki</span>
-          <input type="file" id="ticket-attachments" multiple />
+          <span>Załącznik</span>
+          <input type="file" id="ticketFile" />
         </label>
-        <div id="ticket-form-message" class="message hidden"></div>
-        <button id="btn-save-ticket" class="btn primary">Zapisz</button>
-        <button id="btn-cancel-ticket" class="btn ghost">Anuluj</button>
+        <button id="btnSaveTicket" class="btn primary">Zapisz</button>
+        <button id="btnCancelTicket" class="btn ghost">Anuluj</button>
       </section>
 
       <!-- 🔥 MODAL -->
-      <div id="ticket-modal" class="modal hidden">
+      <div id="ticketModal" class="modal hidden">
         <div class="modal-content">
-          <button id="modal-close" class="modal-close">×</button>
-          <h2 id="modal-title"></h2>
-          <p id="modal-description"></p>
-          <p>Status: <span id="modal-status"></span></p>
-          <p>Data: <span id="modal-date"></span></p>
-          <div id="modal-attachments"></div>
-          <button id="modal-toggle-status" class="btn primary hidden"></button>
+          <button id="closeModal" class="modal-close">×</button>
+          <h2 id="modalTicketTitle"></h2>
+          <p id="modalTicketDesc"></p>
+          <p id="modalTicketStatus"></p>
+          <div id="modalTicketFiles"></div>
+
+          <button id="btnStatusNowe" class="btn ghost">Nowe</button>
+          <button id="btnStatusWTrakcie" class="btn ghost">W trakcie</button>
+          <button id="btnStatusZamkniete" class="btn ghost">Zamknięte</button>
         </div>
       </div>
 
