@@ -13,6 +13,11 @@
       <nav class="topbar-nav">
         <button id="btn-show-login" class="btn ghost">Zaloguj</button>
         <button id="btn-show-signup" class="btn primary">Załóż konto</button>
+
+        <!-- 🔥 DODANE: PRZYCISKI ADMINA (wymagane przez app.js) -->
+        <button id="btn-admin-panel" class="btn ghost hidden">Panel admina</button>
+        <button id="btn-admin-wspolnoty" class="btn ghost hidden">Wspólnoty</button>
+
         <button id="btn-logout" class="btn ghost hidden">Wyloguj</button>
       </nav>
     </header>
@@ -133,9 +138,8 @@
     </main>
   </div>
 
-  <!-- 🔥 SUPABASE + APP.JS (TO BYŁO BRAKUJĄCE!) -->
+  <!-- 🔥 SUPABASE + APP.JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script defer src="app.js"></script>
+  <script defer src="app.js"></script>
 </body>
 </html>
