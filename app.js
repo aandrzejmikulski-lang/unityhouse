@@ -8,52 +8,11 @@ const client = supabase.createClient(
   "https://vswonxgsaqnhzsmzexzh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
   {
-    auth: {
-      persistSession: false
-    }
+    auth: { persistSession: false }
   }
 );
 
 console.log("Supabase client:", client);
-
-// =====================================
-//  LOGOWANIE
-// =====================================
-
-document.getElementById("btnLogin").addEventListener("click", async () => {
-  console.log("PRÓBA LOGOWANIA...");
-
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value.trim();
-
-  console.log("EMAIL:", email);
-  console.log("PASSWORD:", password);
-
-  console.log("client.auth:", client.auth);
-
-  const { data, error } = await client.auth.signInWithPassword(
-    {
-      email: email,
-      password: password
-    },
-    {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    }
-  );
-
-  console.log("LOGIN DATA:", data);
-  console.log("LOGIN ERROR:", error);
-
-  if (error) {
-    alert("Błędny email lub hasło");
-    return;
-  }
-
-  alert("Zalogowano!");
-});
-
 
 // =====================================
 //  ELEMENTY UI
@@ -110,7 +69,6 @@ function setAuthView(isLoggedIn) {
     btnLogoutTop.classList.add("hidden");
   }
 }
-
 // =====================================
 //  OBSŁUGA ZMIANY SESJI
 // =====================================
@@ -131,12 +89,13 @@ client.auth.onAuthStateChange(async (event, session) => {
     .eq("id", session.user.id)
     .single();
 
-  // ADMIN → od razu panel admina
+  // ADMIN → panel admina
   if (profile.role === "admin") {
     hideAllPanels();
     adminPanel.classList.remove("hidden");
     loadPendingUsers();
-    loadTickets();
+    loadAllUsers();
+    loadTicketsAdmin();
     return;
   }
 
@@ -151,8 +110,9 @@ client.auth.onAuthStateChange(async (event, session) => {
   // USER ze wspólnotą → panel główny
   hideAllPanels();
   mainCard.classList.remove("hidden");
-  loadTickets();
+  loadTicketsUser(profile.wspolnota_id);
 });
+
 // =====================================
 //  LOGOWANIE
 // =====================================
@@ -166,7 +126,7 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
     return;
   }
 
-  const { data, error } = await client.auth.signInWithPassword({
+  const { error } = await client.auth.signInWithPassword({
     email,
     password
   });
@@ -178,7 +138,6 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   showMessage(loginMessage, "Logowanie...", "success");
 });
-
 
 // =====================================
 //  REJESTRACJA
@@ -194,12 +153,10 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
     return;
   }
 
-  const { data, error } = await client.auth.signUp({
+  const { error } = await client.auth.signUp({
     email,
     password,
-    options: {
-      data: { fullname }
-    }
+    options: { data: { fullname } }
   });
 
   if (error) {
@@ -209,7 +166,6 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
 
   showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
 });
-
 
 // =====================================
 //  WYLOGOWANIE
@@ -221,7 +177,6 @@ btnLogoutTop.addEventListener("click", async () => {
   loginCard.classList.remove("hidden");
   setAuthView(false);
 });
-
 
 // =====================================
 //  PRZEŁĄCZANIE LOGIN ↔ REJESTRACJA
@@ -275,9 +230,8 @@ async function loadWspolnotyDropdown() {
   });
 }
 
-
 // =====================================
-//  ZAPIS WYBRANEJ WSPÓLNOTY DLA UŻYTKOWNIKA
+//  ZAPIS WYBRANEJ WSPÓLNOTY
 // =====================================
 
 document.getElementById("btnSaveWspolnota").addEventListener("click", async () => {
@@ -311,8 +265,9 @@ document.getElementById("btnSaveWspolnota").addEventListener("click", async () =
 
   hideAllPanels();
   mainCard.classList.remove("hidden");
-  loadTickets();
+  loadTicketsUser(selectedId);
 });
+
 // =====================================
 //  TWORZENIE ZGŁOSZENIA
 // =====================================
@@ -354,7 +309,6 @@ document.getElementById("btnAddTicket").addEventListener("click", async () => {
     return;
   }
 
-  // Upload pliku jeśli jest
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
     const filePath = `${ticket.id}/${file.name}`;
@@ -375,15 +329,14 @@ document.getElementById("btnAddTicket").addEventListener("click", async () => {
   document.getElementById("ticketDesc").value = "";
   document.getElementById("ticketFile").value = "";
 
-  loadTickets();
+  loadTicketsUser(profile.wspolnota_id);
 });
 
-
 // =====================================
-//  ŁADOWANIE ZGŁOSZEŃ
+//  ŁADOWANIE ZGŁOSZEŃ — USER
 // =====================================
 
-async function loadTickets() {
+async function loadTicketsUser(wspolnota_id) {
   const list = document.getElementById("ticketList");
   list.innerHTML = "Ładowanie...";
 
@@ -391,23 +344,49 @@ async function loadTickets() {
     data: { session }
   } = await client.auth.getSession();
 
-  const { data: profile } = await client
-    .from("profiles")
-    .select("role, wspolnota_id")
-    .eq("id", session.user.id)
-    .single();
+  const { data, error } = await client
+    .from("tickets")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .eq("wspolnota_id", wspolnota_id)
+    .order("created_at", { ascending: false });
 
-  let query = client.from("tickets").select("*").order("created_at", { ascending: false });
-
-  if (profile.role === "user") {
-    query = query.eq("user_id", session.user.id);
+  if (error) {
+    list.innerHTML = "Błąd ładowania zgłoszeń.";
+    return;
   }
 
-  if (profile.role === "admin") {
-    query = query.eq("wspolnota_id", profile.wspolnota_id);
-  }
+  list.innerHTML = "";
 
-  const { data, error } = await query;
+  data.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "ticketItem";
+    div.innerHTML = `
+      <b>${t.title}</b><br>
+      Status: ${t.status}<br>
+      <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
+    `;
+    list.appendChild(div);
+  });
+
+  document.querySelectorAll(".btnOpenTicket").forEach(btn => {
+    btn.addEventListener("click", () => openTicketModal(btn.dataset.id));
+  });
+}
+// =====================================
+//  ŁADOWANIE ZGŁOSZEŃ — ADMIN
+// =====================================
+
+async function loadTicketsAdmin() {
+  const list = document.getElementById("adminTickets");
+  if (!list) return;
+
+  list.innerHTML = "Ładowanie...";
+
+  const { data, error } = await client
+    .from("tickets")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
     list.innerHTML = "Błąd ładowania zgłoszeń.";
@@ -432,7 +411,6 @@ async function loadTickets() {
   });
 }
 
-
 // =====================================
 //  MODAL — PODGLĄD ZGŁOSZENIA
 // =====================================
@@ -456,7 +434,6 @@ async function openTicketModal(ticketId) {
   modalDesc.textContent = ticket.description;
   modalStatus.textContent = "Status: " + ticket.status;
 
-  // Pliki
   const { data: files } = await client
     .from("ticket_files")
     .select("*")
@@ -464,7 +441,7 @@ async function openTicketModal(ticketId) {
 
   modalFiles.innerHTML = "";
 
-  if (files.length === 0) {
+  if (!files || files.length === 0) {
     modalFiles.innerHTML = "<i>Brak plików</i>";
   } else {
     for (const f of files) {
@@ -481,19 +458,22 @@ async function openTicketModal(ticketId) {
     }
   }
 
-  // Zmiana statusu (admin)
-  document.getElementById("btnStatusNowe").onclick = () => updateTicketStatus(ticketId, "nowe");
-  document.getElementById("btnStatusWTrakcie").onclick = () => updateTicketStatus(ticketId, "w_trakcie");
-  document.getElementById("btnStatusZamkniete").onclick = () => updateTicketStatus(ticketId, "zamkniete");
+  document.getElementById("btnStatusNowe").onclick = () =>
+    updateTicketStatus(ticketId, "nowe");
+
+  document.getElementById("btnStatusWTrakcie").onclick = () =>
+    updateTicketStatus(ticketId, "w_trakcie");
+
+  document.getElementById("btnStatusZamkniete").onclick = () =>
+    updateTicketStatus(ticketId, "zamkniete");
 }
 
 document.getElementById("closeModal").addEventListener("click", () => {
   document.getElementById("ticketModal").classList.add("hidden");
 });
 
-
 // =====================================
-//  ZMIANA STATUSU ZGŁOSZENIA
+//  ZMIANA STATUSU
 // =====================================
 
 async function updateTicketStatus(ticketId, newStatus) {
@@ -508,8 +488,9 @@ async function updateTicketStatus(ticketId, newStatus) {
   }
 
   document.getElementById("ticketModal").classList.add("hidden");
-  loadTickets();
+  loadTicketsAdmin();
 }
+
 // =====================================
 //  PANEL ADMINA — OCZEKUJĄCY UŻYTKOWNICY
 // =====================================
@@ -518,20 +499,9 @@ async function loadPendingUsers() {
   const list = document.getElementById("pendingUsersList");
   list.innerHTML = "Ładowanie...";
 
-  const {
-    data: { session }
-  } = await client.auth.getSession();
-
-  const { data: adminProfile } = await client
-    .from("profiles")
-    .select("wspolnota_id")
-    .eq("id", session.user.id)
-    .single();
-
   const { data, error } = await client
     .from("profiles")
     .select("id, email, fullname, wspolnota_id, approved")
-    .eq("wspolnota_id", adminProfile.wspolnota_id)
     .eq("approved", false);
 
   if (error) {
@@ -567,38 +537,19 @@ async function loadPendingUsers() {
 }
 
 async function approveUser(userId) {
-  const { error } = await client
-    .from("profiles")
-    .update({ approved: true })
-    .eq("id", userId);
-
-  if (error) {
-    alert("Nie udało się zatwierdzić użytkownika.");
-    return;
-  }
-
+  await client.from("profiles").update({ approved: true }).eq("id", userId);
   loadPendingUsers();
   loadAllUsers();
 }
 
 async function rejectUser(userId) {
-  const { error } = await client
-    .from("profiles")
-    .delete()
-    .eq("id", userId);
-
-  if (error) {
-    alert("Nie udało się odrzucić użytkownika.");
-    return;
-  }
-
+  await client.from("profiles").delete().eq("id", userId);
   loadPendingUsers();
   loadAllUsers();
 }
 
-
 // =====================================
-//  PANEL ADMINA — LISTA WSZYSTKICH UŻYTKOWNIKÓW WSPÓLNOTY
+//  PANEL ADMINA — WSZYSCY UŻYTKOWNICY
 // =====================================
 
 async function loadAllUsers() {
@@ -607,20 +558,9 @@ async function loadAllUsers() {
 
   list.innerHTML = "Ładowanie...";
 
-  const {
-    data: { session }
-  } = await client.auth.getSession();
-
-  const { data: adminProfile } = await client
-    .from("profiles")
-    .select("wspolnota_id")
-    .eq("id", session.user.id)
-    .single();
-
   const { data, error } = await client
     .from("profiles")
     .select("email, fullname, approved, role")
-    .eq("wspolnota_id", adminProfile.wspolnota_id)
     .order("approved", { ascending: false });
 
   if (error) {
