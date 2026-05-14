@@ -191,14 +191,19 @@ btnLogin.addEventListener("click", async () => {
     return;
   }
 
-  setAuthView(true);
+ if (profile.role === "admin") {
+    // ukryj panel mieszkańca
+    mainCard.classList.add("hidden");
 
-  if (profile.role === "admin") {
+    // pokaż panel admina
+    adminPanel.classList.remove("hidden");
+
+    // pokaż przyciski admina
     btnAdminPanel.classList.remove("hidden");
     btnAdminWspolnoty.classList.remove("hidden");
-    btnNewTicket.classList.add("hidden");
-    ticketForm.classList.add("hidden");
-  }
+
+    return; // bardzo ważne — nie ładujemy ticketów mieszkańca
+}
 
   loadTickets();
 });
