@@ -1,5 +1,5 @@
 // =====================================
-//  INIT SUPABASE
+//  KONFIGURACJA SUPABASE
 // =====================================
 
 const client = supabase.createClient(
@@ -11,91 +11,71 @@ const client = supabase.createClient(
 //  ELEMENTY UI
 // =====================================
 
-const authCard = document.getElementById("auth-card");
-const mainCard = document.getElementById("main-card");
-const adminPanel = document.getElementById("admin-panel");
-const adminWspolnoty = document.getElementById("admin-wspolnoty");
-const selectWspolnota = document.getElementById("select-wspolnota");
-const ticketForm = document.getElementById("ticket-form");
+const loginCard = document.getElementById("loginCard");
+const registerCard = document.getElementById("registerCard");
+const mainCard = document.getElementById("mainCard");
+const adminPanel = document.getElementById("adminPanel");
+const selectWspolnota = document.getElementById("selectWspolnota");
 
-const ticketsList = document.getElementById("tickets-list");
-const adminTickets = document.getElementById("admin-tickets");
+const btnLoginTop = document.getElementById("btnLoginTop");
+const btnRegisterTop = document.getElementById("btnRegisterTop");
+const btnLogoutTop = document.getElementById("btnLogoutTop");
 
-const btnShowLogin = document.getElementById("btn-show-login");
-const btnShowSignup = document.getElementById("btn-show-signup");
-const btnLogin = document.getElementById("btn-login");
-const btnSignup = document.getElementById("btn-signup");
-const btnLogout = document.getElementById("btn-logout");
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const loginMessage = document.getElementById("loginMessage");
 
-const btnAdminPanel = document.getElementById("btn-admin-panel");
-const btnAdminWspolnoty = document.getElementById("btn-admin-wspolnoty");
+const registerEmail = document.getElementById("registerEmail");
+const registerPassword = document.getElementById("registerPassword");
+const registerFullname = document.getElementById("registerFullname");
+const registerMessage = document.getElementById("registerMessage");
 
-const btnNewTicket = document.getElementById("btn-new-ticket");
-const btnSaveTicket = document.getElementById("btn-save-ticket");
-const btnCancelTicket = document.getElementById("btn-cancel-ticket");
-
-const ticketTitle = document.getElementById("ticket-title");
-const ticketDescription = document.getElementById("ticket-description");
-const ticketAttachments = document.getElementById("ticket-attachments");
-
-const ticketModal = document.getElementById("ticket-modal");
-const modalClose = document.getElementById("modal-close");
-const modalTitle = document.getElementById("modal-title");
-const modalDescription = document.getElementById("modal-description");
-const modalStatus = document.getElementById("modal-status");
-const modalDate = document.getElementById("modal-date");
-const modalAttachments = document.getElementById("modal-attachments");
-const modalToggleStatus = document.getElementById("modal-toggle-status");
-
-const authMessage = document.getElementById("auth-message");
-const ticketFormMessage = document.getElementById("ticket-form-message");
+const wspolnotaDropdown = document.getElementById("wspolnotaDropdown");
+const wspolnotaMessage = document.getElementById("wspolnotaMessage");
 
 // =====================================
-//  FUNKCJE POMOCNICZE
+//  FUNKCJE UI
 // =====================================
+
+function hideAllPanels() {
+  loginCard.classList.add("hidden");
+  registerCard.classList.add("hidden");
+  mainCard.classList.add("hidden");
+  adminPanel.classList.add("hidden");
+  selectWspolnota.classList.add("hidden");
+}
 
 function showMessage(el, text, type = "info") {
   el.textContent = text;
-  el.className = `message ${type}`;
+  el.className = type;
   el.classList.remove("hidden");
 }
 
-function hideAllPanels() {
-  authCard.classList.add("hidden");
-  mainCard.classList.add("hidden");
-  adminPanel.classList.add("hidden");
-  adminWspolnoty.classList.add("hidden");
-  selectWspolnota.classList.add("hidden");
-  ticketForm.classList.add("hidden");
-}
-
-// =====================================
-//  USTAWIENIE WIDOKU
-// =====================================
-
 function setAuthView(isLoggedIn) {
-  hideAllPanels();
-
-  if (!isLoggedIn) {
-    authCard.classList.remove("hidden");
-    btnLogout.classList.add("hidden");
-    btnAdminPanel.classList.add("hidden");
-    btnAdminWspolnoty.classList.add("hidden");
-    return;
+  if (isLoggedIn) {
+    btnLoginTop.classList.add("hidden");
+    btnRegisterTop.classList.add("hidden");
+    btnLogoutTop.classList.remove("hidden");
+  } else {
+    btnLoginTop.classList.remove("hidden");
+    btnRegisterTop.classList.remove("hidden");
+    btnLogoutTop.classList.add("hidden");
   }
-
-  btnLogout.classList.remove("hidden");
 }
 
 // =====================================
-//  OBSŁUGA SESJI
+//  OBSŁUGA ZMIANY SESJI
 // =====================================
 
 client.auth.onAuthStateChange(async (event, session) => {
   if (!session) {
+    hideAllPanels();
+    loginCard.classList.remove("hidden");
     setAuthView(false);
     return;
   }
+
+  setAuthView(true);
 
   const { data: profile } = await client
     .from("profiles")
@@ -103,16 +83,8 @@ client.auth.onAuthStateChange(async (event, session) => {
     .eq("id", session.user.id)
     .single();
 
-  if (!profile.wspolnota_id) {
-    hideAllPanels();
-    selectWspolnota.classList.remove("hidden");
-    loadWspolnotyDropdown();
-    return;
-  }
-
+  // ADMIN → od razu panel admina
   if (profile.role === "admin") {
-    btnAdminPanel.classList.remove("hidden");
-    btnAdminWspolnoty.classList.remove("hidden");
     hideAllPanels();
     adminPanel.classList.remove("hidden");
     loadPendingUsers();
@@ -120,460 +92,505 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // USER bez wspólnoty → wybór wspólnoty
+  if (!profile.wspolnota_id) {
+    hideAllPanels();
+    selectWspolnota.classList.remove("hidden");
+    loadWspolnotyDropdown();
+    return;
+  }
+
+  // USER ze wspólnotą → panel główny
   hideAllPanels();
   mainCard.classList.remove("hidden");
   loadTickets();
 });
-
 // =====================================
 //  LOGOWANIE
 // =====================================
 
-btnLogin.addEventListener("click", async () => {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value.trim();
 
-  const { error } = await client.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    showMessage(authMessage, "Błędne dane logowania.", "error");
+  if (!email || !password) {
+    showMessage(loginMessage, "Uzupełnij wszystkie pola.", "error");
     return;
   }
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    showMessage(loginMessage, "Błędny e-mail lub hasło.", "error");
+    return;
+  }
+
+  showMessage(loginMessage, "Logowanie...", "success");
 });
+
 
 // =====================================
 //  REJESTRACJA
 // =====================================
 
-btnSignup.addEventListener("click", async () => {
-  const fullname = document.getElementById("signup-fullname").value;
-  const email = document.getElementById("signup-email").value;
-  const password = document.getElementById("signup-password").value;
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  const email = registerEmail.value.trim();
+  const password = registerPassword.value.trim();
+  const fullname = registerFullname.value.trim();
+
+  if (!email || !password || !fullname) {
+    showMessage(registerMessage, "Uzupełnij wszystkie pola.", "error");
+    return;
+  }
 
   const { data, error } = await client.auth.signUp({
     email,
     password,
+    options: {
+      data: { fullname }
+    }
   });
 
   if (error) {
-    showMessage(authMessage, "Błąd rejestracji.", "error");
+    showMessage(registerMessage, "Błąd rejestracji.", "error");
     return;
   }
 
-  await client.from("profiles").insert({
-    id: data.user.id,
-    fullname,
-    role: "user",
-  });
-
-  showMessage(authMessage, "Konto utworzone. Możesz się zalogować.", "success");
+  showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
 });
+
 
 // =====================================
 //  WYLOGOWANIE
 // =====================================
 
-btnLogout.addEventListener("click", async () => {
+btnLogoutTop.addEventListener("click", async () => {
   await client.auth.signOut();
-
-  ticketModal.classList.add("hidden");
-  modalTitle.textContent = "";
-  modalDescription.textContent = "";
-  modalStatus.textContent = "";
-  modalDate.textContent = "";
-  modalAttachments.innerHTML = "";
-
   hideAllPanels();
+  loginCard.classList.remove("hidden");
   setAuthView(false);
 });
+
+
 // =====================================
-//  WSPÓLNOTY – DROPDOWN DLA UŻYTKOWNIKA
+//  PRZEŁĄCZANIE LOGIN ↔ REJESTRACJA
 // =====================================
 
-const selectWspolnotaDropdown = document.getElementById("select-wspolnota-dropdown");
-const btnSaveWspolnota = document.getElementById("btn-save-wspolnota");
-const btnAddWspolnota = document.getElementById("btn-add-wspolnota");
-const newWspolnotaName = document.getElementById("new-wspolnota-name");
-const wspolnotyList = document.getElementById("wspolnoty-list");
-const pendingUsersList = document.getElementById("pending-users-list");
+btnLoginTop.addEventListener("click", () => {
+  hideAllPanels();
+  loginCard.classList.remove("hidden");
+});
+
+btnRegisterTop.addEventListener("click", () => {
+  hideAllPanels();
+  registerCard.classList.remove("hidden");
+});
+
+document.getElementById("goToRegister").addEventListener("click", () => {
+  hideAllPanels();
+  registerCard.classList.remove("hidden");
+});
+
+document.getElementById("goToLogin").addEventListener("click", () => {
+  hideAllPanels();
+  loginCard.classList.remove("hidden");
+});
+// =====================================
+//  ŁADOWANIE LISTY WSPÓLNOT
+// =====================================
 
 async function loadWspolnotyDropdown() {
-  const { data } = await client.from("wspolnoty").select("*").order("name");
-  selectWspolnotaDropdown.innerHTML = "";
+  wspolnotaDropdown.innerHTML = "";
+  const { data, error } = await client
+    .from("wspolnoty")
+    .select("id, nazwa")
+    .order("nazwa", { ascending: true });
 
-  if (!data || data.length === 0) {
-    const opt = document.createElement("option");
-    opt.value = "";
-    opt.textContent = "Brak wspólnot – skontaktuj się z administratorem.";
-    selectWspolnotaDropdown.appendChild(opt);
+  if (error) {
+    showMessage(wspolnotaMessage, "Nie udało się załadować listy wspólnot.", "error");
     return;
   }
 
-  data.forEach((w) => {
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Wybierz wspólnotę";
+  wspolnotaDropdown.appendChild(defaultOption);
+
+  data.forEach(w => {
     const opt = document.createElement("option");
     opt.value = w.id;
-    opt.textContent = w.name;
-    selectWspolnotaDropdown.appendChild(opt);
+    opt.textContent = w.nazwa;
+    wspolnotaDropdown.appendChild(opt);
   });
 }
 
-btnSaveWspolnota.addEventListener("click", async () => {
-  const wspolnotaId = selectWspolnotaDropdown.value;
-  const session = await client.auth.getSession();
-  if (!session.data.session) return;
 
-  await client
+// =====================================
+//  ZAPIS WYBRANEJ WSPÓLNOTY DLA UŻYTKOWNIKA
+// =====================================
+
+document.getElementById("btnSaveWspolnota").addEventListener("click", async () => {
+  const selectedId = wspolnotaDropdown.value;
+
+  if (!selectedId) {
+    showMessage(wspolnotaMessage, "Wybierz wspólnotę z listy.", "error");
+    return;
+  }
+
+  const {
+    data: { session }
+  } = await client.auth.getSession();
+
+  if (!session) {
+    showMessage(wspolnotaMessage, "Brak aktywnej sesji. Zaloguj się ponownie.", "error");
+    return;
+  }
+
+  const { error } = await client
     .from("profiles")
-    .update({ wspolnota_id: wspolnotaId })
-    .eq("id", session.data.session.user.id);
+    .update({ wspolnota_id: selectedId })
+    .eq("id", session.user.id);
+
+  if (error) {
+    showMessage(wspolnotaMessage, "Nie udało się zapisać wspólnoty.", "error");
+    return;
+  }
+
+  showMessage(wspolnotaMessage, "Wspólnota zapisana. Ładuję zgłoszenia...", "success");
 
   hideAllPanels();
   mainCard.classList.remove("hidden");
   loadTickets();
 });
-
 // =====================================
-//  PANEL ADMINA – WSPÓLNOTY
+//  TWORZENIE ZGŁOSZENIA
 // =====================================
 
-btnAdminWspolnoty.addEventListener("click", () => {
-  hideAllPanels();
-  adminWspolnoty.classList.remove("hidden");
-  loadWspolnotyList();
-});
+document.getElementById("btnAddTicket").addEventListener("click", async () => {
+  const title = document.getElementById("ticketTitle").value.trim();
+  const desc = document.getElementById("ticketDesc").value.trim();
+  const fileInput = document.getElementById("ticketFile");
 
-async function loadWspolnotyList() {
-  const { data } = await client.from("wspolnoty").select("*").order("created_at");
-  wspolnotyList.innerHTML = "";
-
-  if (!data || data.length === 0) {
-    wspolnotyList.innerHTML = "<p>Brak wspólnot.</p>";
+  if (!title || !desc) {
+    alert("Uzupełnij tytuł i opis.");
     return;
   }
 
-  data.forEach((w) => {
-    const div = document.createElement("div");
-    div.className = "wspolnota-item";
-    div.textContent = w.name;
-    wspolnotyList.appendChild(div);
-  });
-}
-
-btnAddWspolnota.addEventListener("click", async () => {
-  const name = newWspolnotaName.value.trim();
-  if (!name) return;
-
-  await client.from("wspolnoty").insert({ name });
-  newWspolnotaName.value = "";
-  loadWspolnotyList();
-});
-
-// =====================================
-//  PANEL ADMINA – UŻYTKOWNICY OCZEKUJĄCY
-// =====================================
-
-btnAdminPanel.addEventListener("click", () => {
-  hideAllPanels();
-  adminPanel.classList.remove("hidden");
-  loadPendingUsers();
-  loadTickets();
-});
-
-async function loadPendingUsers() {
-  const { data } = await client
-    .from("profiles")
-    .select("*")
-    .is("wspolnota_id", null)
-    .order("created_at", { ascending: true });
-
-  pendingUsersList.innerHTML = "";
-
-  if (!data || data.length === 0) {
-    pendingUsersList.innerHTML = "<p>Brak użytkowników oczekujących na przypisanie.</p>";
-    return;
-  }
-
-  data.forEach((u) => {
-    const row = document.createElement("div");
-    row.className = "pending-user-row";
-    row.innerHTML = `
-      <div>
-        <strong>${u.fullname || "Bez nazwy"}</strong><br />
-        <span class="muted">${u.id}</span>
-      </div>
-      <button class="btn ghost" data-user-id="${u.id}">Przypisz do wspólnoty</button>
-    `;
-    pendingUsersList.appendChild(row);
-  });
-
-  pendingUsersList.querySelectorAll("button[data-user-id]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const userId = btn.getAttribute("data-user-id");
-      hideAllPanels();
-      selectWspolnota.classList.remove("hidden");
-
-      btnSaveWspolnota.onclick = async () => {
-        const wspolnotaId = selectWspolnotaDropdown.value;
-        await client
-          .from("profiles")
-          .update({ wspolnota_id: wspolnotaId })
-          .eq("id", userId);
-
-        hideAllPanels();
-        adminPanel.classList.remove("hidden");
-        loadPendingUsers();
-        loadTickets();
-      };
-
-      await loadWspolnotyDropdown();
-    });
-  });
-}
-
-// =====================================
-//  ZGŁOSZENIA – WIDOK MIESZKAŃCA I ADMINA
-// =====================================
-
-async function loadTickets() {
-  const session = await client.auth.getSession();
-  if (!session.data.session) return;
+  const {
+    data: { session }
+  } = await client.auth.getSession();
 
   const { data: profile } = await client
     .from("profiles")
-    .select("*")
-    .eq("id", session.data.session.user.id)
+    .select("wspolnota_id")
+    .eq("id", session.user.id)
+    .single();
+
+  const { data: ticket, error } = await client
+    .from("tickets")
+    .insert({
+      title,
+      description: desc,
+      user_id: session.user.id,
+      wspolnota_id: profile.wspolnota_id,
+      status: "nowe"
+    })
+    .select()
+    .single();
+
+  if (error) {
+    alert("Błąd tworzenia zgłoszenia.");
+    return;
+  }
+
+  // Upload pliku jeśli jest
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const filePath = `${ticket.id}/${file.name}`;
+
+    const { error: uploadError } = await client.storage
+      .from("ticket_files")
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      await client.from("ticket_files").insert({
+        ticket_id: ticket.id,
+        file_path: filePath
+      });
+    }
+  }
+
+  document.getElementById("ticketTitle").value = "";
+  document.getElementById("ticketDesc").value = "";
+  document.getElementById("ticketFile").value = "";
+
+  loadTickets();
+});
+
+
+// =====================================
+//  ŁADOWANIE ZGŁOSZEŃ
+// =====================================
+
+async function loadTickets() {
+  const list = document.getElementById("ticketList");
+  list.innerHTML = "Ładowanie...";
+
+  const {
+    data: { session }
+  } = await client.auth.getSession();
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("role, wspolnota_id")
+    .eq("id", session.user.id)
     .single();
 
   let query = client.from("tickets").select("*").order("created_at", { ascending: false });
 
   if (profile.role === "user") {
-    query = query.eq("user_id", session.data.session.user.id);
+    query = query.eq("user_id", session.user.id);
+  }
+
+  if (profile.role === "admin") {
+    query = query.eq("wspolnota_id", profile.wspolnota_id);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Błąd ładowania zgłoszeń:", error);
+    list.innerHTML = "Błąd ładowania zgłoszeń.";
     return;
   }
 
-  if (profile.role === "user") {
-    renderUserTickets(data || []);
-  } else {
-    renderAdminTickets(data || [], profile);
-  }
-}
+  list.innerHTML = "";
 
-function renderUserTickets(tickets) {
-  ticketsList.innerHTML = "";
-
-  if (!tickets.length) {
-    ticketsList.innerHTML = "<p>Brak zgłoszeń.</p>";
-    return;
-  }
-
-  tickets.forEach((t) => {
+  data.forEach(t => {
     const div = document.createElement("div");
-    div.className = "ticket-item";
+    div.className = "ticketItem";
     div.innerHTML = `
-      <div class="ticket-header">
-        <div class="ticket-title">${t.title}</div>
-        <span class="badge ${t.status === "open" ? "badge-open" : "badge-closed"}">
-          ${t.status === "open" ? "Otwarte" : "Zamknięte"}
-        </span>
-      </div>
-      <div class="ticket-meta">
-        Utworzone: ${new Date(t.created_at).toLocaleString("pl-PL")}
-      </div>
+      <b>${t.title}</b><br>
+      Status: ${t.status}<br>
+      <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
     `;
+    list.appendChild(div);
+  });
 
-    div.addEventListener("click", () => openTicketDetails(t, "user"));
-    ticketsList.appendChild(div);
+  document.querySelectorAll(".btnOpenTicket").forEach(btn => {
+    btn.addEventListener("click", () => openTicketModal(btn.dataset.id));
   });
 }
 
-function renderAdminTickets(tickets, profile) {
-  adminTickets.innerHTML = "";
-
-  if (!tickets.length) {
-    adminTickets.innerHTML = "<p>Brak zgłoszeń.</p>";
-    return;
-  }
-
-  tickets.forEach((t) => {
-    const div = document.createElement("div");
-    div.className = "ticket-item";
-    div.innerHTML = `
-      <div class="ticket-header">
-        <div class="ticket-title">${t.title}</div>
-        <span class="badge ${t.status === "open" ? "badge-open" : "badge-closed"}">
-          ${t.status === "open" ? "Otwarte" : "Zamknięte"}
-        </span>
-      </div>
-      <div class="ticket-meta">
-        Utworzone: ${new Date(t.created_at).toLocaleString("pl-PL")}
-      </div>
-    `;
-
-    div.addEventListener("click", () => openTicketDetails(t, profile.role));
-    adminTickets.appendChild(div);
-  });
-}
-// =====================================
-//  NOWE ZGŁOSZENIE – FORMULARZ
-// =====================================
-
-btnNewTicket.addEventListener("click", () => {
-  hideAllPanels();
-  ticketForm.classList.remove("hidden");
-  ticketTitle.value = "";
-  ticketDescription.value = "";
-  ticketAttachments.value = "";
-  ticketFormMessage.classList.add("hidden");
-});
-
-btnCancelTicket.addEventListener("click", () => {
-  hideAllPanels();
-  mainCard.classList.remove("hidden");
-});
 
 // =====================================
-//  ZAPIS ZGŁOSZENIA + ZAŁĄCZNIKÓW (ticket_files)
+//  MODAL — PODGLĄD ZGŁOSZENIA
 // =====================================
 
-btnSaveTicket.addEventListener("click", async () => {
-  const title = ticketTitle.value.trim();
-  const description = ticketDescription.value.trim();
-  const files = ticketAttachments.files;
+async function openTicketModal(ticketId) {
+  const modal = document.getElementById("ticketModal");
+  const modalTitle = document.getElementById("modalTicketTitle");
+  const modalDesc = document.getElementById("modalTicketDesc");
+  const modalFiles = document.getElementById("modalTicketFiles");
+  const modalStatus = document.getElementById("modalTicketStatus");
 
-  if (!title || !description) {
-    showMessage(ticketFormMessage, "Uzupełnij tytuł i opis.", "error");
-    return;
-  }
+  modal.classList.remove("hidden");
 
-  const session = await client.auth.getSession();
-  if (!session.data.session) return;
-
-  const { data: profile } = await client
-    .from("profiles")
-    .select("*")
-    .eq("id", session.data.session.user.id)
-    .single();
-
-  // 1. Tworzymy zgłoszenie
-  const { data: newTicket, error: ticketError } = await client
+  const { data: ticket } = await client
     .from("tickets")
-    .insert({
-      user_id: session.data.session.user.id,
-      wspolnota_id: profile.wspolnota_id,
-      title,
-      description,
-      status: "open",
-    })
-    .select()
+    .select("*")
+    .eq("id", ticketId)
     .single();
 
-  if (ticketError) {
-    showMessage(ticketFormMessage, "Błąd tworzenia zgłoszenia.", "error");
-    return;
-  }
-
-  // 2. Upload plików + zapis do ticket_files
-  for (const file of files) {
-    const filePath = `${newTicket.id}/${Date.now()}-${file.name}`;
-
-    await client.storage.from("attachments").upload(filePath, file);
-
-    await client.from("ticket_files").insert({
-      ticket_id: newTicket.id,
-      file_path: filePath,
-    });
-  }
-
-  showMessage(ticketFormMessage, "Zgłoszenie zapisane.", "success");
-
-  setTimeout(() => {
-    hideAllPanels();
-    mainCard.classList.remove("hidden");
-    loadTickets();
-  }, 600);
-});
-
-// =====================================
-//  MODAL – SZCZEGÓŁY ZGŁOSZENIA
-// =====================================
-
-async function openTicketDetails(ticket, role) {
   modalTitle.textContent = ticket.title;
-  modalDescription.textContent = ticket.description || "Brak opisu.";
-  modalStatus.textContent = ticket.status === "open" ? "Otwarte" : "Zamknięte";
-  modalDate.textContent = new Date(ticket.created_at).toLocaleString("pl-PL");
+  modalDesc.textContent = ticket.description;
+  modalStatus.textContent = "Status: " + ticket.status;
 
-  modalToggleStatus.classList.add("hidden");
-  if (role === "admin") {
-    modalToggleStatus.classList.remove("hidden");
-    modalToggleStatus.textContent =
-      ticket.status === "open" ? "Zamknij zgłoszenie" : "Otwórz zgłoszenie";
-
-    modalToggleStatus.onclick = () => toggleTicketStatus(ticket);
-  }
-
-  await loadTicketFiles(ticket.id);
-
-  ticketModal.classList.remove("hidden");
-}
-
-modalClose.addEventListener("click", () => {
-  ticketModal.classList.add("hidden");
-});
-
-// =====================================
-//  ŁADOWANIE ZAŁĄCZNIKÓW Z ticket_files
-// =====================================
-
-async function loadTicketFiles(ticketId) {
+  // Pliki
   const { data: files } = await client
     .from("ticket_files")
     .select("*")
     .eq("ticket_id", ticketId);
 
-  modalAttachments.innerHTML = "";
+  modalFiles.innerHTML = "";
 
-  if (!files || files.length === 0) {
-    modalAttachments.innerHTML = "<p>Brak załączników.</p>";
-    return;
+  if (files.length === 0) {
+    modalFiles.innerHTML = "<i>Brak plików</i>";
+  } else {
+    for (const f of files) {
+      const { data: urlData } = await client.storage
+        .from("ticket_files")
+        .createSignedUrl(f.file_path, 3600);
+
+      const a = document.createElement("a");
+      a.href = urlData.signedUrl;
+      a.textContent = f.file_path.split("/")[1];
+      a.target = "_blank";
+      modalFiles.appendChild(a);
+      modalFiles.appendChild(document.createElement("br"));
+    }
   }
 
-  files.forEach((f) => {
-    const { data } = client.storage.from("attachments").getPublicUrl(f.file_path);
-    const url = data.publicUrl;
-
-    const img = document.createElement("img");
-    img.src = url;
-    img.className = "attachment-thumb";
-    img.onclick = () => window.open(url, "_blank");
-
-    modalAttachments.appendChild(img);
-  });
+  // Zmiana statusu (admin)
+  document.getElementById("btnStatusNowe").onclick = () => updateTicketStatus(ticketId, "nowe");
+  document.getElementById("btnStatusWTrakcie").onclick = () => updateTicketStatus(ticketId, "w_trakcie");
+  document.getElementById("btnStatusZamkniete").onclick = () => updateTicketStatus(ticketId, "zamkniete");
 }
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  document.getElementById("ticketModal").classList.add("hidden");
+});
+
 
 // =====================================
 //  ZMIANA STATUSU ZGŁOSZENIA
 // =====================================
 
-async function toggleTicketStatus(ticket) {
-  const newStatus = ticket.status === "open" ? "closed" : "open";
-
+async function updateTicketStatus(ticketId, newStatus) {
   const { error } = await client
     .from("tickets")
     .update({ status: newStatus })
-    .eq("id", ticket.id);
+    .eq("id", ticketId);
 
   if (error) {
-    console.error("Błąd zmiany statusu:", error);
+    alert("Błąd zmiany statusu.");
     return;
   }
 
-  ticketModal.classList.add("hidden");
+  document.getElementById("ticketModal").classList.add("hidden");
   loadTickets();
+}
+// =====================================
+//  PANEL ADMINA — OCZEKUJĄCY UŻYTKOWNICY
+// =====================================
+
+async function loadPendingUsers() {
+  const list = document.getElementById("pendingUsersList");
+  list.innerHTML = "Ładowanie...";
+
+  const {
+    data: { session }
+  } = await client.auth.getSession();
+
+  const { data: adminProfile } = await client
+    .from("profiles")
+    .select("wspolnota_id")
+    .eq("id", session.user.id)
+    .single();
+
+  const { data, error } = await client
+    .from("profiles")
+    .select("id, email, fullname, wspolnota_id, approved")
+    .eq("wspolnota_id", adminProfile.wspolnota_id)
+    .eq("approved", false);
+
+  if (error) {
+    list.innerHTML = "Błąd ładowania użytkowników.";
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    list.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  data.forEach(u => {
+    const div = document.createElement("div");
+    div.className = "pendingUserItem";
+    div.innerHTML = `
+      <b>${u.fullname || "(bez imienia)"}</b> — ${u.email}<br>
+      <button class="btnApproveUser" data-id="${u.id}">Zatwierdź</button>
+      <button class="btnRejectUser" data-id="${u.id}">Odrzuć</button>
+    `;
+    list.appendChild(div);
+  });
+
+  document.querySelectorAll(".btnApproveUser").forEach(btn => {
+    btn.addEventListener("click", () => approveUser(btn.dataset.id));
+  });
+
+  document.querySelectorAll(".btnRejectUser").forEach(btn => {
+    btn.addEventListener("click", () => rejectUser(btn.dataset.id));
+  });
+}
+
+async function approveUser(userId) {
+  const { error } = await client
+    .from("profiles")
+    .update({ approved: true })
+    .eq("id", userId);
+
+  if (error) {
+    alert("Nie udało się zatwierdzić użytkownika.");
+    return;
+  }
+
+  loadPendingUsers();
+  loadAllUsers();
+}
+
+async function rejectUser(userId) {
+  const { error } = await client
+    .from("profiles")
+    .delete()
+    .eq("id", userId);
+
+  if (error) {
+    alert("Nie udało się odrzucić użytkownika.");
+    return;
+  }
+
+  loadPendingUsers();
+  loadAllUsers();
+}
+
+
+// =====================================
+//  PANEL ADMINA — LISTA WSZYSTKICH UŻYTKOWNIKÓW WSPÓLNOTY
+// =====================================
+
+async function loadAllUsers() {
+  const list = document.getElementById("allUsersList");
+  if (!list) return;
+
+  list.innerHTML = "Ładowanie...";
+
+  const {
+    data: { session }
+  } = await client.auth.getSession();
+
+  const { data: adminProfile } = await client
+    .from("profiles")
+    .select("wspolnota_id")
+    .eq("id", session.user.id)
+    .single();
+
+  const { data, error } = await client
+    .from("profiles")
+    .select("email, fullname, approved, role")
+    .eq("wspolnota_id", adminProfile.wspolnota_id)
+    .order("approved", { ascending: false });
+
+  if (error) {
+    list.innerHTML = "Błąd ładowania listy użytkowników.";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  data.forEach(u => {
+    const div = document.createElement("div");
+    div.className = "userItem";
+    div.innerHTML = `
+      <b>${u.fullname || "(bez imienia)"}</b> — ${u.email}
+      <br>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}
+      <br>Rola: ${u.role}
+      <hr>
+    `;
+    list.appendChild(div);
+  });
 }
