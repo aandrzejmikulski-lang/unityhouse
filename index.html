@@ -70,3 +70,72 @@
             <p class="muted">Dodawaj zgłoszenia, załączaj pliki, śledź status.</p>
           </div>
           <button id="btn-new-ticket" class="btn primary">Nowe zgłoszenie</button>
+        </header>
+
+        <div id="tickets-list"></div>
+      </section>
+
+      <!-- 🔥 PANEL ADMINA -->
+      <section class="card hidden" id="admin-panel">
+        <h2>Panel administratora</h2>
+        <div id="pending-users-list"></div>
+        <div id="admin-tickets"></div>
+      </section>
+
+      <!-- 🔥 PANEL WSPÓLNOT -->
+      <section class="card hidden" id="admin-wspolnoty">
+        <h2>Wspólnoty</h2>
+        <input type="text" id="new-wspolnota-name" placeholder="Nazwa wspólnoty" />
+        <button id="btn-add-wspolnota" class="btn primary">Dodaj</button>
+        <div id="wspolnoty-list"></div>
+      </section>
+
+      <!-- 🔥 WYBÓR WSPÓLNOTY -->
+      <section class="card hidden" id="select-wspolnota">
+        <h2>Wybierz wspólnotę</h2>
+        <select id="select-wspolnota-dropdown"></select>
+        <button id="btn-save-wspolnota" class="btn primary">Zapisz</button>
+      </section>
+
+      <!-- 🔥 FORMULARZ ZGŁOSZENIA -->
+      <section class="card hidden" id="ticket-form">
+        <h2>Nowe zgłoszenie</h2>
+        <label class="field">
+          <span>Tytuł</span>
+          <input type="text" id="ticket-title" />
+        </label>
+        <label class="field">
+          <span>Opis</span>
+          <textarea id="ticket-description"></textarea>
+        </label>
+        <label class="field">
+          <span>Załączniki</span>
+          <input type="file" id="ticket-attachments" multiple />
+        </label>
+        <div id="ticket-form-message" class="message hidden"></div>
+        <button id="btn-save-ticket" class="btn primary">Zapisz</button>
+        <button id="btn-cancel-ticket" class="btn ghost">Anuluj</button>
+      </section>
+
+      <!-- 🔥 MODAL -->
+      <div id="ticket-modal" class="modal hidden">
+        <div class="modal-content">
+          <button id="modal-close" class="modal-close">×</button>
+          <h2 id="modal-title"></h2>
+          <p id="modal-description"></p>
+          <p>Status: <span id="modal-status"></span></p>
+          <p>Data: <span id="modal-date"></span></p>
+          <div id="modal-attachments"></div>
+          <button id="modal-toggle-status" class="btn primary hidden"></button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 🔥 SUPABASE + APP.JS (TO BYŁO BRAKUJĄCE!) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
