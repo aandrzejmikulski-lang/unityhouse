@@ -21,9 +21,12 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
 
+  console.log("EMAIL:", email);
+  console.log("PASSWORD:", password);
+
   const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password
+    email: email,
+    password: password
   });
 
   console.log("LOGIN DATA:", data);
@@ -36,8 +39,6 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   alert("Zalogowano!");
 });
-
-
 // =====================================
 //  ELEMENTY UI
 // =====================================
