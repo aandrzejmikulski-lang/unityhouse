@@ -1,7 +1,4 @@
 console.log("APP START");
-console.log("loginEmail:", document.getElementById("loginEmail"));
-console.log("loginPassword:", document.getElementById("loginPassword"));
-console.log("btnLogin:", document.getElementById("btnLogin"));
 
 // =====================================
 //  KONFIGURACJA SUPABASE
@@ -11,14 +8,35 @@ const client = supabase.createClient(
   "https://vswonxgsaqnhzsmzexzh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
 );
+
 console.log("Supabase client:", client);
+
 // =====================================
-//  TEST PRZYCISKU LOGOWANIA
+//  LOGOWANIE — PRAWDZIWY KOD
 // =====================================
 
-document.getElementById("btnLogin").addEventListener("click", () => {
-  console.log("KLIK DZIAŁA");
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  console.log("PRÓBA LOGOWANIA...");
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  console.log("LOGIN DATA:", data);
+  console.log("LOGIN ERROR:", error);
+
+  if (error) {
+    alert("Błędny email lub hasło");
+    return;
+  }
+
+  alert("Zalogowano!");
 });
+
 
 // =====================================
 //  ELEMENTY UI
