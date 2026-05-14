@@ -1,6 +1,11 @@
 const client = supabase.createClient(
   "https://vswonxgsaqnhzsmzexzh.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
+  {
+    auth: {
+      persistSession: false
+    }
+  }
 );
 
 // =========================
@@ -206,6 +211,7 @@ btnLogin.addEventListener("click", async () => {
   loadTickets();
 });
 
+
 // =========================
 // WYLOGOWANIE
 // =========================
@@ -213,22 +219,6 @@ btnLogin.addEventListener("click", async () => {
 btnLogout.addEventListener("click", async () => {
   await client.auth.signOut();
   setAuthView(false);
-});
-
-
-  // ADMIN
-  if (profile.role === "admin") {
-    mainCard.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
-
-    btnAdminPanel.classList.remove("hidden");
-    btnAdminWspolnoty.classList.remove("hidden");
-
-    return; // nie ładujemy ticketów mieszkańca
-  }
-
-  // MIESZKANIEC
-  loadTickets();
 });
 
 
@@ -524,85 +514,4 @@ function renderAttachments(attachments) {
 
 
 // =========================
-// ZMIANA STATUSU
-// =========================
-
-async function toggleTicketStatus(ticket) {
-  const newStatus = ticket.status === "open" ? "closed" : "open";
-
-  await client.from("tickets").update({ status: newStatus }).eq("id", ticket.id);
-
-  ticket.status = newStatus;
-
-  modalStatus.textContent = newStatus === "open" ? "Otwarte" : "Zamknięte";
-  modalToggleStatus.textContent =
-    newStatus === "open" ? "Oznacz jako zamknięte" : "Oznacz jako otwarte";
-
-  loadTickets();
-}
-
-
-// =========================
-// ZAMYKANIE MODALA
-// =========================
-
-modalClose.addEventListener("click", () => ticketModal.classList.add("hidden"));
-ticketModal.addEventListener("click", (e) => {
-  if (e.target === ticketModal) ticketModal.classList.add("hidden");
-});
-// =========================
-// AUTO-LOGIN NA START
-// =========================
-
-(async () => {
-  const { data: session } = await client.auth.getSession();
-
-  if (!session.session) {
-    setAuthView(false);
-    return;
-  }
-
-  const { data: profile } = await client
-    .from("profiles")
-    .select("*")
-    .eq("id", session.session.user.id)
-    .single();
-
-  // jeśli konto niezatwierdzone – traktuj jak wylogowanego
-  if (!profile || !profile.approved) {
-    await client.auth.signOut();
-    setAuthView(false);
-    return;
-  }
-
-  // użytkownik zalogowany
-  setAuthView(true);
-
-  if (profile.role === "admin") {
-    btnAdminPanel.classList.remove("hidden");
-    btnAdminWspolnoty.classList.remove("hidden");
-    btnNewTicket.classList.add("hidden");
-    ticketForm.classList.add("hidden");
-  }
-
-  // jeśli brak wspólnoty – pokaż wybór
-  if (!profile.wspolnota_id) {
-    mainCard.classList.add("hidden");
-    selectWspolnota.classList.remove("hidden");
-    const { data: wsp } = await client.from("wspolnoty").select("*");
-    selectWspolnotaDropdown.innerHTML = "";
-    (wsp || []).forEach((w) => {
-      const opt = document.createElement("option");
-      opt.value = w.id;
-      opt.textContent = w.name;
-      selectWspolnotaDropdown.appendChild(opt);
-    });
-    return;
-  }
-
-  // normalne ładowanie zgłoszeń
-  loadTickets();
-})();
-
-
-
+// ZMIANA
