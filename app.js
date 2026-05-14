@@ -205,6 +205,10 @@ btnLogin.addEventListener("click", async () => {
     btnAdminPanel.classList.remove("hidden");
     btnAdminWspolnoty.classList.remove("hidden");
 
+    // 🔥 DODANA POPRAWKA
+    loadPendingUsers();
+    loadTickets();
+
     return;
   }
 
@@ -511,7 +515,3 @@ function renderAttachments(attachments) {
     modalAttachments.appendChild(img);
   });
 }
-
-
-// =========================
-// ZMIANA
