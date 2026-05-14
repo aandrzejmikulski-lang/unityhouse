@@ -23,9 +23,10 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   console.log("EMAIL:", email);
   console.log("PASSWORD:", password);
-console.log("client.auth:", client.auth);
 
-  const { data, error } = await client.auth.signInWithPassword({
+  console.log("client.auth:", client.auth);
+
+  const { data, error } = await client.auth.signIn({
     email: email,
     password: password
   });
