@@ -211,8 +211,26 @@ btnLogin.addEventListener("click", async () => {
 
 btnLogout.addEventListener("click", async () => {
   await client.auth.signOut();
+
+  // 🔥 zamknij modal zgłoszenia
+  ticketModal.classList.add("hidden");
+
+  // 🔥 wyczyść zawartość modala (żeby nie pokazywał starego zgłoszenia)
+  modalTitle.textContent = "";
+  modalDescription.textContent = "";
+  modalStatus.textContent = "";
+  modalDate.textContent = "";
+  modalAttachments.innerHTML = "";
+
+  // 🔥 ukryj panele (gdyby były otwarte)
+  adminPanel.classList.add("hidden");
+  adminWspolnoty.classList.add("hidden");
+  ticketForm.classList.add("hidden");
+
+  // 🔥 wróć do widoku logowania
   setAuthView(false);
 });
+
 
 // =========================
 // PANEL ADMINA
