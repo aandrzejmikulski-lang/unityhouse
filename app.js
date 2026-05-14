@@ -7,12 +7,8 @@ console.log("APP START");
 const client = supabase.createClient(
   "https://vswonxgsaqnhzsmzexzh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
-  {
-    auth: { persistSession: false }
-  }
+  { auth: { persistSession: false } }
 );
-
-console.log("Supabase client:", client);
 
 // =====================================
 //  ELEMENTY UI
@@ -117,7 +113,7 @@ client.auth.onAuthStateChange(async (event, session) => {
 //  LOGOWANIE
 // =====================================
 
-document.getElementById("btnLogin").addEventListener("click", async () => {
+document.getElementById("btnLogin").onclick = async () => {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
 
@@ -126,10 +122,7 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
     return;
   }
 
-  const { error } = await client.auth.signInWithPassword({
-    email,
-    password
-  });
+  const { error } = await client.auth.signInWithPassword({ email, password });
 
   if (error) {
     showMessage(loginMessage, "Błędny e-mail lub hasło.", "error");
@@ -137,13 +130,13 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
   }
 
   showMessage(loginMessage, "Logowanie...", "success");
-});
+};
 
 // =====================================
-//  REJESTRACJA
+//  REJESTRACJA (NAPRAWIONA)
 // =====================================
 
-document.getElementById("btnRegister").addEventListener("click", async () => {
+document.getElementById("btnRegister").onclick = async () => {
   const email = registerEmail.value.trim();
   const password = registerPassword.value.trim();
   const fullname = registerFullname.value.trim();
@@ -165,42 +158,46 @@ document.getElementById("btnRegister").addEventListener("click", async () => {
   }
 
   showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
-});
+};
 
 // =====================================
-//  WYLOGOWANIE
+//  WYLOGOWANIE (NAPRAWIONE)
 // =====================================
 
-btnLogoutTop.addEventListener("click", async () => {
+btnLogoutTop.onclick = async () => {
   await client.auth.signOut();
+
+  loginEmail.value = "";
+  loginPassword.value = "";
+
   hideAllPanels();
   loginCard.classList.remove("hidden");
   setAuthView(false);
-});
+};
 
 // =====================================
 //  PRZEŁĄCZANIE LOGIN ↔ REJESTRACJA
 // =====================================
 
-btnLoginTop.addEventListener("click", () => {
+btnLoginTop.onclick = () => {
   hideAllPanels();
   loginCard.classList.remove("hidden");
-});
+};
 
-btnRegisterTop.addEventListener("click", () => {
+btnRegisterTop.onclick = () => {
   hideAllPanels();
   registerCard.classList.remove("hidden");
-});
+};
 
-document.getElementById("goToRegister").addEventListener("click", () => {
+document.getElementById("goToRegister").onclick = () => {
   hideAllPanels();
   registerCard.classList.remove("hidden");
-});
+};
 
-document.getElementById("goToLogin").addEventListener("click", () => {
+document.getElementById("goToLogin").onclick = () => {
   hideAllPanels();
   loginCard.classList.remove("hidden");
-});
+};
 // =====================================
 //  ŁADOWANIE LISTY WSPÓLNOT
 // =====================================
@@ -234,7 +231,7 @@ async function loadWspolnotyDropdown() {
 //  ZAPIS WYBRANEJ WSPÓLNOTY
 // =====================================
 
-document.getElementById("btnSaveWspolnota").addEventListener("click", async () => {
+document.getElementById("btnSaveWspolnota").onclick = async () => {
   const selectedId = wspolnotaDropdown.value;
 
   if (!selectedId) {
@@ -266,13 +263,13 @@ document.getElementById("btnSaveWspolnota").addEventListener("click", async () =
   hideAllPanels();
   mainCard.classList.remove("hidden");
   loadTicketsUser(selectedId);
-});
+};
 
 // =====================================
 //  TWORZENIE ZGŁOSZENIA
 // =====================================
 
-document.getElementById("btnAddTicket").addEventListener("click", async () => {
+document.getElementById("btnAddTicket").onclick = async () => {
   const title = document.getElementById("ticketTitle").value.trim();
   const desc = document.getElementById("ticketDesc").value.trim();
   const fileInput = document.getElementById("ticketFile");
@@ -309,6 +306,7 @@ document.getElementById("btnAddTicket").addEventListener("click", async () => {
     return;
   }
 
+  // Upload pliku
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
     const filePath = `${ticket.id}/${file.name}`;
@@ -330,7 +328,7 @@ document.getElementById("btnAddTicket").addEventListener("click", async () => {
   document.getElementById("ticketFile").value = "";
 
   loadTicketsUser(profile.wspolnota_id);
-});
+};
 
 // =====================================
 //  ŁADOWANIE ZGŁOSZEŃ — USER
@@ -468,9 +466,9 @@ async function openTicketModal(ticketId) {
     updateTicketStatus(ticketId, "zamkniete");
 }
 
-document.getElementById("closeModal").addEventListener("click", () => {
+document.getElementById("closeModal").onclick = () => {
   document.getElementById("ticketModal").classList.add("hidden");
-});
+};
 
 // =====================================
 //  ZMIANA STATUSU
@@ -490,7 +488,6 @@ async function updateTicketStatus(ticketId, newStatus) {
   document.getElementById("ticketModal").classList.add("hidden");
   loadTicketsAdmin();
 }
-
 // =====================================
 //  PANEL ADMINA — OCZEKUJĄCY UŻYTKOWNICY
 // =====================================
@@ -560,8 +557,8 @@ async function loadAllUsers() {
 
   const { data, error } = await client
     .from("profiles")
-    .select("email, fullname, approved, role")
-    .order("approved", { ascending: false });
+    .select("email, fullname, approved, role, wspolnota_id")
+    .order("email", { ascending: true });
 
   if (error) {
     list.innerHTML = "Błąd ładowania listy użytkowników.";
@@ -575,6 +572,7 @@ async function loadAllUsers() {
     div.className = "userItem";
     div.innerHTML = `
       <b>${u.fullname || "(bez imienia)"}</b> — ${u.email}
+      <br>Wspólnota: ${u.wspolnota_id || "brak"}
       <br>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}
       <br>Rola: ${u.role}
       <hr>
