@@ -205,7 +205,6 @@ btnLogin.addEventListener("click", async () => {
     btnAdminPanel.classList.remove("hidden");
     btnAdminWspolnoty.classList.remove("hidden");
 
-    // 🔥 DODANA POPRAWKA
     loadPendingUsers();
     loadTickets();
 
@@ -416,10 +415,6 @@ async function loadTickets(filter = "all") {
   if (filter === "closed") query = query.eq("status", "closed");
 
   const { data, error } = await query;
-console.log("PROFILE:", profile);
-console.log("QUERY RESULT:", data);
-console.log("ERROR:", error);
-
 
   // ADMIN – FILTRY
   if (profile.role === "admin") {
@@ -519,3 +514,20 @@ function renderAttachments(attachments) {
     modalAttachments.appendChild(img);
   });
 }
+
+
+// =========================
+// ZMIANA STATUSU ZGŁOSZENIA
+// =========================
+
+async function toggleTicketStatus(ticket) {
+  const newStatus = ticket.status === "open" ? "closed" : "open";
+
+  const { error } = await client
+    .from("tickets")
+    .update({ status: newStatus })
+    .eq("id", ticket.id);
+
+  if (error) {
+    console.error("Błąd zmiany statusu:", error);
+    return;
