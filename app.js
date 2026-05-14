@@ -202,21 +202,8 @@ btnLogin.addEventListener("click", async () => {
     btnAdminPanel.classList.remove("hidden");
     btnAdminWspolnoty.classList.remove("hidden");
 
-    return; // nie ładujemy ticketów mieszkańca
-  }
-
-  // MIESZKANIEC
-  loadTickets();
-});
-
-  loadTickets();
-});
-
-
-// =========================
-// WYLOGOWANIE
-// =========================
-
+ tak ma to wygladac?
+   
 btnLogout.addEventListener("click", async () => {
   await client.auth.signOut();
   setAuthView(false);
