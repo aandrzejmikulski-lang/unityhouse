@@ -12,7 +12,7 @@ const client = supabase.createClient(
 console.log("Supabase client:", client);
 
 // =====================================
-//  LOGOWANIE — PRAWDZIWY KOD
+//  LOGOWANIE
 // =====================================
 
 document.getElementById("btnLogin").addEventListener("click", async () => {
@@ -39,6 +39,7 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   alert("Zalogowano!");
 });
+
 // =====================================
 //  ELEMENTY UI
 // =====================================
