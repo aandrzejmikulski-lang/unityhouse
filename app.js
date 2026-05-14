@@ -415,7 +415,11 @@ async function loadTickets(filter = "all") {
   if (filter === "open") query = query.eq("status", "open");
   if (filter === "closed") query = query.eq("status", "closed");
 
-  const { data } = await query;
+  const { data, error } = await query;
+console.log("PROFILE:", profile);
+console.log("QUERY RESULT:", data);
+console.log("ERROR:", error);
+
 
   // ADMIN – FILTRY
   if (profile.role === "admin") {
