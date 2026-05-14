@@ -1,4 +1,7 @@
 console.log("APP START");
+console.log("loginEmail:", document.getElementById("loginEmail"));
+console.log("loginPassword:", document.getElementById("loginPassword"));
+console.log("btnLogin:", document.getElementById("btnLogin"));
 
 // =====================================
 //  KONFIGURACJA SUPABASE
