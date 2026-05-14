@@ -31,10 +31,17 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   console.log("client.auth:", client.auth);
 
-  const { data, error } = await client.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
+  const { data, error } = await client.auth.signInWithPassword(
+    {
+      email: email,
+      password: password
+    },
+    {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+  );
 
   console.log("LOGIN DATA:", data);
   console.log("LOGIN ERROR:", error);
@@ -46,6 +53,7 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   alert("Zalogowano!");
 });
+
 
 // =====================================
 //  ELEMENTY UI
