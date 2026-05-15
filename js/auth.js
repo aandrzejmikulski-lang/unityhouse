@@ -1,26 +1,45 @@
 let currentProfile = null;
 
 function initAuth() {
-  btnLoginTop.onclick = () => {
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
-    showLoginTab();
-  };
 
-  btnRegisterTop.onclick = () => {
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
-    showRegisterTab();
-  };
+  // 🔥 Wszystko wykonujemy dopiero po załadowaniu DOM
+  document.addEventListener("DOMContentLoaded", () => {
 
-  goToLogin.onclick = showLoginTab;
-  goToRegister.onclick = showRegisterTab;
+    // ============================
+    // PRZYCISKI GÓRNE (logowanie / rejestracja)
+    // ============================
+    btnLoginTop.onclick = () => {
+      hideAllPanels();
+      loginCard.classList.remove("hidden");
+      showLoginTab();
+    };
 
-  btnLogin.onclick = loginUser;
-  btnRegister.onclick = registerUser;
-  btnLogoutTop.onclick = logoutUser;
+    btnRegisterTop.onclick = () => {
+      hideAllPanels();
+      loginCard.classList.remove("hidden");
+      showRegisterTab();
+    };
+
+    // ============================
+    // PRZEŁĄCZANIE TABS
+    // ============================
+    goToLogin.onclick = showLoginTab;
+    goToRegister.onclick = showRegisterTab;
+
+    // ============================
+    // LOGOWANIE / REJESTRACJA / WYLOGOWANIE
+    // ============================
+    btnLogin.onclick = loginUser;
+    btnRegister.onclick = registerUser;
+    btnLogoutTop.onclick = logoutUser;
+
+  });
 }
 
+
+// =======================================
+// LOGOWANIE
+// =======================================
 async function loginUser() {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
@@ -56,8 +75,11 @@ async function loginUser() {
   currentProfile = profile;
   hideAllPanels();
 
+  // ============================
+  // ADMIN
+  // ============================
   if (profile.role === "admin") {
-    adminCard.classList.remove("hidden");
+    showSection("adminCard");
     loadPendingUsers();
     loadAllUsers();
     loadTicketsAdmin();
@@ -65,26 +87,39 @@ async function loginUser() {
     return;
   }
 
+  // ============================
+  // NIEZATWIERDZONY
+  // ============================
   if (!profile.approved) {
-    loginCard.classList.remove("hidden");
+    showSection("loginCard");
     showLoginTab();
     showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
     setAuthView(true);
     return;
   }
 
+  // ============================
+  // BEZ WSPÓLNOTY
+  // ============================
   if (!profile.wspolnota_id) {
-    selectWspolnotaCard.classList.remove("hidden");
+    showSection("selectWspolnotaCard");
     loadWspolnotyDropdown();
     setAuthView(true);
     return;
   }
 
-  mainCard.classList.remove("hidden");
+  // ============================
+  // UŻYTKOWNIK Z WSPÓLNOTĄ
+  // ============================
+  showSection("mainCard");
   loadTicketsUser(profile.wspolnota_id);
   setAuthView(true);
 }
 
+
+// =======================================
+// REJESTRACJA
+// =======================================
 async function registerUser() {
   const email = registerEmail.value.trim();
   const password = registerPassword.value.trim();
@@ -120,14 +155,19 @@ async function registerUser() {
   }
 }
 
+
+// =======================================
+// WYLOGOWANIE
+// =======================================
 async function logoutUser() {
   await client.auth.signOut();
+
   loginEmail.value = "";
   loginPassword.value = "";
   currentProfile = null;
 
   hideAllPanels();
-  loginCard.classList.remove("hidden");
+  showSection("loginCard");
   showLoginTab();
   setAuthView(false);
 }
