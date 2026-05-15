@@ -9,7 +9,6 @@ function hideAllPanels() {
   mainCard.classList.add("hidden");
   adminCard.classList.add("hidden");
   wspolnotaCard.classList.add("hidden");
-  selectWspolnotaCard.classList.add("hidden");
   ticketForm.classList.add("hidden");
 }
 
