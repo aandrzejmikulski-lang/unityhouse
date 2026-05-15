@@ -2,13 +2,9 @@
 //  INIT
 // ===============================
 function initAnnouncements() {
-  const btnAdd = document.getElementById("btnAddAnnouncement");
-  const btnCancel = document.getElementById("btnCancelAnnouncement");
-  const btnSave = document.getElementById("btnSaveAnnouncement");
-
-  if (btnAdd) btnAdd.onclick = () => showAnnouncementForm();
-  if (btnCancel) btnCancel.onclick = () => hideAnnouncementForm();
-  if (btnSave) btnSave.onclick = saveAnnouncement;
+  if (btnAddAnnouncement) btnAddAnnouncement.onclick = () => showAnnouncementForm();
+  if (btnCancelAnnouncement) btnCancelAnnouncement.onclick = () => hideAnnouncementForm();
+  if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
 
   loadAnnouncementsUser();
   loadAnnouncementsAdmin();
@@ -19,11 +15,14 @@ function initAnnouncements() {
 //  FORMULARZ
 // ===============================
 function showAnnouncementForm() {
+  if (!announcementForm) return;
   announcementForm.classList.remove("hidden");
   loadAnnouncementWspolnotyCheckboxes();
 }
 
 function hideAnnouncementForm() {
+  if (!announcementForm) return;
+
   announcementForm.classList.add("hidden");
   announcementTitle.value = "";
   announcementContent.value = "";
