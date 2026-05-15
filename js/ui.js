@@ -1,3 +1,11 @@
+// ELEMENTY DOM (muszą być zdefiniowane!)
+const loginCard = document.getElementById("loginCard");
+const mainCard = document.getElementById("mainCard");
+const adminCard = document.getElementById("adminCard");
+const wspolnotaCard = document.getElementById("wspolnotaCard");
+const selectWspolnotaCard = document.getElementById("selectWspolnotaCard");
+const ticketForm = document.getElementById("ticketForm");
+
 function initUI() {
   document.getElementById("closeModal").onclick = () => {
     document.getElementById("ticketModal").classList.add("hidden");
