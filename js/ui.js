@@ -52,6 +52,22 @@ const btnSaveWspolnota = document.getElementById("btnSaveWspolnota");
 const btnLogin = document.getElementById("btnLogin");
 const btnRegister = document.getElementById("btnRegister");
 
+// ===============================
+// OGŁOSZENIA — GLOBALNE ELEMENTY DOM
+// ===============================
+const announcementForm = document.getElementById("announcementForm");
+const announcementTitle = document.getElementById("announcementTitle");
+const announcementContent = document.getElementById("announcementContent");
+const announcementGlobal = document.getElementById("announcementGlobal");
+const announcementFrom = document.getElementById("announcementFrom");
+const announcementTo = document.getElementById("announcementTo");
+
+const btnAddAnnouncement = document.getElementById("btnAddAnnouncement");
+const btnCancelAnnouncement = document.getElementById("btnCancelAnnouncement");
+const btnSaveAnnouncement = document.getElementById("btnSaveAnnouncement");
+
+const userAnnouncements = document.getElementById("userAnnouncements");
+const adminAnnouncements = document.getElementById("adminAnnouncements");
 
 // ===============================
 // INIT UI
@@ -61,7 +77,6 @@ function initUI() {
     ticketModal.classList.add("hidden");
   };
 
-  // 🔥 PRZEŁĄCZANIE FORMULARZY
   if (btnAddTicket) {
     btnAddTicket.onclick = () => showSection("ticketForm");
   }
@@ -71,14 +86,12 @@ function initUI() {
   }
 }
 
-
 // ===============================
-// NOWE hideAllPanels (sidebar-friendly)
+// NOWE hideAllPanels
 // ===============================
 function hideAllPanels() {
   document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
 }
-
 
 // ===============================
 // MESSAGE
@@ -89,9 +102,8 @@ function showMessage(el, text, type = "info") {
   el.classList.remove("hidden");
 }
 
-
 // ===============================
-// AUTH VIEW (sidebar visibility)
+// AUTH VIEW
 // ===============================
 function setAuthView(isLoggedIn) {
   const sidebar = document.querySelector(".sidebar");
@@ -104,7 +116,6 @@ function setAuthView(isLoggedIn) {
     btnLogoutTop.classList.add("hidden");
   }
 }
-
 
 // ===============================
 // LOGIN / REGISTER TABS
