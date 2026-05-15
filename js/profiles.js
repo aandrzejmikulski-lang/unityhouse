@@ -1,8 +1,17 @@
+// ===============================
+// INIT
+// ===============================
 function initProfiles() {
-  btnSaveWspolnota.onclick = saveWspolnota;
+  if (btnSaveWspolnota) btnSaveWspolnota.onclick = saveWspolnota;
 }
 
+
+// ===============================
+// ŁADOWANIE LISTY WSPÓLNOT (DLA UŻYTKOWNIKA)
+// ===============================
 async function loadWspolnotyDropdown() {
+  if (!wspolnotaDropdown) return;
+
   wspolnotaDropdown.innerHTML = "";
 
   const { data, error } = await client
@@ -10,7 +19,7 @@ async function loadWspolnotyDropdown() {
     .select("id, nazwa")
     .order("nazwa");
 
-  if (error) {
+  if (error || !data) {
     showMessage(wspolnotaMessage, "Nie udało się załadować listy wspólnot.", "error");
     return;
   }
@@ -28,6 +37,10 @@ async function loadWspolnotyDropdown() {
   });
 }
 
+
+// ===============================
+// ZAPIS WYBRANEJ WSPÓLNOTY
+// ===============================
 async function saveWspolnota() {
   const selectedId = wspolnotaDropdown.value;
 
@@ -36,7 +49,11 @@ async function saveWspolnota() {
     return;
   }
 
-  const { data: { session } } = await client.auth.getSession();
+  const { data: { session }, error: sessionError } = await client.auth.getSession();
+  if (sessionError || !session?.user) {
+    showMessage(wspolnotaMessage, "Brak sesji użytkownika.", "error");
+    return;
+  }
 
   await client
     .from("profiles")
@@ -48,22 +65,32 @@ async function saveWspolnota() {
   loadTicketsUser(selectedId);
 }
 
-async function loadPendingUsers() {
-  const list = pendingUsersList;
-  list.innerHTML = "Ładowanie...";
 
-  const { data } = await client
+// ===============================
+// OCZEKUJĄCY UŻYTKOWNICY (ADMIN)
+// ===============================
+async function loadPendingUsers() {
+  if (!pendingUsersList) return;
+
+  pendingUsersList.innerHTML = "Ładowanie...";
+
+  const { data, error } = await client
     .from("profiles")
     .select("*")
     .eq("approved", false)
     .eq("role", "user");
 
-  if (!data.length) {
-    list.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
+  if (error || !data) {
+    pendingUsersList.innerHTML = "<i>Błąd ładowania.</i>";
     return;
   }
 
-  list.innerHTML = "";
+  if (!data.length) {
+    pendingUsersList.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
+    return;
+  }
+
+  pendingUsersList.innerHTML = "";
 
   data.forEach(u => {
     const div = document.createElement("div");
@@ -73,7 +100,7 @@ async function loadPendingUsers() {
       <button class="btnApproveUser" data-id="${u.id}">Zatwierdź</button>
       <button class="btnRejectUser" data-id="${u.id}">Odrzuć</button>
     `;
-    list.appendChild(div);
+    pendingUsersList.appendChild(div);
   });
 
   document.querySelectorAll(".btnApproveUser").forEach(btn =>
@@ -85,24 +112,36 @@ async function loadPendingUsers() {
   );
 }
 
+
+// ===============================
+// ZATWIERDZENIE UŻYTKOWNIKA
+// ===============================
 async function approveUser(id) {
   await client.from("profiles").update({ approved: true }).eq("id", id);
   loadPendingUsers();
   loadAllUsers();
 }
 
+
+// ===============================
+// ODRZUCENIE UŻYTKOWNIKA
+// ===============================
 async function rejectUser(id) {
   await client.from("profiles").delete().eq("id", id);
   loadPendingUsers();
   loadAllUsers();
 }
 
-async function loadAllUsers() {
-  const list = allUsersList;
-  list.innerHTML = "Ładowanie...";
 
-  // 🔧 POPRAWKA: pobieramy nazwę wspólnoty przez JOIN
-  const { data } = await client
+// ===============================
+// WSZYSCY UŻYTKOWNICY (ADMIN)
+// ===============================
+async function loadAllUsers() {
+  if (!allUsersList) return;
+
+  allUsersList.innerHTML = "Ładowanie...";
+
+  const { data, error } = await client
     .from("profiles")
     .select(`
       id,
@@ -115,7 +154,12 @@ async function loadAllUsers() {
     `)
     .order("email");
 
-  list.innerHTML = "";
+  if (error || !data) {
+    allUsersList.innerHTML = "<i>Błąd ładowania użytkowników.</i>";
+    return;
+  }
+
+  allUsersList.innerHTML = "";
 
   data.forEach(u => {
     const div = document.createElement("div");
@@ -127,6 +171,6 @@ async function loadAllUsers() {
       <br>Rola: ${u.role}
       <hr>
     `;
-    list.appendChild(div);
+    allUsersList.appendChild(div);
   });
 }
