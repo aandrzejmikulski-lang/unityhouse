@@ -19,7 +19,6 @@
 
     <main class="layout">
 
-      <!-- 🔥 PANEL LOGOWANIA / REJESTRACJI -->
       <section class="card auth-card" id="loginCard">
         <h1>Panel mieszkańca</h1>
         <p class="muted">
@@ -62,7 +61,6 @@
         </div>
       </section>
 
-      <!-- 🔥 PANEL MIESZKAŃCA -->
       <section class="card hidden" id="mainCard">
         <header class="card-header">
           <div>
@@ -75,7 +73,6 @@
         <div id="ticketList"></div>
       </section>
 
-      <!-- 🔥 PANEL ADMINA -->
       <section class="card hidden" id="adminCard">
         <h2>Panel administratora</h2>
 
@@ -89,7 +86,6 @@
         <div id="allUsersList"></div>
       </section>
 
-      <!-- 🔥 PANEL WSPÓLNOT -->
       <section class="card hidden" id="wspolnotaCard">
         <h2>Wspólnoty</h2>
         <input type="text" id="newWspolnotaName" placeholder="Nazwa wspólnoty" />
@@ -97,7 +93,6 @@
         <div id="wspolnotyList"></div>
       </section>
 
-      <!-- 🔥 WYBÓR WSPÓLNOTY -->
       <section class="card hidden" id="selectWspolnotaCard">
         <h2>Wybierz wspólnotę</h2>
         <select id="wspolnotaDropdown"></select>
@@ -105,7 +100,6 @@
         <div id="wspolnotaMessage" class="message hidden"></div>
       </section>
 
-      <!-- 🔥 FORMULARZ ZGŁOSZENIA -->
       <section class="card hidden" id="ticketForm">
         <h2>Nowe zgłoszenie</h2>
         <label class="field">
@@ -124,7 +118,6 @@
         <button id="btnCancelTicket" class="btn ghost">Anuluj</button>
       </section>
 
-      <!-- 🔥 MODAL -->
       <div id="ticketModal" class="modal hidden">
         <div class="modal-content">
           <button id="closeModal" class="modal-close">×</button>
@@ -142,7 +135,6 @@
     </main>
   </div>
 
-  <!-- 🔥 SUPABASE + MODUŁY -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
   <script src="js/ui.js"></script>
@@ -150,6 +142,5 @@
   <script src="js/profiles.js"></script>
   <script src="js/tickets.js"></script>
   <script src="js/main.js"></script>
-
 </body>
 </html>
