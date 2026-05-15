@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initAuth();
   initProfiles();
   initTickets();
+  initAnnouncements();   // 🔥 dodane, ale bezpieczne
 });
 
 client.auth.onAuthStateChange(async (event, session) => {
@@ -39,15 +40,25 @@ client.auth.onAuthStateChange(async (event, session) => {
 
   currentProfile = profile;
 
+  // ============================
+  // ADMIN
+  // ============================
   if (profile.role === "admin") {
     hideAllPanels();
     adminCard.classList.remove("hidden");
-    loadPendingUsers();
-    loadAllUsers();
-    loadTicketsAdmin();
+
+    // 🔥 Bezpieczne wywołania — tylko jeśli element istnieje
+    if (pendingUsersList) loadPendingUsers();
+    if (allUsersList) loadAllUsers();
+    if (adminTickets) loadTicketsAdmin();
+    if (adminAnnouncements) loadAnnouncementsAdmin();
+
     return;
   }
 
+  // ============================
+  // UŻYTKOWNIK NIEZATWIERDZONY
+  // ============================
   if (!profile.approved) {
     hideAllPanels();
     loginCard.classList.remove("hidden");
@@ -56,6 +67,9 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // ============================
+  // UŻYTKOWNIK BEZ WSPÓLNOTY
+  // ============================
   if (!profile.wspolnota_id) {
     hideAllPanels();
     selectWspolnotaCard.classList.remove("hidden");
@@ -63,7 +77,12 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // ============================
+  // UŻYTKOWNIK Z WSPÓLNOTĄ
+  // ============================
   hideAllPanels();
   mainCard.classList.remove("hidden");
+
   loadTicketsUser(profile.wspolnota_id);
+  loadAnnouncementsUser();   // 🔥 dodane
 });
