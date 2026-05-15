@@ -6,18 +6,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <div class="app-shell">
-    <header class="topbar">
-      <div class="logo">Unity House</div>
-      <nav class="topbar-nav">
-        <button id="btnLoginTop" class="btn ghost">Zaloguj</button>
-        <button id="btnRegisterTop" class="btn primary">Załóż konto</button>
-        <button id="btnLogoutTop" class="btn ghost hidden">Wyloguj</button>
-      </nav>
-    </header>
 
-    <main class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">Unity House</div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-item active" data-target="loginCard">Logowanie</div>
+        <div class="sidebar-item" data-target="mainCard">Panel mieszkańca</div>
+        <div class="sidebar-item" data-target="adminCard">Panel administratora</div>
+        <div class="sidebar-item" data-target="wspolnotaCard">Wspólnoty</div>
+        <div class="sidebar-item" data-target="selectWspolnotaCard">Wybór wspólnoty</div>
+        <div class="sidebar-item" data-target="ticketForm">Nowe zgłoszenie</div>
+        <div class="sidebar-item" data-target="announcementForm">Nowe ogłoszenie</div>
+      </nav>
+
+      <button id="btnLogoutTop" class="btn ghost hidden" style="margin-top:auto;">
+        Wyloguj
+      </button>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
 
       <!-- LOGOWANIE / REJESTRACJA -->
       <section class="card auth-card" id="loginCard">
@@ -152,7 +165,6 @@
 
         <div id="announcementWspolnoty"></div>
 
-        <!-- 🔥 DODANE POLA DAT -->
         <label class="field">
           <span>Wyświetlaj od</span>
           <input type="date" id="announcementFrom" />
@@ -193,5 +205,21 @@
   <script src="js/tickets.js"></script>
   <script src="js/announcements.js"></script>
   <script src="js/main.js"></script>
+
+  <!-- SIDEBAR LOGIC -->
+  <script>
+    document.querySelectorAll(".sidebar-item").forEach(item => {
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+        item.classList.add("active");
+
+        const target = item.dataset.target;
+
+        document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
+        document.getElementById(target).classList.remove("hidden");
+      });
+    });
+  </script>
+
 </body>
 </html>
