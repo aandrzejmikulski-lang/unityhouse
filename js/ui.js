@@ -73,9 +73,10 @@ const adminAnnouncements = document.getElementById("adminAnnouncements");
 // INIT UI
 // ===============================
 function initUI() {
-  document.getElementById("closeModal").onclick = () => {
-    ticketModal.classList.add("hidden");
-  };
+  const closeModal = document.getElementById("closeModal");
+  if (closeModal) {
+    closeModal.onclick = () => ticketModal.classList.add("hidden");
+  }
 
   if (btnAddTicket) {
     btnAddTicket.onclick = () => showSection("ticketForm");
@@ -87,7 +88,7 @@ function initUI() {
 }
 
 // ===============================
-// NOWE hideAllPanels
+// HIDE ALL PANELS
 // ===============================
 function hideAllPanels() {
   document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
