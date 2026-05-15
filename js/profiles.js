@@ -1,23 +1,7 @@
-// profiles.js
-
-// ------------------------------------------------------------
-// ELEMENTY DOM
-// ------------------------------------------------------------
-const wspolnotaDropdown = document.getElementById("wspolnotaDropdown");
-const wspolnotaMessage = document.getElementById("wspolnotaMessage");
-const pendingUsersList = document.getElementById("pendingUsersList");
-const allUsersList = document.getElementById("allUsersList");
-
-// ------------------------------------------------------------
-// INICJALIZACJA
-// ------------------------------------------------------------
 function initProfiles() {
-  document.getElementById("btnSaveWspolnota").onclick = saveWspolnota;
+  btnSaveWspolnota.onclick = saveWspolnota;
 }
 
-// ------------------------------------------------------------
-// LISTA WSPÓLNOT
-// ------------------------------------------------------------
 async function loadWspolnotyDropdown() {
   wspolnotaDropdown.innerHTML = "";
 
@@ -44,9 +28,6 @@ async function loadWspolnotyDropdown() {
   });
 }
 
-// ------------------------------------------------------------
-// ZAPIS WYBRANEJ WSPÓLNOTY
-// ------------------------------------------------------------
 async function saveWspolnota() {
   const selectedId = wspolnotaDropdown.value;
 
@@ -67,9 +48,6 @@ async function saveWspolnota() {
   loadTicketsUser(selectedId);
 }
 
-// ------------------------------------------------------------
-// OCZEKUJĄCY UŻYTKOWNICY
-// ------------------------------------------------------------
 async function loadPendingUsers() {
   const list = pendingUsersList;
   list.innerHTML = "Ładowanie...";
@@ -106,9 +84,6 @@ async function loadPendingUsers() {
   );
 }
 
-// ------------------------------------------------------------
-// ZATWIERDZANIE / ODRZUCANIE UŻYTKOWNIKÓW
-// ------------------------------------------------------------
 async function approveUser(id) {
   await client.from("profiles").update({ approved: true }).eq("id", id);
   loadPendingUsers();
@@ -121,9 +96,6 @@ async function rejectUser(id) {
   loadAllUsers();
 }
 
-// ------------------------------------------------------------
-// LISTA WSZYSTKICH UŻYTKOWNIKÓW
-// ------------------------------------------------------------
 async function loadAllUsers() {
   const list = allUsersList;
   list.innerHTML = "Ładowanie...";
