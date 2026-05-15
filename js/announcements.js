@@ -1,5 +1,5 @@
 // ===============================
-//  INIT
+// INIT
 // ===============================
 function initAnnouncements() {
   if (btnAddAnnouncement) btnAddAnnouncement.onclick = () => showAnnouncementForm();
@@ -12,7 +12,7 @@ function initAnnouncements() {
 
 
 // ===============================
-//  FORMULARZ
+// FORMULARZ
 // ===============================
 function showAnnouncementForm() {
   if (!announcementForm) return;
@@ -33,7 +33,7 @@ function hideAnnouncementForm() {
 
 
 // ===============================
-//  ŁADOWANIE LISTY WSPÓLNOT DO CHECKBOXÓW
+// ŁADOWANIE LISTY WSPÓLNOT DO CHECKBOXÓW
 // ===============================
 async function loadAnnouncementWspolnotyCheckboxes() {
   const box = document.getElementById("announcementWspolnoty");
@@ -65,7 +65,7 @@ async function loadAnnouncementWspolnotyCheckboxes() {
 
 
 // ===============================
-//  ZAPIS OGŁOSZENIA
+// ZAPIS OGŁOSZENIA
 // ===============================
 async function saveAnnouncement() {
   const title = announcementTitle.value.trim();
@@ -127,7 +127,7 @@ async function saveAnnouncement() {
 
 
 // ===============================
-//  OGŁOSZENIA DLA MIESZKAŃCA
+// OGŁOSZENIA DLA MIESZKAŃCA
 // ===============================
 async function loadAnnouncementsUser() {
   if (!userAnnouncements) return;
@@ -207,7 +207,7 @@ async function loadAnnouncementsUser() {
 
 
 // ===============================
-//  OGŁOSZENIA DLA ADMINA
+// OGŁOSZENIA DLA ADMINA
 // ===============================
 async function loadAnnouncementsAdmin() {
   if (!adminAnnouncements) return;
