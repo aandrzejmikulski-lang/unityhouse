@@ -1,15 +1,14 @@
 let currentProfile = null;
 
+// ===============================
+// INIT AUTH
+// ===============================
 function initAuth() {
 
-  // ============================
-  // ZABEZPIECZENIE — elementy mogą nie istnieć
-  // ============================
+  // zabezpieczenie — jeśli elementów nie ma, nie inicjujemy
   if (!btnLoginTop || !btnRegisterTop || !btnLogoutTop) return;
 
-  // ============================
-  // PRZYCISKI GÓRNE (logowanie / rejestracja)
-  // ============================
+  // przełączanie widoków logowania/rejestracji
   btnLoginTop.onclick = () => {
     hideAllPanels();
     loginCard.classList.remove("hidden");
@@ -22,24 +21,18 @@ function initAuth() {
     showRegisterTab();
   };
 
-  // ============================
-  // PRZEŁĄCZANIE TABS
-  // ============================
   goToLogin.onclick = showLoginTab;
   goToRegister.onclick = showRegisterTab;
 
-  // ============================
-  // LOGOWANIE / REJESTRACJA / WYLOGOWANIE
-  // ============================
   btnLogin.onclick = loginUser;
   btnRegister.onclick = registerUser;
   btnLogoutTop.onclick = logoutUser;
 }
 
 
-// =======================================
+// ===============================
 // LOGOWANIE
-// =======================================
+// ===============================
 async function loginUser() {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
@@ -68,28 +61,24 @@ async function loginUser() {
 
   if (profileError) {
     showMessage(loginMessage, "Błąd pobierania profilu.", "error");
-    console.error(profileError);
     return;
   }
 
   currentProfile = profile;
   hideAllPanels();
 
-  // ============================
   // ADMIN
-  // ============================
   if (profile.role === "admin") {
     showSection("adminCard");
     loadPendingUsers();
     loadAllUsers();
     loadTicketsAdmin();
+    loadAnnouncementsAdmin();
     setAuthView(true);
     return;
   }
 
-  // ============================
   // NIEZATWIERDZONY
-  // ============================
   if (!profile.approved) {
     showSection("loginCard");
     showLoginTab();
@@ -98,9 +87,7 @@ async function loginUser() {
     return;
   }
 
-  // ============================
   // BEZ WSPÓLNOTY
-  // ============================
   if (!profile.wspolnota_id) {
     showSection("selectWspolnotaCard");
     loadWspolnotyDropdown();
@@ -108,18 +95,17 @@ async function loginUser() {
     return;
   }
 
-  // ============================
   // UŻYTKOWNIK Z WSPÓLNOTĄ
-  // ============================
   showSection("mainCard");
   loadTicketsUser(profile.wspolnota_id);
+  loadAnnouncementsUser();
   setAuthView(true);
 }
 
 
-// =======================================
+// ===============================
 // REJESTRACJA
-// =======================================
+// ===============================
 async function registerUser() {
   const email = registerEmail.value.trim();
   const password = registerPassword.value.trim();
@@ -156,9 +142,9 @@ async function registerUser() {
 }
 
 
-// =======================================
+// ===============================
 // WYLOGOWANIE
-// =======================================
+// ===============================
 async function logoutUser() {
   await client.auth.signOut();
 
