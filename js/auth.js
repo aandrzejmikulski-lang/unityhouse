@@ -2,38 +2,33 @@ let currentProfile = null;
 
 function initAuth() {
 
-  // 🔥 Wszystko wykonujemy dopiero po załadowaniu DOM
-  document.addEventListener("DOMContentLoaded", () => {
+  // ============================
+  // PRZYCISKI GÓRNE (logowanie / rejestracja)
+  // ============================
+  btnLoginTop.onclick = () => {
+    hideAllPanels();
+    loginCard.classList.remove("hidden");
+    showLoginTab();
+  };
 
-    // ============================
-    // PRZYCISKI GÓRNE (logowanie / rejestracja)
-    // ============================
-    btnLoginTop.onclick = () => {
-      hideAllPanels();
-      loginCard.classList.remove("hidden");
-      showLoginTab();
-    };
+  btnRegisterTop.onclick = () => {
+    hideAllPanels();
+    loginCard.classList.remove("hidden");
+    showRegisterTab();
+  };
 
-    btnRegisterTop.onclick = () => {
-      hideAllPanels();
-      loginCard.classList.remove("hidden");
-      showRegisterTab();
-    };
+  // ============================
+  // PRZEŁĄCZANIE TABS
+  // ============================
+  goToLogin.onclick = showLoginTab;
+  goToRegister.onclick = showRegisterTab;
 
-    // ============================
-    // PRZEŁĄCZANIE TABS
-    // ============================
-    goToLogin.onclick = showLoginTab;
-    goToRegister.onclick = showRegisterTab;
-
-    // ============================
-    // LOGOWANIE / REJESTRACJA / WYLOGOWANIE
-    // ============================
-    btnLogin.onclick = loginUser;
-    btnRegister.onclick = registerUser;
-    btnLogoutTop.onclick = logoutUser;
-
-  });
+  // ============================
+  // LOGOWANIE / REJESTRACJA / WYLOGOWANIE
+  // ============================
+  btnLogin.onclick = loginUser;
+  btnRegister.onclick = registerUser;
+  btnLogoutTop.onclick = logoutUser;
 }
 
 
