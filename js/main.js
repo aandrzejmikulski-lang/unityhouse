@@ -4,19 +4,47 @@ const client = supabase.createClient(
   { auth: { persistSession: false } }
 );
 
+// =======================================
+// GLOBALNE PRZEŁĄCZANIE WIDOKÓW (SIDEBAR)
+// =======================================
+function showSection(id) {
+  document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
+  const el = document.getElementById(id);
+  if (el) el.classList.remove("hidden");
+}
+
+// =======================================
+// SIDEBAR — aktywacja modułów
+// =======================================
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".sidebar-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+
+      const target = item.dataset.target;
+      showSection(target);
+    });
+  });
+
+  // Inicjalizacje modułów
   initUI();
   initAuth();
   initProfiles();
   initTickets();
-  initAnnouncements();   // 🔥 dodane, ale bezpieczne
+  initAnnouncements();
 });
 
+// =======================================
+// AUTH STATE CHANGE
+// =======================================
 client.auth.onAuthStateChange(async (event, session) => {
   if (!session) {
     currentProfile = null;
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
+
+    // powrót do logowania
+    showSection("loginCard");
+
     showLoginTab();
     setAuthView(false);
     return;
@@ -32,8 +60,7 @@ client.auth.onAuthStateChange(async (event, session) => {
 
   if (error) {
     console.error("Błąd pobierania profilu:", error);
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
+    showSection("loginCard");
     showLoginTab();
     return;
   }
@@ -44,10 +71,8 @@ client.auth.onAuthStateChange(async (event, session) => {
   // ADMIN
   // ============================
   if (profile.role === "admin") {
-    hideAllPanels();
-    adminCard.classList.remove("hidden");
+    showSection("adminCard");
 
-    // 🔥 Bezpieczne wywołania — tylko jeśli element istnieje
     if (pendingUsersList) loadPendingUsers();
     if (allUsersList) loadAllUsers();
     if (adminTickets) loadTicketsAdmin();
@@ -60,8 +85,7 @@ client.auth.onAuthStateChange(async (event, session) => {
   // UŻYTKOWNIK NIEZATWIERDZONY
   // ============================
   if (!profile.approved) {
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
+    showSection("loginCard");
     showLoginTab();
     showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
     return;
@@ -71,8 +95,7 @@ client.auth.onAuthStateChange(async (event, session) => {
   // UŻYTKOWNIK BEZ WSPÓLNOTY
   // ============================
   if (!profile.wspolnota_id) {
-    hideAllPanels();
-    selectWspolnotaCard.classList.remove("hidden");
+    showSection("selectWspolnotaCard");
     loadWspolnotyDropdown();
     return;
   }
@@ -80,9 +103,8 @@ client.auth.onAuthStateChange(async (event, session) => {
   // ============================
   // UŻYTKOWNIK Z WSPÓLNOTĄ
   // ============================
-  hideAllPanels();
-  mainCard.classList.remove("hidden");
+  showSection("mainCard");
 
   loadTicketsUser(profile.wspolnota_id);
-  loadAnnouncementsUser();   // 🔥 dodane
+  loadAnnouncementsUser();
 });
