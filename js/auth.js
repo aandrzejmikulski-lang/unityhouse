@@ -3,6 +3,11 @@ let currentProfile = null;
 function initAuth() {
 
   // ============================
+  // ZABEZPIECZENIE — elementy mogą nie istnieć
+  // ============================
+  if (!btnLoginTop || !btnRegisterTop || !btnLogoutTop) return;
+
+  // ============================
   // PRZYCISKI GÓRNE (logowanie / rejestracja)
   // ============================
   btnLoginTop.onclick = () => {
