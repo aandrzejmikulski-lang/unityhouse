@@ -91,16 +91,16 @@ function showMessage(el, text, type = "info") {
 
 
 // ===============================
-// AUTH VIEW
+// AUTH VIEW (sidebar visibility)
 // ===============================
 function setAuthView(isLoggedIn) {
+  const sidebar = document.querySelector(".sidebar");
+
   if (isLoggedIn) {
-    btnLoginTop.classList.add("hidden");
-    btnRegisterTop.classList.add("hidden");
+    sidebar.classList.remove("hidden");
     btnLogoutTop.classList.remove("hidden");
   } else {
-    btnLoginTop.classList.remove("hidden");
-    btnRegisterTop.classList.remove("hidden");
+    sidebar.classList.add("hidden");
     btnLogoutTop.classList.add("hidden");
   }
 }
