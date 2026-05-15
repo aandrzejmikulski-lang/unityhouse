@@ -1,24 +1,5 @@
-// ------------------------------------------------------------
-// ELEMENTY DOM
-// ------------------------------------------------------------
-const loginCard = document.getElementById("loginCard");
-const mainCard = document.getElementById("mainCard");
-const wspolnotaCard = document.getElementById("wspolnotaCard");
-const adminCard = document.getElementById("adminCard");   // <-- NAPRAWIONE
-const loginMessage = document.getElementById("loginMessage");
-const registerMessage = document.getElementById("registerMessage");
-
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
-const registerEmail = document.getElementById("registerEmail");
-const registerPassword = document.getElementById("registerPassword");
-const registerFullname = document.getElementById("registerFullname");
-
 let currentProfile = null;
 
-// ------------------------------------------------------------
-// INICJALIZACJA
-// ------------------------------------------------------------
 function initAuth() {
   btnLoginTop.onclick = () => {
     hideAllPanels();
@@ -35,14 +16,11 @@ function initAuth() {
   goToLogin.onclick = showLoginTab;
   goToRegister.onclick = showRegisterTab;
 
-  document.getElementById("btnLogin").onclick = loginUser;
-  document.getElementById("btnRegister").onclick = registerUser;
+  btnLogin.onclick = loginUser;
+  btnRegister.onclick = registerUser;
   btnLogoutTop.onclick = logoutUser;
 }
 
-// ------------------------------------------------------------
-// LOGOWANIE
-// ------------------------------------------------------------
 async function loginUser() {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
@@ -61,10 +39,8 @@ async function loginUser() {
 
   showMessage(loginMessage, "Logowanie...", "success");
 
-  // --- POBIERANIE UŻYTKOWNIKA ---
   const { data: { user } } = await client.auth.getUser();
 
-  // --- POBIERANIE PROFILU ---
   const { data: profile, error: profileError } = await client
     .from("profiles")
     .select("*")
@@ -78,42 +54,37 @@ async function loginUser() {
   }
 
   currentProfile = profile;
-
-  // --- ROUTING ---
   hideAllPanels();
 
-  // ADMIN
   if (profile.role === "admin") {
     adminCard.classList.remove("hidden");
     loadPendingUsers();
     loadAllUsers();
+    loadTicketsAdmin();
+    setAuthView(true);
     return;
   }
 
-  // NIEZATWIERDZONY  *** POPRAWKA TUTAJ ***
   if (!profile.approved) {
-    loginCard.classList.remove("hidden");   // <-- DODANA LINIJKA
+    loginCard.classList.remove("hidden");
+    showLoginTab();
     showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
+    setAuthView(true);
     return;
   }
 
-  // BRAK WSPÓLNOTY
-  // BRAK WSPÓLNOTY
-if (!profile.wspolnota_id) {
-  selectWspolnotaCard.classList.remove("hidden");
-  loadWspolnotyDropdown();
-  return;
-}
+  if (!profile.wspolnota_id) {
+    selectWspolnotaCard.classList.remove("hidden");
+    loadWspolnotyDropdown();
+    setAuthView(true);
+    return;
+  }
 
-
-  // UŻYTKOWNIK Z WSPÓLNOTĄ
   mainCard.classList.remove("hidden");
   loadTicketsUser(profile.wspolnota_id);
+  setAuthView(true);
 }
 
-// ------------------------------------------------------------
-// REJESTRACJA
-// ------------------------------------------------------------
 async function registerUser() {
   const email = registerEmail.value.trim();
   const password = registerPassword.value.trim();
@@ -149,9 +120,6 @@ async function registerUser() {
   }
 }
 
-// ------------------------------------------------------------
-// WYLOGOWANIE
-// ------------------------------------------------------------
 async function logoutUser() {
   await client.auth.signOut();
   loginEmail.value = "";
