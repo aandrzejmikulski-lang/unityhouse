@@ -14,6 +14,16 @@ function showSection(id) {
 }
 
 // =======================================
+// INICJALIZACJE — MUSZĄ BYĆ TU
+// (żeby onclick w auth.js działały)
+// =======================================
+initUI();
+initAuth();
+initProfiles();
+initTickets();
+initAnnouncements();
+
+// =======================================
 // SIDEBAR — aktywacja modułów
 // =======================================
 document.addEventListener("DOMContentLoaded", () => {
@@ -26,13 +36,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showSection(target);
     });
   });
-
-  // Inicjalizacje modułów
-  initUI();
-  initAuth();
-  initProfiles();
-  initTickets();
-  initAnnouncements();
 });
 
 // =======================================
@@ -42,9 +45,7 @@ client.auth.onAuthStateChange(async (event, session) => {
   if (!session) {
     currentProfile = null;
 
-    // powrót do logowania
     showSection("loginCard");
-
     showLoginTab();
     setAuthView(false);
     return;
