@@ -1,17 +1,5 @@
 // main.js
 
-// Inicjalizacja Supabase
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// Start aplikacji
-document.addEventListener("DOMContentLoaded", () => {
-  initUI();
-  initAuth();
-  initTickets();
-  initProfiles();
-});
-// main.js
-
 // =====================================
 //  SUPABASE
 // =====================================
@@ -66,6 +54,7 @@ client.auth.onAuthStateChange(async (event, session) => {
 
   currentProfile = profile;
 
+  // ADMIN
   if (profile.role === "admin") {
     hideAllPanels();
     adminPanel.classList.remove("hidden");
@@ -75,6 +64,7 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // UŻYTKOWNIK BEZ WYBRANEJ WSPÓLNOTY
   if (!profile.wspolnota_id) {
     hideAllPanels();
     selectWspolnota.classList.remove("hidden");
@@ -82,8 +72,8 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // UŻYTKOWNIK Z WSPÓLNOTĄ
   hideAllPanels();
   mainCard.classList.remove("hidden");
   loadTicketsUser(profile.wspolnota_id);
 });
-
