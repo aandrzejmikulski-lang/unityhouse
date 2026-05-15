@@ -1,5 +1,24 @@
-// auth.js
+// ------------------------------------------------------------
+// ELEMENTY DOM
+// ------------------------------------------------------------
+const loginCard = document.getElementById("loginCard");
+const mainCard = document.getElementById("mainCard");
+const wspolnotaCard = document.getElementById("wspolnotaCard");
+const adminCard = document.getElementById("adminCard");   // <-- NAPRAWIONE
+const loginMessage = document.getElementById("loginMessage");
+const registerMessage = document.getElementById("registerMessage");
 
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const registerEmail = document.getElementById("registerEmail");
+const registerPassword = document.getElementById("registerPassword");
+const registerFullname = document.getElementById("registerFullname");
+
+let currentProfile = null;
+
+// ------------------------------------------------------------
+// INICJALIZACJA
+// ------------------------------------------------------------
 function initAuth() {
   btnLoginTop.onclick = () => {
     hideAllPanels();
