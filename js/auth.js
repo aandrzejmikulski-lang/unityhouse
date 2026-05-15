@@ -98,11 +98,13 @@ async function loginUser() {
   }
 
   // BRAK WSPÓLNOTY
-  if (!profile.wspolnota_id) {
-    wspolnotaCard.classList.remove("hidden");
-    loadWspolnotyDropdown();
-    return;
-  }
+  // BRAK WSPÓLNOTY
+if (!profile.wspolnota_id) {
+  selectWspolnotaCard.classList.remove("hidden");
+  loadWspolnotyDropdown();
+  return;
+}
+
 
   // UŻYTKOWNIK Z WSPÓLNOTĄ
   mainCard.classList.remove("hidden");
