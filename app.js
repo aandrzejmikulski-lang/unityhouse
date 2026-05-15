@@ -178,7 +178,8 @@ document.getElementById("btnRegister").onclick = async () => {
     return;
   }
 
-  const { error } = await client.auth.signUp({
+  // 1. Rejestracja w auth
+  const { data, error } = await client.auth.signUp({
     email,
     password,
     options: { data: { fullname } }
@@ -190,8 +191,28 @@ document.getElementById("btnRegister").onclick = async () => {
     return;
   }
 
+  // 2. Tworzenie profilu w tabeli profiles
+  if (data.user) {
+    const { error: profileError } = await client
+      .from("profiles")
+      .insert([
+        {
+          id: data.user.id,
+          fullname: fullname,
+          approved: false
+        }
+      ]);
+
+    if (profileError) {
+      console.error("Błąd tworzenia profilu:", profileError);
+      showMessage(registerMessage, "Błąd tworzenia profilu.", "error");
+      return;
+    }
+  }
+
   showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
 };
+
 
 // =====================================
 //  WYLOGOWANIE
