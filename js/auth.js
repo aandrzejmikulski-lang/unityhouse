@@ -1,26 +1,6 @@
 // auth.js
 
 function initAuth() {
-  document.getElementById("btnLogin")?.addEventListener("click", loginUser);
-  document.getElementById("btnRegister")?.addEventListener("click", registerUser);
-  document.getElementById("btnLogout")?.addEventListener("click", logoutUser);
-}
-
-async function registerUser() {
-  // tu wkleimy Twój kod rejestracji
-}
-
-async function loginUser() {
-  // tu wkleimy logowanie
-}
-
-async function logoutUser() {
-  await client.auth.signOut();
-  switchPanel("loginPanel");
-}
-// auth.js
-
-function initAuth() {
   btnLoginTop.onclick = () => {
     hideAllPanels();
     loginCard.classList.remove("hidden");
@@ -82,16 +62,17 @@ async function registerUser() {
   }
 
   if (data.user) {
-await client.from("profiles").insert({
-  id: data.user.id,
-  fullname,
-  email: data.user.email,
-  role: "user",
-  approved: false,
-  wspolnota_id: null
-});
+    await client.from("profiles").insert({
+      id: data.user.id,
+      fullname,
+      email: data.user.email,
+      role: "user",
+      approved: false,
+      wspolnota_id: null
+    });
 
-  showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
+    showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
+  }
 }
 
 async function logoutUser() {
