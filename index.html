@@ -13,7 +13,6 @@
       <nav class="topbar-nav">
         <button id="btnLoginTop" class="btn ghost">Zaloguj</button>
         <button id="btnRegisterTop" class="btn primary">Załóż konto</button>
-
         <button id="btnLogoutTop" class="btn ghost hidden">Wyloguj</button>
       </nav>
     </header>
@@ -75,6 +74,7 @@
 
         <div id="ticketList"></div>
       </section>
+
       <!-- 🔥 PANEL ADMINA -->
       <section class="card hidden" id="adminPanel">
         <h2>Panel administratora</h2>
@@ -141,8 +141,14 @@
     </main>
   </div>
 
-  <!-- 🔥 SUPABASE + APP.JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script defer src="app.js"></script>
+  <!-- 🔥 SUPABASE + MODUŁY -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profiles.js"></script>
+  <script src="js/tickets.js"></script>
+  <script src="js/main.js"></script>
+
 </body>
 </html>
