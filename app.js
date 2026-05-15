@@ -198,8 +198,10 @@ document.getElementById("btnRegister").onclick = async () => {
       .insert([
         {
           id: data.user.id,
-          fullname: fullname,
-          approved: false
+          fullname: fullname || "Nieznany użytkownik",
+          role: "user",
+          approved: false,
+          wspolnota_id: null
         }
       ]);
 
