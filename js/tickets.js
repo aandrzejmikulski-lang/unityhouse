@@ -2,6 +2,32 @@ function initTickets() {
   btnAddTicket.onclick = () => ticketForm.classList.remove("hidden");
   btnCancelTicket.onclick = () => ticketForm.classList.add("hidden");
   btnSaveTicket.onclick = saveTicket;
+
+  // 🔥 Ładujemy listę wspólnot do filtra admina
+  loadWspolnotyFilter();
+
+  // 🔥 Reagujemy na zmianę filtra
+  const filter = document.getElementById("filterWspolnota");
+  if (filter) filter.onchange = loadTicketsAdmin;
+}
+
+async function loadWspolnotyFilter() {
+  const sel = document.getElementById("filterWspolnota");
+  if (!sel) return;
+
+  sel.innerHTML = `<option value="">Wszystkie wspólnoty</option>`;
+
+  const { data } = await client
+    .from("wspolnoty")
+    .select("id, nazwa")
+    .order("nazwa");
+
+  data.forEach(w => {
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    opt.textContent = w.nazwa;
+    sel.appendChild(opt);
+  });
 }
 
 async function saveTicket() {
@@ -37,7 +63,6 @@ async function saveTicket() {
     const file = ticketFile.files[0];
     const filePath = `${ticket.id}/${file.name}`;
 
-    // 🔧 TU JEST POPRAWKA: tickets-files
     const { error: uploadError } = await client.storage
       .from("tickets-files")
       .upload(filePath, file);
@@ -96,10 +121,26 @@ async function loadTicketsUser(wspolnota_id) {
 async function loadTicketsAdmin() {
   adminTickets.innerHTML = "Ładowanie...";
 
-  const { data } = await client
+  const wsp = document.getElementById("filterWspolnota")?.value;
+
+  let query = client
     .from("tickets")
-    .select("*")
+    .select(`
+      id,
+      title,
+      description,
+      status,
+      created_at,
+      wspolnota_id,
+      wspolnoty (nazwa)
+    `)
     .order("created_at", { ascending: false });
+
+  if (wsp) {
+    query = query.eq("wspolnota_id", wsp);
+  }
+
+  const { data } = await query;
 
   adminTickets.innerHTML = "";
 
@@ -113,6 +154,7 @@ async function loadTicketsAdmin() {
     div.className = "ticketItem";
     div.innerHTML = `
       <b>${t.title}</b><br>
+      Wspólnota: ${t.wspolnoty?.nazwa || "brak"}<br>
       Status: ${t.status}<br>
       <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
     `;
@@ -148,8 +190,6 @@ async function openTicketModal(ticketId) {
     modalTicketFiles.innerHTML = "<i>Brak plików</i>";
   } else {
     for (const f of files) {
-
-      // 🔧 DRUGA POPRAWKA: tickets-files
       const { data: urlData } = await client.storage
         .from("tickets-files")
         .createSignedUrl(f.file_path, 3600);
