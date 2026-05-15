@@ -52,12 +52,11 @@ async function loadPendingUsers() {
   const list = pendingUsersList;
   list.innerHTML = "Ładowanie...";
 
- const { data } = await client
-  .from("profiles")
-  .select("*")
-  .eq("approved", false)
-  .eq("role", "user");
-
+  const { data } = await client
+    .from("profiles")
+    .select("*")
+    .eq("approved", false)
+    .eq("role", "user");
 
   if (!data.length) {
     list.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
@@ -102,9 +101,18 @@ async function loadAllUsers() {
   const list = allUsersList;
   list.innerHTML = "Ładowanie...";
 
+  // 🔧 POPRAWKA: pobieramy nazwę wspólnoty przez JOIN
   const { data } = await client
     .from("profiles")
-    .select("*")
+    .select(`
+      id,
+      email,
+      fullname,
+      role,
+      approved,
+      wspolnota_id,
+      wspolnoty (nazwa)
+    `)
     .order("email");
 
   list.innerHTML = "";
@@ -114,7 +122,7 @@ async function loadAllUsers() {
     div.className = "userItem";
     div.innerHTML = `
       <b>${u.fullname}</b> — ${u.email}
-      <br>Wspólnota: ${u.wspolnota_id || "brak"}
+      <br>Wspólnota: ${u.wspolnoty?.nazwa || "brak"}
       <br>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}
       <br>Rola: ${u.role}
       <hr>
