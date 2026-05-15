@@ -82,14 +82,14 @@ async function registerUser() {
   }
 
   if (data.user) {
-    await client.from("profiles").insert({
-      id: data.user.id,
-      fullname,
-      role: "user",
-      approved: false,
-      wspolnota_id: null
-    });
-  }
+await client.from("profiles").insert({
+  id: data.user.id,
+  fullname,
+  email: data.user.email,
+  role: "user",
+  approved: false,
+  wspolnota_id: null
+});
 
   showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
 }
