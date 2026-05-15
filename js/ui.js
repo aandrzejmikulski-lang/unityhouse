@@ -52,27 +52,47 @@ const btnSaveWspolnota = document.getElementById("btnSaveWspolnota");
 const btnLogin = document.getElementById("btnLogin");
 const btnRegister = document.getElementById("btnRegister");
 
+
+// ===============================
+// INIT UI
+// ===============================
 function initUI() {
   document.getElementById("closeModal").onclick = () => {
     ticketModal.classList.add("hidden");
   };
+
+  // 🔥 PRZEŁĄCZANIE FORMULARZY
+  if (btnAddTicket) {
+    btnAddTicket.onclick = () => showSection("ticketForm");
+  }
+
+  if (btnCancelTicket) {
+    btnCancelTicket.onclick = () => showSection("mainCard");
+  }
 }
 
+
+// ===============================
+// NOWE hideAllPanels (sidebar-friendly)
+// ===============================
 function hideAllPanels() {
-  loginCard.classList.add("hidden");
-  mainCard.classList.add("hidden");
-  adminCard.classList.add("hidden");
-  wspolnotaCard.classList.add("hidden");
-  selectWspolnotaCard.classList.add("hidden");
-  ticketForm.classList.add("hidden");
+  document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
 }
 
+
+// ===============================
+// MESSAGE
+// ===============================
 function showMessage(el, text, type = "info") {
   el.textContent = text;
   el.className = "message " + type;
   el.classList.remove("hidden");
 }
 
+
+// ===============================
+// AUTH VIEW
+// ===============================
 function setAuthView(isLoggedIn) {
   if (isLoggedIn) {
     btnLoginTop.classList.add("hidden");
@@ -85,6 +105,10 @@ function setAuthView(isLoggedIn) {
   }
 }
 
+
+// ===============================
+// LOGIN / REGISTER TABS
+// ===============================
 function showLoginTab() {
   goToLogin.classList.add("active");
   goToRegister.classList.remove("active");
