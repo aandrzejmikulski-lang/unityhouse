@@ -1,5 +1,3 @@
-// main.js
-
 // =====================================
 //  SUPABASE
 // =====================================
@@ -10,7 +8,7 @@ const client = supabase.createClient(
   { auth: { persistSession: false } }
 );
 
-let currentProfile = null;
+// UWAGA: currentProfile jest tylko w auth.js — NIE deklarujemy go tutaj!
 
 // =====================================
 //  START APLIKACJI
@@ -57,7 +55,7 @@ client.auth.onAuthStateChange(async (event, session) => {
   // ADMIN
   if (profile.role === "admin") {
     hideAllPanels();
-    adminPanel.classList.remove("hidden");
+    adminCard.classList.remove("hidden");
     loadPendingUsers();
     loadAllUsers();
     loadTicketsAdmin();
@@ -67,7 +65,7 @@ client.auth.onAuthStateChange(async (event, session) => {
   // UŻYTKOWNIK BEZ WYBRANEJ WSPÓLNOTY
   if (!profile.wspolnota_id) {
     hideAllPanels();
-    selectWspolnota.classList.remove("hidden");
+    selectWspolnotaCard.classList.remove("hidden");
     loadWspolnotyDropdown();
     return;
   }
