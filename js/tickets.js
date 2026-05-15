@@ -37,8 +37,9 @@ async function saveTicket() {
     const file = ticketFile.files[0];
     const filePath = `${ticket.id}/${file.name}`;
 
+    // 🔧 TU JEST POPRAWKA: tickets-files
     const { error: uploadError } = await client.storage
-      .from("ticket_files")
+      .from("tickets-files")
       .upload(filePath, file);
 
     if (!uploadError) {
@@ -147,8 +148,10 @@ async function openTicketModal(ticketId) {
     modalTicketFiles.innerHTML = "<i>Brak plików</i>";
   } else {
     for (const f of files) {
+
+      // 🔧 DRUGA POPRAWKA: tickets-files
       const { data: urlData } = await client.storage
-        .from("ticket_files")
+        .from("tickets-files")
         .createSignedUrl(f.file_path, 3600);
 
       const a = document.createElement("a");
