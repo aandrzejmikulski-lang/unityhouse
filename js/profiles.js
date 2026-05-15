@@ -52,10 +52,12 @@ async function loadPendingUsers() {
   const list = pendingUsersList;
   list.innerHTML = "Ładowanie...";
 
-  const { data } = await client
-    .from("profiles")
-    .select("*")
-    .eq("approved", false);
+ const { data } = await client
+  .from("profiles")
+  .select("*")
+  .eq("approved", false)
+  .eq("role", "user");
+
 
   if (!data.length) {
     list.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
