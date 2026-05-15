@@ -1,18 +1,29 @@
 // tickets.js
 
-function initTickets() {
-  // np. event listenery do tworzenia zgłoszeń
-}
+// ------------------------------------------------------------
+// ELEMENTY DOM
+// ------------------------------------------------------------
+const ticketForm = document.getElementById("ticketForm");
+const ticketTitle = document.getElementById("ticketTitle");
+const ticketDesc = document.getElementById("ticketDesc");
+const ticketFile = document.getElementById("ticketFile");
+const ticketList = document.getElementById("ticketList");
 
-async function createTicket() {
-  // tworzenie zgłoszenia
-}
+const adminTickets = document.getElementById("adminTickets");
 
-async function loadTickets() {
-  // pobieranie zgłoszeń
-}
-// tickets.js
+const ticketModal = document.getElementById("ticketModal");
+const modalTicketTitle = document.getElementById("modalTicketTitle");
+const modalTicketDesc = document.getElementById("modalTicketDesc");
+const modalTicketStatus = document.getElementById("modalTicketStatus");
+const modalTicketFiles = document.getElementById("modalTicketFiles");
 
+const btnStatusNowe = document.getElementById("btnStatusNowe");
+const btnStatusWTrakcie = document.getElementById("btnStatusWTrakcie");
+const btnStatusZamkniete = document.getElementById("btnStatusZamkniete");
+
+// ------------------------------------------------------------
+// INICJALIZACJA
+// ------------------------------------------------------------
 function initTickets() {
   document.getElementById("btnAddTicket").onclick = () =>
     ticketForm.classList.remove("hidden");
@@ -23,10 +34,12 @@ function initTickets() {
   document.getElementById("btnSaveTicket").onclick = saveTicket;
 }
 
+// ------------------------------------------------------------
+// TWORZENIE ZGŁOSZENIA
+// ------------------------------------------------------------
 async function saveTicket() {
   const title = ticketTitle.value.trim();
   const desc = ticketDesc.value.trim();
-  const fileInput = ticketFile;
 
   if (!title || !desc) {
     alert("Uzupełnij tytuł i opis.");
@@ -53,8 +66,9 @@ async function saveTicket() {
     .select()
     .single();
 
-  if (fileInput.files.length > 0) {
-    const file = fileInput.files[0];
+  // Upload pliku
+  if (ticketFile.files.length > 0) {
+    const file = ticketFile.files[0];
     const filePath = `${ticket.id}/${file.name}`;
 
     const { error: uploadError } = await client.storage
@@ -69,6 +83,7 @@ async function saveTicket() {
     }
   }
 
+  // Reset formularza
   ticketTitle.value = "";
   ticketDesc.value = "";
   ticketFile.value = "";
@@ -77,9 +92,11 @@ async function saveTicket() {
   loadTicketsUser(profile.wspolnota_id);
 }
 
+// ------------------------------------------------------------
+// ZGŁOSZENIA UŻYTKOWNIKA
+// ------------------------------------------------------------
 async function loadTicketsUser(wspolnota_id) {
-  const list = ticketList;
-  list.innerHTML = "Ładowanie...";
+  ticketList.innerHTML = "Ładowanie...";
 
   const { data: { session } } = await client.auth.getSession();
 
@@ -90,10 +107,10 @@ async function loadTicketsUser(wspolnota_id) {
     .eq("wspolnota_id", wspolnota_id)
     .order("created_at", { ascending: false });
 
-  list.innerHTML = "";
+  ticketList.innerHTML = "";
 
   if (!data.length) {
-    list.innerHTML = "<i>Brak zgłoszeń.</i>";
+    ticketList.innerHTML = "<i>Brak zgłoszeń.</i>";
     return;
   }
 
@@ -105,7 +122,7 @@ async function loadTicketsUser(wspolnota_id) {
       Status: ${t.status}<br>
       <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
     `;
-    list.appendChild(div);
+    ticketList.appendChild(div);
   });
 
   document.querySelectorAll(".btnOpenTicket").forEach(btn =>
@@ -113,19 +130,21 @@ async function loadTicketsUser(wspolnota_id) {
   );
 }
 
+// ------------------------------------------------------------
+// ZGŁOSZENIA ADMINA
+// ------------------------------------------------------------
 async function loadTicketsAdmin() {
-  const list = adminTickets;
-  list.innerHTML = "Ładowanie...";
+  adminTickets.innerHTML = "Ładowanie...";
 
   const { data } = await client
     .from("tickets")
     .select("*")
     .order("created_at", { ascending: false });
 
-  list.innerHTML = "";
+  adminTickets.innerHTML = "";
 
   if (!data.length) {
-    list.innerHTML = "<i>Brak zgłoszeń.</i>";
+    adminTickets.innerHTML = "<i>Brak zgłoszeń.</i>";
     return;
   }
 
@@ -137,7 +156,7 @@ async function loadTicketsAdmin() {
       Status: ${t.status}<br>
       <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
     `;
-    list.appendChild(div);
+    adminTickets.appendChild(div);
   });
 
   document.querySelectorAll("#adminTickets .btnOpenTicket").forEach(btn =>
@@ -145,9 +164,11 @@ async function loadTicketsAdmin() {
   );
 }
 
+// ------------------------------------------------------------
+// MODAL ZGŁOSZENIA
+// ------------------------------------------------------------
 async function openTicketModal(ticketId) {
-  const modal = ticketModal;
-  modal.classList.remove("hidden");
+  ticketModal.classList.remove("hidden");
 
   const { data: ticket } = await client
     .from("tickets")
@@ -159,6 +180,7 @@ async function openTicketModal(ticketId) {
   modalTicketDesc.textContent = ticket.description;
   modalTicketStatus.textContent = "Status: " + ticket.status;
 
+  // Pliki
   const { data: files } = await client
     .from("ticket_files")
     .select("*")
@@ -183,6 +205,7 @@ async function openTicketModal(ticketId) {
     }
   }
 
+  // Przyciski statusów tylko dla admina
   const isAdmin = currentProfile?.role === "admin";
   btnStatusNowe.style.display = isAdmin ? "inline-block" : "none";
   btnStatusWTrakcie.style.display = isAdmin ? "inline-block" : "none";
@@ -195,6 +218,9 @@ async function openTicketModal(ticketId) {
   }
 }
 
+// ------------------------------------------------------------
+// ZMIANA STATUSU
+// ------------------------------------------------------------
 async function updateTicketStatus(ticketId, newStatus) {
   await client
     .from("tickets")
