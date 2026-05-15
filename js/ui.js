@@ -1,5 +1,3 @@
-// ui.js
-
 function initUI() {
   document.getElementById("closeModal").onclick = () => {
     document.getElementById("ticketModal").classList.add("hidden");
@@ -9,8 +7,9 @@ function initUI() {
 function hideAllPanels() {
   loginCard.classList.add("hidden");
   mainCard.classList.add("hidden");
-  adminPanel.classList.add("hidden");
-  selectWspolnota.classList.add("hidden");
+  adminCard.classList.add("hidden");
+  wspolnotaCard.classList.add("hidden");
+  selectWspolnotaCard.classList.add("hidden");
   ticketForm.classList.add("hidden");
 }
 
