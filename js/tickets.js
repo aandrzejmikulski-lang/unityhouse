@@ -1,26 +1,33 @@
+// ===============================
+// INIT
+// ===============================
 function initTickets() {
-  btnAddTicket.onclick = () => ticketForm.classList.remove("hidden");
-  btnCancelTicket.onclick = () => ticketForm.classList.add("hidden");
-  btnSaveTicket.onclick = saveTicket;
+  if (btnAddTicket) btnAddTicket.onclick = () => ticketForm.classList.remove("hidden");
+  if (btnCancelTicket) btnCancelTicket.onclick = () => ticketForm.classList.add("hidden");
+  if (btnSaveTicket) btnSaveTicket.onclick = saveTicket;
 
-  // 🔥 Ładujemy listę wspólnot do filtra admina
   loadWspolnotyFilter();
 
-  // 🔥 Reagujemy na zmianę filtra
   const filter = document.getElementById("filterWspolnota");
   if (filter) filter.onchange = loadTicketsAdmin;
 }
 
+
+// ===============================
+// FILTR WSPÓLNOT (ADMIN)
+// ===============================
 async function loadWspolnotyFilter() {
   const sel = document.getElementById("filterWspolnota");
   if (!sel) return;
 
   sel.innerHTML = `<option value="">Wszystkie wspólnoty</option>`;
 
-  const { data } = await client
+  const { data, error } = await client
     .from("wspolnoty")
     .select("id, nazwa")
     .order("nazwa");
+
+  if (error || !data) return;
 
   data.forEach(w => {
     const opt = document.createElement("option");
@@ -30,6 +37,10 @@ async function loadWspolnotyFilter() {
   });
 }
 
+
+// ===============================
+// ZAPIS ZGŁOSZENIA
+// ===============================
 async function saveTicket() {
   const title = ticketTitle.value.trim();
   const desc = ticketDesc.value.trim();
@@ -39,15 +50,24 @@ async function saveTicket() {
     return;
   }
 
-  const { data: { session } } = await client.auth.getSession();
+  const { data: { session }, error: sessionError } = await client.auth.getSession();
+  if (sessionError || !session?.user) {
+    alert("Brak sesji użytkownika.");
+    return;
+  }
 
-  const { data: profile } = await client
+  const { data: profile, error: profileError } = await client
     .from("profiles")
     .select("wspolnota_id")
     .eq("id", session.user.id)
     .single();
 
-  const { data: ticket } = await client
+  if (profileError || !profile) {
+    alert("Błąd profilu użytkownika.");
+    return;
+  }
+
+  const { data: ticket, error: ticketError } = await client
     .from("tickets")
     .insert({
       title,
@@ -59,6 +79,12 @@ async function saveTicket() {
     .select()
     .single();
 
+  if (ticketError || !ticket) {
+    alert("Błąd zapisu zgłoszenia.");
+    return;
+  }
+
+  // plik
   if (ticketFile.files.length > 0) {
     const file = ticketFile.files[0];
     const filePath = `${ticket.id}/${file.name}`;
@@ -83,24 +109,39 @@ async function saveTicket() {
   loadTicketsUser(profile.wspolnota_id);
 }
 
+
+// ===============================
+// ZGŁOSZENIA UŻYTKOWNIKA
+// ===============================
 async function loadTicketsUser(wspolnota_id) {
+  if (!ticketList) return;
+
   ticketList.innerHTML = "Ładowanie...";
 
-  const { data: { session } } = await client.auth.getSession();
+  const { data: { session }, error: sessionError } = await client.auth.getSession();
+  if (sessionError || !session?.user) {
+    ticketList.innerHTML = "<i>Błąd sesji użytkownika.</i>";
+    return;
+  }
 
-  const { data } = await client
+  const { data, error } = await client
     .from("tickets")
     .select("*")
     .eq("user_id", session.user.id)
     .eq("wspolnota_id", wspolnota_id)
     .order("created_at", { ascending: false });
 
-  ticketList.innerHTML = "";
+  if (error || !data) {
+    ticketList.innerHTML = "<i>Błąd ładowania zgłoszeń.</i>";
+    return;
+  }
 
   if (!data.length) {
     ticketList.innerHTML = "<i>Brak zgłoszeń.</i>";
     return;
   }
+
+  ticketList.innerHTML = "";
 
   data.forEach(t => {
     const div = document.createElement("div");
@@ -118,7 +159,13 @@ async function loadTicketsUser(wspolnota_id) {
   );
 }
 
+
+// ===============================
+// ZGŁOSZENIA ADMINA
+// ===============================
 async function loadTicketsAdmin() {
+  if (!adminTickets) return;
+
   adminTickets.innerHTML = "Ładowanie...";
 
   const wsp = document.getElementById("filterWspolnota")?.value;
@@ -136,18 +183,21 @@ async function loadTicketsAdmin() {
     `)
     .order("created_at", { ascending: false });
 
-  if (wsp) {
-    query = query.eq("wspolnota_id", wsp);
+  if (wsp) query = query.eq("wspolnota_id", wsp);
+
+  const { data, error } = await query;
+
+  if (error || !data) {
+    adminTickets.innerHTML = "<i>Błąd ładowania zgłoszeń.</i>";
+    return;
   }
-
-  const { data } = await query;
-
-  adminTickets.innerHTML = "";
 
   if (!data.length) {
     adminTickets.innerHTML = "<i>Brak zgłoszeń.</i>";
     return;
   }
+
+  adminTickets.innerHTML = "";
 
   data.forEach(t => {
     const div = document.createElement("div");
@@ -166,14 +216,22 @@ async function loadTicketsAdmin() {
   );
 }
 
+
+// ===============================
+// MODAL ZGŁOSZENIA
+// ===============================
 async function openTicketModal(ticketId) {
+  if (!ticketModal) return;
+
   ticketModal.classList.remove("hidden");
 
-  const { data: ticket } = await client
+  const { data: ticket, error } = await client
     .from("tickets")
     .select("*")
     .eq("id", ticketId)
     .single();
+
+  if (error || !ticket) return;
 
   modalTicketTitle.textContent = ticket.title;
   modalTicketDesc.textContent = ticket.description;
@@ -186,7 +244,7 @@ async function openTicketModal(ticketId) {
 
   modalTicketFiles.innerHTML = "";
 
-  if (!files.length) {
+  if (!files || !files.length) {
     modalTicketFiles.innerHTML = "<i>Brak plików</i>";
   } else {
     for (const f of files) {
@@ -215,6 +273,10 @@ async function openTicketModal(ticketId) {
   }
 }
 
+
+// ===============================
+// ZMIANA STATUSU
+// ===============================
 async function updateTicketStatus(ticketId, newStatus) {
   await client
     .from("tickets")
