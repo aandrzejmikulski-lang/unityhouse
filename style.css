@@ -31,7 +31,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+  background: linear-gradient(160deg, #0a0c12 0%, #0b0d13 40%, #05060a 100%);
   color: var(--text);
   font-family: var(--font-sans);
 }
@@ -94,23 +94,20 @@ body {
 /* Cards */
 
 .card {
-  background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.12), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), #020617);
+  background: rgba(15, 23, 42, 0.85);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: var(--shadow-soft);
-  padding: 22px 22px 20px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  padding: 24px;
   position: relative;
   overflow: hidden;
+  transition: all var(--transition-med);
 }
 
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top, rgba(148, 163, 184, 0.12), transparent 60%);
-  opacity: 0.4;
-  pointer-events: none;
+.card:hover {
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: 0 25px 55px rgba(79, 70, 229, 0.35);
 }
 
 .card > * {
@@ -155,12 +152,6 @@ body {
   background: var(--accent-soft);
   color: var(--text);
   transform: translateY(-1px);
-}
-
-.tab-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 /* Fields */
@@ -225,6 +216,7 @@ textarea {
   background: linear-gradient(135deg, #4f46e5, #6366f1);
   border-color: rgba(129, 140, 248, 0.9);
   box-shadow: 0 14px 30px rgba(79, 70, 229, 0.45);
+  font-weight: 500;
 }
 
 .btn.primary:hover {
@@ -369,6 +361,32 @@ textarea {
   background: rgba(34, 197, 94, 0.12);
   border-color: rgba(34, 197, 94, 0.7);
   color: #bbf7d0;
+}
+
+/* ANNOUNCEMENTS — PREMIUM */
+
+.announcementItem {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.announcementItem:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.4);
+}
+
+.announcementItem b {
+  color: #a5b4fc;
+}
+
+.announcementItem small {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 /* Utils */
