@@ -21,6 +21,9 @@ function initAuth() {
   btnLogoutTop.onclick = logoutUser;
 }
 
+// ------------------------------------------------------------
+// LOGOWANIE
+// ------------------------------------------------------------
 async function loginUser() {
   const email = loginEmail.value.trim();
   const password = loginPassword.value.trim();
@@ -38,8 +41,57 @@ async function loginUser() {
   }
 
   showMessage(loginMessage, "Logowanie...", "success");
+
+  // --- POBIERANIE UŻYTKOWNIKA ---
+  const { data: { user } } = await client.auth.getUser();
+
+  // --- POBIERANIE PROFILU ---
+  const { data: profile, error: profileError } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError) {
+    showMessage(loginMessage, "Błąd pobierania profilu.", "error");
+    console.error(profileError);
+    return;
+  }
+
+  currentProfile = profile;
+
+  // --- ROUTING ---
+  hideAllPanels();
+
+  // ADMIN
+  if (profile.role === "admin") {
+    adminCard.classList.remove("hidden");
+    loadPendingUsers();
+    loadAllUsers();
+    return;
+  }
+
+  // NIEZATWIERDZONY
+  if (!profile.approved) {
+    showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
+    return;
+  }
+
+  // BRAK WSPÓLNOTY
+  if (!profile.wspolnota_id) {
+    wspolnotaCard.classList.remove("hidden");
+    loadWspolnotyDropdown();
+    return;
+  }
+
+  // UŻYTKOWNIK Z WSPÓLNOTĄ
+  mainCard.classList.remove("hidden");
+  loadTicketsUser(profile.wspolnota_id);
 }
 
+// ------------------------------------------------------------
+// REJESTRACJA
+// ------------------------------------------------------------
 async function registerUser() {
   const email = registerEmail.value.trim();
   const password = registerPassword.value.trim();
@@ -75,6 +127,9 @@ async function registerUser() {
   }
 }
 
+// ------------------------------------------------------------
+// WYLOGOWANIE
+// ------------------------------------------------------------
 async function logoutUser() {
   await client.auth.signOut();
   loginEmail.value = "";
