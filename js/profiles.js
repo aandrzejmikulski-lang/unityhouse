@@ -1,22 +1,23 @@
 // profiles.js
 
-function initProfiles() {
-  // np. ładowanie listy profili admina
-}
+// ------------------------------------------------------------
+// ELEMENTY DOM
+// ------------------------------------------------------------
+const wspolnotaDropdown = document.getElementById("wspolnotaDropdown");
+const wspolnotaMessage = document.getElementById("wspolnotaMessage");
+const pendingUsersList = document.getElementById("pendingUsersList");
+const allUsersList = document.getElementById("allUsersList");
 
-async function loadProfiles() {
-  // pobieranie profili
-}
-
-async function approveUser(id) {
-  // akceptacja użytkownika
-}
-// profiles.js
-
+// ------------------------------------------------------------
+// INICJALIZACJA
+// ------------------------------------------------------------
 function initProfiles() {
   document.getElementById("btnSaveWspolnota").onclick = saveWspolnota;
 }
 
+// ------------------------------------------------------------
+// LISTA WSPÓLNOT
+// ------------------------------------------------------------
 async function loadWspolnotyDropdown() {
   wspolnotaDropdown.innerHTML = "";
 
@@ -43,6 +44,9 @@ async function loadWspolnotyDropdown() {
   });
 }
 
+// ------------------------------------------------------------
+// ZAPIS WYBRANEJ WSPÓLNOTY
+// ------------------------------------------------------------
 async function saveWspolnota() {
   const selectedId = wspolnotaDropdown.value;
 
@@ -53,7 +57,8 @@ async function saveWspolnota() {
 
   const { data: { session } } = await client.auth.getSession();
 
-  await client.from("profiles")
+  await client
+    .from("profiles")
     .update({ wspolnota_id: selectedId })
     .eq("id", session.user.id);
 
@@ -62,6 +67,9 @@ async function saveWspolnota() {
   loadTicketsUser(selectedId);
 }
 
+// ------------------------------------------------------------
+// OCZEKUJĄCY UŻYTKOWNICY
+// ------------------------------------------------------------
 async function loadPendingUsers() {
   const list = pendingUsersList;
   list.innerHTML = "Ładowanie...";
@@ -98,6 +106,9 @@ async function loadPendingUsers() {
   );
 }
 
+// ------------------------------------------------------------
+// ZATWIERDZANIE / ODRZUCANIE UŻYTKOWNIKÓW
+// ------------------------------------------------------------
 async function approveUser(id) {
   await client.from("profiles").update({ approved: true }).eq("id", id);
   loadPendingUsers();
@@ -110,6 +121,9 @@ async function rejectUser(id) {
   loadAllUsers();
 }
 
+// ------------------------------------------------------------
+// LISTA WSZYSTKICH UŻYTKOWNIKÓW
+// ------------------------------------------------------------
 async function loadAllUsers() {
   const list = allUsersList;
   list.innerHTML = "Ładowanie...";
@@ -134,4 +148,3 @@ async function loadAllUsers() {
     list.appendChild(div);
   });
 }
-
