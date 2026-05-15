@@ -14,19 +14,18 @@ function showSection(id) {
 }
 
 // =======================================
-// INICJALIZACJE — MUSZĄ BYĆ TU
-// (żeby onclick w auth.js działały)
-// =======================================
-initUI();
-initAuth();
-initProfiles();
-initTickets();
-initAnnouncements();
-
-// =======================================
-// SIDEBAR — aktywacja modułów
+// INICJALIZACJE — TERAZ POPRAWIONE
 // =======================================
 document.addEventListener("DOMContentLoaded", () => {
+  initUI();
+  initAuth();
+  initProfiles();
+  initTickets();
+  initAnnouncements();
+
+  // =======================================
+  // SIDEBAR — aktywacja modułów
+  // =======================================
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
