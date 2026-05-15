@@ -90,8 +90,9 @@ async function loginUser() {
     return;
   }
 
-  // NIEZATWIERDZONY
+  // NIEZATWIERDZONY  *** POPRAWKA TUTAJ ***
   if (!profile.approved) {
+    loginCard.classList.remove("hidden");   // <-- DODANA LINIJKA
     showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
     return;
   }
