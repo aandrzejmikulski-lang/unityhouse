@@ -28,6 +28,8 @@ function hideAnnouncementForm() {
   announcementTitle.value = "";
   announcementContent.value = "";
   announcementGlobal.checked = false;
+  announcementFrom.value = "";
+  announcementTo.value = "";
 }
 
 
@@ -36,7 +38,7 @@ function hideAnnouncementForm() {
 // ===============================
 async function loadAnnouncementWspolnotyCheckboxes() {
   const box = document.getElementById("announcementWspolnoty");
-  if (!box) return; // 🔧 zabezpieczenie
+  if (!box) return;
   box.innerHTML = "";
 
   const { data, error } = await client
@@ -71,6 +73,9 @@ async function saveAnnouncement() {
   const content = announcementContent.value.trim();
   const isGlobal = announcementGlobal.checked;
 
+  const validFrom = announcementFrom.value || null;
+  const validTo = announcementTo.value || null;
+
   if (!title || !content) {
     alert("Uzupełnij tytuł i treść ogłoszenia.");
     return;
@@ -89,7 +94,9 @@ async function saveAnnouncement() {
       title,
       content,
       author_id: session.user.id,
-      global: isGlobal
+      global: isGlobal,
+      valid_from: validFrom,
+      valid_to: validTo
     })
     .select()
     .single();
@@ -155,6 +162,8 @@ async function loadAnnouncementsUser() {
       content,
       created_at,
       global,
+      valid_from,
+      valid_to,
       announcement_wspolnoty (wspolnota_id)
     `)
     .order("created_at", { ascending: false });
@@ -165,8 +174,16 @@ async function loadAnnouncementsUser() {
     return;
   }
 
+  const today = new Date().toISOString().split("T")[0];
+
   const filtered = data.filter(a =>
-    a.global || (a.announcement_wspolnoty && a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp))
+    (a.global ||
+     (a.announcement_wspolnoty && a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp))
+    )
+    &&
+    (a.valid_from === null || a.valid_from <= today)
+    &&
+    (a.valid_to === null || a.valid_to >= today)
   );
 
   if (!filtered.length) {
@@ -206,6 +223,8 @@ async function loadAnnouncementsAdmin() {
       content,
       created_at,
       global,
+      valid_from,
+      valid_to,
       announcement_wspolnoty (wspolnota_id, wspolnoty (nazwa))
     `)
     .order("created_at", { ascending: false });
@@ -235,6 +254,7 @@ async function loadAnnouncementsAdmin() {
     div.innerHTML = `
       <b>${a.title}</b><br>
       <small>${new Date(a.created_at).toLocaleString()}</small><br>
+      <b>Wyświetlaj:</b> ${a.valid_from || "—"} → ${a.valid_to || "bez końca"}<br>
       <b>Dotyczy:</b> ${wsp}<br><br>
       ${a.content}
       <hr>
