@@ -1,4 +1,4 @@
-// ELEMENTY DOM (muszą być zdefiniowane!)
+// ELEMENTY DOM
 const loginCard = document.getElementById("loginCard");
 const mainCard = document.getElementById("mainCard");
 const adminCard = document.getElementById("adminCard");
@@ -6,9 +6,55 @@ const wspolnotaCard = document.getElementById("wspolnotaCard");
 const selectWspolnotaCard = document.getElementById("selectWspolnotaCard");
 const ticketForm = document.getElementById("ticketForm");
 
+const loginMessage = document.getElementById("loginMessage");
+const registerMessage = document.getElementById("registerMessage");
+
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const registerEmail = document.getElementById("registerEmail");
+const registerPassword = document.getElementById("registerPassword");
+const registerFullname = document.getElementById("registerFullname");
+
+const btnLoginTop = document.getElementById("btnLoginTop");
+const btnRegisterTop = document.getElementById("btnRegisterTop");
+const btnLogoutTop = document.getElementById("btnLogoutTop");
+
+const goToLogin = document.getElementById("goToLogin");
+const goToRegister = document.getElementById("goToRegister");
+const loginForm = document.getElementById("loginForm");
+const registerCard = document.getElementById("registerCard");
+
+const wspolnotaDropdown = document.getElementById("wspolnotaDropdown");
+const wspolnotaMessage = document.getElementById("wspolnotaMessage");
+const pendingUsersList = document.getElementById("pendingUsersList");
+const allUsersList = document.getElementById("allUsersList");
+
+const ticketTitle = document.getElementById("ticketTitle");
+const ticketDesc = document.getElementById("ticketDesc");
+const ticketFile = document.getElementById("ticketFile");
+const ticketList = document.getElementById("ticketList");
+const adminTickets = document.getElementById("adminTickets");
+
+const ticketModal = document.getElementById("ticketModal");
+const modalTicketTitle = document.getElementById("modalTicketTitle");
+const modalTicketDesc = document.getElementById("modalTicketDesc");
+const modalTicketStatus = document.getElementById("modalTicketStatus");
+const modalTicketFiles = document.getElementById("modalTicketFiles");
+
+const btnStatusNowe = document.getElementById("btnStatusNowe");
+const btnStatusWTrakcie = document.getElementById("btnStatusWTrakcie");
+const btnStatusZamkniete = document.getElementById("btnStatusZamkniete");
+
+const btnAddTicket = document.getElementById("btnAddTicket");
+const btnCancelTicket = document.getElementById("btnCancelTicket");
+const btnSaveTicket = document.getElementById("btnSaveTicket");
+const btnSaveWspolnota = document.getElementById("btnSaveWspolnota");
+const btnLogin = document.getElementById("btnLogin");
+const btnRegister = document.getElementById("btnRegister");
+
 function initUI() {
   document.getElementById("closeModal").onclick = () => {
-    document.getElementById("ticketModal").classList.add("hidden");
+    ticketModal.classList.add("hidden");
   };
 }
 
@@ -17,6 +63,7 @@ function hideAllPanels() {
   mainCard.classList.add("hidden");
   adminCard.classList.add("hidden");
   wspolnotaCard.classList.add("hidden");
+  selectWspolnotaCard.classList.add("hidden");
   ticketForm.classList.add("hidden");
 }
 
