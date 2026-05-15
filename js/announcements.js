@@ -36,12 +36,19 @@ function hideAnnouncementForm() {
 // ===============================
 async function loadAnnouncementWspolnotyCheckboxes() {
   const box = document.getElementById("announcementWspolnoty");
+  if (!box) return; // 🔧 zabezpieczenie
   box.innerHTML = "";
 
-  const { data } = await client
+  const { data, error } = await client
     .from("wspolnoty")
     .select("id, nazwa")
     .order("nazwa");
+
+  if (error || !data) {
+    console.error("Błąd ładowania wspólnot:", error);
+    box.innerHTML = "<i>Błąd ładowania wspólnot.</i>";
+    return;
+  }
 
   data.forEach(w => {
     const div = document.createElement("div");
@@ -69,10 +76,14 @@ async function saveAnnouncement() {
     return;
   }
 
-  const { data: { session } } = await client.auth.getSession();
+  const { data: { session }, error: sessionError } = await client.auth.getSession();
+  if (sessionError || !session?.user) {
+    alert("Brak sesji użytkownika.");
+    return;
+  }
 
   // 1. Zapis ogłoszenia
-  const { data: ann } = await client
+  const { data: ann, error: annError } = await client
     .from("announcements")
     .insert({
       title,
@@ -83,18 +94,23 @@ async function saveAnnouncement() {
     .select()
     .single();
 
+  if (annError || !ann) {
+    console.error("Błąd zapisu ogłoszenia:", annError);
+    alert("Nie udało się zapisać ogłoszenia.");
+    return;
+  }
+
   // 2. Jeśli nie globalne → zapis powiązań
   if (!isGlobal) {
-    const selected = [...document.querySelectorAll(".annWspCheck:checked")]
-      .map(c => c.value);
-
+    const selected = [...document.querySelectorAll(".annWspCheck:checked")].map(c => c.value);
     if (selected.length > 0) {
       const rows = selected.map(id => ({
         announcement_id: ann.id,
         wspolnota_id: id
       }));
 
-      await client.from("announcement_wspolnoty").insert(rows);
+      const { error: linkError } = await client.from("announcement_wspolnoty").insert(rows);
+      if (linkError) console.error("Błąd zapisu powiązań:", linkError);
     }
   }
 
@@ -112,20 +128,26 @@ async function loadAnnouncementsUser() {
 
   userAnnouncements.innerHTML = "Ładowanie...";
 
-  const { data: { session } } = await client.auth.getSession();
+  const { data: { session }, error: sessionError } = await client.auth.getSession();
+  if (sessionError || !session?.user) {
+    userAnnouncements.innerHTML = "<i>Błąd sesji użytkownika.</i>";
+    return;
+  }
 
-  const { data: profile } = await client
+  const { data: profile, error: profileError } = await client
     .from("profiles")
     .select("wspolnota_id")
     .eq("id", session.user.id)
     .single();
 
+  if (profileError || !profile) {
+    userAnnouncements.innerHTML = "<i>Błąd profilu użytkownika.</i>";
+    return;
+  }
+
   const wsp = profile.wspolnota_id;
 
-  // Pobieramy:
-  // - globalne ogłoszenia
-  // - ogłoszenia przypisane do wspólnoty użytkownika
-  const { data } = await client
+  const { data, error } = await client
     .from("announcements")
     .select(`
       id,
@@ -137,9 +159,14 @@ async function loadAnnouncementsUser() {
     `)
     .order("created_at", { ascending: false });
 
+  if (error || !data) {
+    console.error("Błąd ładowania ogłoszeń:", error);
+    userAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
+    return;
+  }
+
   const filtered = data.filter(a =>
-    a.global ||
-    a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp)
+    a.global || (a.announcement_wspolnoty && a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp))
   );
 
   if (!filtered.length) {
@@ -171,7 +198,7 @@ async function loadAnnouncementsAdmin() {
 
   adminAnnouncements.innerHTML = "Ładowanie...";
 
-  const { data } = await client
+  const { data, error } = await client
     .from("announcements")
     .select(`
       id,
@@ -183,6 +210,12 @@ async function loadAnnouncementsAdmin() {
     `)
     .order("created_at", { ascending: false });
 
+  if (error || !data) {
+    console.error("Błąd ładowania ogłoszeń admina:", error);
+    adminAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
+    return;
+  }
+
   if (!data.length) {
     adminAnnouncements.innerHTML = "<i>Brak ogłoszeń.</i>";
     return;
@@ -193,7 +226,9 @@ async function loadAnnouncementsAdmin() {
   data.forEach(a => {
     const wsp = a.global
       ? "Wszystkie wspólnoty"
-      : a.announcement_wspolnoty.map(x => x.wspolnoty.nazwa).join(", ");
+      : (a.announcement_wspolnoty || [])
+          .map(x => x.wspolnoty?.nazwa || "—")
+          .join(", ");
 
     const div = document.createElement("div");
     div.className = "announcementItem";
