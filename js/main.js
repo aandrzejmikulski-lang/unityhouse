@@ -5,7 +5,7 @@ const client = supabase.createClient(
 );
 
 // =======================================
-// GLOBALNE PRZEŁĄCZANIE WIDOKÓW (SIDEBAR)
+// GLOBALNE PRZEŁĄCZANIE WIDOKÓW
 // =======================================
 function showSection(id) {
   document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
@@ -14,7 +14,7 @@ function showSection(id) {
 }
 
 // =======================================
-// INICJALIZACJE — TERAZ POPRAWIONE
+// INICJALIZACJE — POPRAWIONE
 // =======================================
 document.addEventListener("DOMContentLoaded", () => {
   initUI();
@@ -23,9 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initTickets();
   initAnnouncements();
 
-  // =======================================
-  // SIDEBAR — aktywacja modułów
-  // =======================================
+  // sidebar
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -67,9 +65,7 @@ client.auth.onAuthStateChange(async (event, session) => {
 
   currentProfile = profile;
 
-  // ============================
   // ADMIN
-  // ============================
   if (profile.role === "admin") {
     showSection("adminCard");
 
@@ -81,9 +77,7 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // ============================
-  // UŻYTKOWNIK NIEZATWIERDZONY
-  // ============================
+  // NIEZATWIERDZONY
   if (!profile.approved) {
     showSection("loginCard");
     showLoginTab();
@@ -91,18 +85,14 @@ client.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // ============================
-  // UŻYTKOWNIK BEZ WSPÓLNOTY
-  // ============================
+  // BEZ WSPÓLNOTY
   if (!profile.wspolnota_id) {
     showSection("selectWspolnotaCard");
     loadWspolnotyDropdown();
     return;
   }
 
-  // ============================
   // UŻYTKOWNIK Z WSPÓLNOTĄ
-  // ============================
   showSection("mainCard");
 
   loadTicketsUser(profile.wspolnota_id);
