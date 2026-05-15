@@ -11,3 +11,196 @@ async function createTicket() {
 async function loadTickets() {
   // pobieranie zgłoszeń
 }
+// tickets.js
+
+function initTickets() {
+  document.getElementById("btnAddTicket").onclick = () =>
+    ticketForm.classList.remove("hidden");
+
+  document.getElementById("btnCancelTicket").onclick = () =>
+    ticketForm.classList.add("hidden");
+
+  document.getElementById("btnSaveTicket").onclick = saveTicket;
+}
+
+async function saveTicket() {
+  const title = ticketTitle.value.trim();
+  const desc = ticketDesc.value.trim();
+  const fileInput = ticketFile;
+
+  if (!title || !desc) {
+    alert("Uzupełnij tytuł i opis.");
+    return;
+  }
+
+  const { data: { session } } = await client.auth.getSession();
+
+  const { data: profile } = await client
+    .from("profiles")
+    .select("wspolnota_id")
+    .eq("id", session.user.id)
+    .single();
+
+  const { data: ticket } = await client
+    .from("tickets")
+    .insert({
+      title,
+      description: desc,
+      user_id: session.user.id,
+      wspolnota_id: profile.wspolnota_id,
+      status: "nowe"
+    })
+    .select()
+    .single();
+
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const filePath = `${ticket.id}/${file.name}`;
+
+    const { error: uploadError } = await client.storage
+      .from("ticket_files")
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      await client.from("ticket_files").insert({
+        ticket_id: ticket.id,
+        file_path: filePath
+      });
+    }
+  }
+
+  ticketTitle.value = "";
+  ticketDesc.value = "";
+  ticketFile.value = "";
+  ticketForm.classList.add("hidden");
+
+  loadTicketsUser(profile.wspolnota_id);
+}
+
+async function loadTicketsUser(wspolnota_id) {
+  const list = ticketList;
+  list.innerHTML = "Ładowanie...";
+
+  const { data: { session } } = await client.auth.getSession();
+
+  const { data } = await client
+    .from("tickets")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .eq("wspolnota_id", wspolnota_id)
+    .order("created_at", { ascending: false });
+
+  list.innerHTML = "";
+
+  if (!data.length) {
+    list.innerHTML = "<i>Brak zgłoszeń.</i>";
+    return;
+  }
+
+  data.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "ticketItem";
+    div.innerHTML = `
+      <b>${t.title}</b><br>
+      Status: ${t.status}<br>
+      <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
+    `;
+    list.appendChild(div);
+  });
+
+  document.querySelectorAll(".btnOpenTicket").forEach(btn =>
+    btn.onclick = () => openTicketModal(btn.dataset.id)
+  );
+}
+
+async function loadTicketsAdmin() {
+  const list = adminTickets;
+  list.innerHTML = "Ładowanie...";
+
+  const { data } = await client
+    .from("tickets")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  list.innerHTML = "";
+
+  if (!data.length) {
+    list.innerHTML = "<i>Brak zgłoszeń.</i>";
+    return;
+  }
+
+  data.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "ticketItem";
+    div.innerHTML = `
+      <b>${t.title}</b><br>
+      Status: ${t.status}<br>
+      <button class="btnOpenTicket" data-id="${t.id}">Otwórz</button>
+    `;
+    list.appendChild(div);
+  });
+
+  document.querySelectorAll("#adminTickets .btnOpenTicket").forEach(btn =>
+    btn.onclick = () => openTicketModal(btn.dataset.id)
+  );
+}
+
+async function openTicketModal(ticketId) {
+  const modal = ticketModal;
+  modal.classList.remove("hidden");
+
+  const { data: ticket } = await client
+    .from("tickets")
+    .select("*")
+    .eq("id", ticketId)
+    .single();
+
+  modalTicketTitle.textContent = ticket.title;
+  modalTicketDesc.textContent = ticket.description;
+  modalTicketStatus.textContent = "Status: " + ticket.status;
+
+  const { data: files } = await client
+    .from("ticket_files")
+    .select("*")
+    .eq("ticket_id", ticketId);
+
+  modalTicketFiles.innerHTML = "";
+
+  if (!files.length) {
+    modalTicketFiles.innerHTML = "<i>Brak plików</i>";
+  } else {
+    for (const f of files) {
+      const { data: urlData } = await client.storage
+        .from("ticket_files")
+        .createSignedUrl(f.file_path, 3600);
+
+      const a = document.createElement("a");
+      a.href = urlData.signedUrl;
+      a.textContent = f.file_path.split("/")[1];
+      a.target = "_blank";
+      modalTicketFiles.appendChild(a);
+      modalTicketFiles.appendChild(document.createElement("br"));
+    }
+  }
+
+  const isAdmin = currentProfile?.role === "admin";
+  btnStatusNowe.style.display = isAdmin ? "inline-block" : "none";
+  btnStatusWTrakcie.style.display = isAdmin ? "inline-block" : "none";
+  btnStatusZamkniete.style.display = isAdmin ? "inline-block" : "none";
+
+  if (isAdmin) {
+    btnStatusNowe.onclick = () => updateTicketStatus(ticketId, "nowe");
+    btnStatusWTrakcie.onclick = () => updateTicketStatus(ticketId, "w_trakcie");
+    btnStatusZamkniete.onclick = () => updateTicketStatus(ticketId, "zamkniete");
+  }
+}
+
+async function updateTicketStatus(ticketId, newStatus) {
+  await client
+    .from("tickets")
+    .update({ status: newStatus })
+    .eq("id", ticketId);
+
+  ticketModal.classList.add("hidden");
+  loadTicketsAdmin();
+}
