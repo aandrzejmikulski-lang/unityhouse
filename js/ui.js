@@ -1,21 +1,6 @@
 // ui.js
 
 function initUI() {
-  // np. obsługa menu, modali
-}
-
-function showMessage(element, text, type = "info") {
-  element.textContent = text;
-  element.className = type;
-}
-
-function switchPanel(panelId) {
-  document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
-  document.getElementById(panelId).style.display = "block";
-}
-// ui.js
-
-function initUI() {
   document.getElementById("closeModal").onclick = () => {
     document.getElementById("ticketModal").classList.add("hidden");
   };
@@ -50,13 +35,15 @@ function setAuthView(isLoggedIn) {
 function showLoginTab() {
   goToLogin.classList.add("active");
   goToRegister.classList.remove("active");
+
   loginForm.classList.remove("hidden");
-  registerCardInner.classList.add("hidden");
+  registerCard.classList.add("hidden");
 }
 
 function showRegisterTab() {
   goToLogin.classList.remove("active");
   goToRegister.classList.add("active");
+
   loginForm.classList.add("hidden");
-  registerCardInner.classList.remove("hidden");
+  registerCard.classList.remove("hidden");
 }
