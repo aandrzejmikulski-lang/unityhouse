@@ -1,3 +1,5 @@
+alert("TEST MAIN");
+
 window.App = window.App || {};
 
 App.supabase = supabase.createClient(
