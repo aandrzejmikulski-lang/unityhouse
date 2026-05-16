@@ -4,34 +4,49 @@
   <meta charset="UTF-8" />
   <title>Unity House – Panel mieszkańca</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- STYLE -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- SUPABASE -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+  <!-- APP MODULES -->
+  <script defer src="js/ui.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/profiles.js"></script>
+  <script defer src="js/tickets.js"></script>
+  <script defer src="js/announcements.js"></script>
+  <script defer src="js/main.js"></script>
 </head>
 
 <body>
   <div class="app-shell">
 
-    <!-- SIDEBAR (UKRYTY PRZED LOGOWANIEM) -->
+    <!-- FLOATING GLASS SIDEBAR -->
     <aside class="sidebar hidden">
-      <div class="logo">Unity House</div>
+      <div class="sidebar-glass">
+        <div class="logo">Unity House</div>
 
-      <nav class="sidebar-nav">
-        <div class="sidebar-item" data-target="mainCard">Panel mieszkańca</div>
-        <div class="sidebar-item" data-target="adminCard">Panel administratora</div>
-        <div class="sidebar-item" data-target="wspolnotaCard">Wspólnoty</div>
-        <div class="sidebar-item" data-target="selectWspolnotaCard">Wybór wspólnoty</div>
-        <div class="sidebar-item" data-target="ticketForm">Nowe zgłoszenie</div>
-        <div class="sidebar-item" data-target="announcementForm">Nowe ogłoszenie</div>
-      </nav>
+        <nav class="sidebar-nav">
+          <div class="sidebar-item" data-target="mainCard">Panel mieszkańca</div>
+          <div class="sidebar-item" data-target="adminCard">Panel administratora</div>
+          <div class="sidebar-item" data-target="wspolnotaCard">Wspólnoty</div>
+          <div class="sidebar-item" data-target="selectWspolnotaCard">Wybór wspólnoty</div>
+          <div class="sidebar-item" data-target="ticketForm">Nowe zgłoszenie</div>
+          <div class="sidebar-item" data-target="announcementForm">Nowe ogłoszenie</div>
+        </nav>
 
-      <button id="btnLogoutTop" class="btn ghost hidden" style="margin-top:auto;">
-        Wyloguj
-      </button>
+        <button id="btnLogoutTop" class="btn ghost hidden logout-btn">
+          Wyloguj
+        </button>
+      </div>
     </aside>
 
-    <!-- CONTENT -->
+    <!-- MAIN CONTENT -->
     <main class="content">
 
-      <!-- LOGOWANIE / REJESTRACJA -->
+      <!-- LOGOWANIE -->
       <section class="card auth-card" id="loginCard">
         <h1>Panel mieszkańca</h1>
         <p class="muted">
@@ -97,6 +112,9 @@
         <h3>Oczekujący użytkownicy</h3>
         <div id="pendingUsersList"></div>
 
+        <h3>Wszyscy użytkownicy</h3>
+        <div id="allUsersList"></div>
+
         <h3>Zgłoszenia wspólnoty</h3>
         <select id="filterWspolnota">
           <option value="">Wszystkie wspólnoty</option>
@@ -157,7 +175,7 @@
           <textarea id="announcementContent"></textarea>
         </label>
 
-        <label class="field">
+        <label class="field checkbox-inline">
           <input type="checkbox" id="announcementGlobal" />
           <span>Ogłoszenie globalne</span>
         </label>
@@ -195,15 +213,5 @@
 
     </main>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-
-  <script src="js/ui.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/profiles.js"></script>
-  <script src="js/tickets.js"></script>
-  <script src="js/announcements.js"></script>
-  <script src="js/main.js"></script>
-
 </body>
 </html>
