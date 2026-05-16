@@ -2,7 +2,9 @@ window.App = window.App || {};
 
 App.auth = (() => {
   let currentProfile = null;
-
+function setCurrentProfile(p) {
+  currentProfile = p;
+}
   function getDom() {
     return App.ui.dom;
   }
@@ -138,10 +140,13 @@ App.auth = (() => {
   }
 
   return {
-    init,
-    loginUser,
-    registerUser,
-    logoutUser,
-    getCurrentProfile
-  };
+  init,
+  loginUser,
+  registerUser,
+  logoutUser,
+  getCurrentProfile,
+  setCurrentProfile
+};
+
+
 })();
