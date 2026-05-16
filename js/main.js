@@ -1,3 +1,5 @@
+alert("MAIN.JS START");
+
 window.App = window.App || {};
 
 // 1) Supabase – na górze, od razu
