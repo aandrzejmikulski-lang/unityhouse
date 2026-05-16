@@ -16,16 +16,19 @@ document.addEventListener("DOMContentLoaded", () => {
   App.tickets.init();
   App.announcements.init();
 
+  // SIDEBAR
+  document.querySelectorAll(".sidebar-item").forEach(item => {
+    item.addEventListener("click", () => {
+      document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+
+      const target = item.dataset.target;
+      App.ui.showSection(target);
+    });
+  });
+
+  // STARTOWY WIDOK
   App.ui.hideAllPanels();
   App.ui.showSection("loginCard");
   App.ui.showLoginTab();
-});
-document.querySelectorAll(".sidebar-item").forEach(item => {
-  item.addEventListener("click", () => {
-    document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-
-    const target = item.dataset.target;
-    App.ui.showSection(target);
-  });
 });
