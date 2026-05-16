@@ -17,46 +17,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 🔥 opóźnienie na załadowanie ui.js
   setTimeout(() => {
+    // Inicjalizacja modułów
     App.ui?.init?.();
     App.auth?.init?.();
     App.profiles?.init?.();
     App.tickets?.init?.();
     App.announcements?.init?.();
+
+    // Widok startowy — ekran logowania
+    App.ui?.hideAllPanels?.();
+    App.ui?.showSection?.("loginCard");
+    App.ui?.showLoginTab?.();
   }, 300);
 
   // ===============================================
-// Sidebar — aktywne sekcje z kontrolą roli
-// ===============================================
-document.querySelectorAll(".sidebar-item").forEach(item => {
-  item.addEventListener("click", () => {
+  // Sidebar — aktywne sekcje z kontrolą roli
+  // ===============================================
+  document.querySelectorAll(".sidebar-item").forEach(item => {
+    item.addEventListener("click", () => {
+      const profile = App.auth.getCurrentProfile();
+      if (!profile) return;
 
-    const profile = App.auth.getCurrentProfile();
-    if (!profile) return;
+      const target = item.dataset.target;
 
-    const target = item.dataset.target;
+      // ADMIN może widzieć tylko adminCard
+      if (profile.role === "admin" && target !== "adminCard") return;
 
-    // ADMIN może widzieć tylko adminCard
-    if (profile.role === "admin") {
-      if (target !== "adminCard") return;
-    }
+      // USER nie może widzieć adminCard
+      if (profile.role === "user" && target === "adminCard") return;
 
-    // USER nie może widzieć adminCard
-    if (profile.role === "user") {
-      if (target === "adminCard") return;
-    }
+      document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
 
-    document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
-    item.classList.add("active");
-
-    App.ui.showSection(target);
+      App.ui.showSection(target);
+    });
   });
-});
-
-
-  // Widok startowy
-  App.ui?.hideAllPanels?.();
-  App.ui?.showSection?.("loginCard");
-  App.ui?.showLoginTab?.();
 });
 
 // ===============================================
@@ -65,6 +60,7 @@ document.querySelectorAll(".sidebar-item").forEach(item => {
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
+  // Brak sesji — wracamy do logowania
   if (!session) {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
@@ -73,6 +69,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // Pobranie profilu
   const { data: profile, error } = await App.supabase
     .from("profiles")
     .select("*")
@@ -81,6 +78,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   if (error) {
     console.error("Błąd pobierania profilu:", error);
+    App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
     return;
@@ -88,51 +86,46 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   App.auth.setCurrentProfile(profile);
 
-  // ADMIN
-  if (profile.role === "admin") {
+  // USER — niezatwierdzony
+  if (!profile.approved) {
+    App.ui?.hideAllPanels?.();
+    App.ui?.showSection?.("loginCard");
+    App.ui?.showLoginTab?.();
+    App.ui?.showMessage?.(
+      App.ui.dom.loginMessage,
+      "Twoje konto czeka na zatwierdzenie.",
+      "error"
+    );
     App.ui?.setAuthView?.(true);
+    return;
+  }
+
+  // USER — brak wspólnoty
+  if (!profile.wspolnota_id && profile.role === "user") {
+    App.ui?.hideAllPanels?.();
+    App.ui?.setAuthView?.(true);
+    App.ui?.showSection?.("selectWspolnotaCard");
+    App.profiles?.loadWspolnotyDropdown?.();
+    return;
+  }
+
+  // Ustawienie widoku po zalogowaniu
+  App.ui?.hideAllPanels?.();
+  App.ui?.setAuthView?.(true);
+
+  if (profile.role === "admin") {
+    console.log("ADMIN VIEW aktywny");
     App.ui?.showSection?.("adminCard");
 
     App.profiles?.loadPendingUsers?.();
     App.profiles?.loadAllUsers?.();
     App.tickets?.loadTicketsAdmin?.();
     App.announcements?.loadAnnouncementsAdmin?.();
-    return;
+  } else {
+    console.log("USER VIEW aktywny");
+    App.ui?.showSection?.("mainCard");
+
+    App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
+    App.announcements?.loadAnnouncementsUser?.();
   }
-
-  // USER — niezatwierdzony
-  if (!profile.approved) {
-    App.ui?.showSection?.("loginCard");
-    App.ui?.showLoginTab?.();
-    App.ui?.showMessage?.(App.ui.dom.loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
-    App.ui?.setAuthView?.(true);
-    return;
-  }
-
-  // USER — brak wspólnoty
-  if (!profile.wspolnota_id) {
-    App.ui?.setAuthView?.(true);
-    App.ui?.showSection?.("selectWspolnotaCard");
-    App.profiles?.loadWspolnotyDropdown?.();
-    return;
-  }
-// Ustawienie widoku po zalogowaniu
-App.ui?.hideAllPanels?.();
-App.ui?.setAuthView?.(true);
-
-if (profile.role === "admin") {
-  App.ui?.showSection?.("adminCard");
-  console.log("ADMIN VIEW aktywny");
-
-  App.profiles?.loadPendingUsers?.();
-  App.profiles?.loadAllUsers?.();
-  App.tickets?.loadTicketsAdmin?.();
-  App.announcements?.loadAnnouncementsAdmin?.();
-} else {
-  App.ui?.showSection?.("mainCard");
-  console.log("USER VIEW aktywny");
-
-  App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
-  App.announcements?.loadAnnouncementsUser?.();
-}
 });
