@@ -1,4 +1,5 @@
 window.App = window.App || {};
+
 App.auth = (() => {
   let currentProfile = null;
 
@@ -8,31 +9,12 @@ App.auth = (() => {
 
   function init() {
     const {
-      btnLoginTop,
-      btnRegisterTop,
-      btnLogoutTop,
-      loginCard,
       goToLogin,
       goToRegister,
       btnLogin,
-      btnRegister
+      btnRegister,
+      btnLogoutTop
     } = getDom();
-
-    if (btnLoginTop && loginCard) {
-      btnLoginTop.onclick = () => {
-        App.ui.hideAllPanels();
-        loginCard.classList.remove("hidden");
-        App.ui.showLoginTab();
-      };
-    }
-
-    if (btnRegisterTop && loginCard) {
-      btnRegisterTop.onclick = () => {
-        App.ui.hideAllPanels();
-        loginCard.classList.remove("hidden");
-        App.ui.showRegisterTab();
-      };
-    }
 
     if (goToLogin) goToLogin.onclick = App.ui.showLoginTab;
     if (goToRegister) goToRegister.onclick = App.ui.showRegisterTab;
@@ -43,11 +25,7 @@ App.auth = (() => {
   }
 
   async function loginUser() {
-    const {
-      loginEmail,
-      loginPassword,
-      loginMessage
-    } = getDom();
+    const { loginEmail, loginPassword, loginMessage } = getDom();
 
     const email = loginEmail.value.trim();
     const password = loginPassword.value.trim();
@@ -68,18 +46,14 @@ App.auth = (() => {
 
     const { data: { user } } = await App.supabase.auth.getUser();
 
-    const { data: profile, error: profileError } = await App.supabase
+    const { data: profile } = await App.supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single();
 
-    if (profileError) {
-      App.ui.showMessage(loginMessage, "Błąd pobierania profilu.", "error");
-      return;
-    }
-
     currentProfile = profile;
+
     App.ui.hideAllPanels();
 
     if (profile.role === "admin") {
@@ -94,7 +68,6 @@ App.auth = (() => {
 
     if (!profile.approved) {
       App.ui.showSection("loginCard");
-      App.ui.showLoginTab();
       App.ui.showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
       App.ui.setAuthView(true);
       return;
@@ -114,12 +87,7 @@ App.auth = (() => {
   }
 
   async function registerUser() {
-    const {
-      registerEmail,
-      registerPassword,
-      registerFullname,
-      registerMessage
-    } = getDom();
+    const { registerEmail, registerPassword, registerFullname, registerMessage } = getDom();
 
     const email = registerEmail.value.trim();
     const password = registerPassword.value.trim();
@@ -156,12 +124,7 @@ App.auth = (() => {
   }
 
   async function logoutUser() {
-    const { loginEmail, loginPassword } = getDom();
-
     await App.supabase.auth.signOut();
-
-    if (loginEmail) loginEmail.value = "";
-    if (loginPassword) loginPassword.value = "";
     currentProfile = null;
 
     App.ui.hideAllPanels();
