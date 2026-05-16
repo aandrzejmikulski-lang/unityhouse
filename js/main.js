@@ -88,3 +88,5 @@ document.addEventListener("DOMContentLoaded", () => {
   App.ui.showSection("loginCard");
   App.ui.showLoginTab();
 });
+console.log("Main.js działa – test startowy");
+App.ui.showSection("loginCard");
