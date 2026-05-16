@@ -15,7 +15,6 @@
       <div class="logo">Unity House</div>
 
       <nav class="sidebar-nav">
-        <div class="sidebar-item active" data-target="loginCard">Logowanie</div>
         <div class="sidebar-item" data-target="mainCard">Panel mieszkańca</div>
         <div class="sidebar-item" data-target="adminCard">Panel administratora</div>
         <div class="sidebar-item" data-target="wspolnotaCard">Wspólnoty</div>
@@ -205,21 +204,6 @@
   <script src="js/tickets.js"></script>
   <script src="js/announcements.js"></script>
   <script src="js/main.js"></script>
-
-  <!-- SIDEBAR LOGIC -->
-  <script>
-    document.querySelectorAll(".sidebar-item").forEach(item => {
-      item.addEventListener("click", () => {
-        document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
-        item.classList.add("active");
-
-        const target = item.dataset.target;
-
-        document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
-        document.getElementById(target).classList.remove("hidden");
-      });
-    });
-  </script>
 
 </body>
 </html>
