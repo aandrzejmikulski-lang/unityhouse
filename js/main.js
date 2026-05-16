@@ -109,25 +109,27 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // FINALNE przełączenie widoku
-  App.ui?.setAuthView?.(true);   // ← najpierw aktywujemy layout
-  App.ui?.hideAllPanels?.();     // ← dopiero potem czyścimy widoki
+  // FINALNE przełączenie widoku — z opóźnieniem
+  setTimeout(() => {
+    App.ui?.setAuthView?.(true);
+    App.ui?.hideAllPanels?.();
 
-  if (profile.role === "admin") {
-    console.log("ADMIN VIEW aktywny");
-    App.ui?.showSection?.("adminCard");
+    if (profile.role === "admin") {
+      console.log("ADMIN VIEW aktywny");
+      App.ui?.showSection?.("adminCard");
 
-    App.profiles?.loadPendingUsers?.();
-    App.profiles?.loadAllUsers?.();
-    App.tickets?.loadTicketsAdmin?.();
-    App.announcements?.loadAnnouncementsAdmin?.();
-  } else {
-    console.log("USER VIEW aktywny");
-    App.ui?.showSection?.("mainCard");
+      App.profiles?.loadPendingUsers?.();
+      App.profiles?.loadAllUsers?.();
+      App.tickets?.loadTicketsAdmin?.();
+      App.announcements?.loadAnnouncementsAdmin?.();
+    } else {
+      console.log("USER VIEW aktywny");
+      App.ui?.showSection?.("mainCard");
 
-    App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
-    App.announcements?.loadAnnouncementsUser?.();
-  }
+      App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
+      App.announcements?.loadAnnouncementsUser?.();
+    }
 
-  setTimeout(() => AUTH_LOCK = false, 300);
+    AUTH_LOCK = false;
+  }, 500);
 });
