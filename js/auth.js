@@ -1,162 +1,184 @@
-let currentProfile = null;
+window.App = window.App || {};
+App.auth = (() => {
+  let currentProfile = null;
 
-// ===============================
-// INIT AUTH
-// ===============================
-function initAuth() {
-
-  // NIE BLOKUJEMY CAŁEJ INICJALIZACJI
-  // zamiast tego sprawdzamy każdy przycisk osobno
-
-  if (btnLoginTop) {
-    btnLoginTop.onclick = () => {
-      hideAllPanels();
-      loginCard.classList.remove("hidden");
-      showLoginTab();
-    };
+  function getDom() {
+    return App.ui.dom;
   }
 
-  if (btnRegisterTop) {
-    btnRegisterTop.onclick = () => {
-      hideAllPanels();
-      loginCard.classList.remove("hidden");
-      showRegisterTab();
-    };
+  function init() {
+    const {
+      btnLoginTop,
+      btnRegisterTop,
+      btnLogoutTop,
+      loginCard,
+      goToLogin,
+      goToRegister,
+      btnLogin,
+      btnRegister
+    } = getDom();
+
+    if (btnLoginTop && loginCard) {
+      btnLoginTop.onclick = () => {
+        App.ui.hideAllPanels();
+        loginCard.classList.remove("hidden");
+        App.ui.showLoginTab();
+      };
+    }
+
+    if (btnRegisterTop && loginCard) {
+      btnRegisterTop.onclick = () => {
+        App.ui.hideAllPanels();
+        loginCard.classList.remove("hidden");
+        App.ui.showRegisterTab();
+      };
+    }
+
+    if (goToLogin) goToLogin.onclick = App.ui.showLoginTab;
+    if (goToRegister) goToRegister.onclick = App.ui.showRegisterTab;
+
+    if (btnLogin) btnLogin.onclick = loginUser;
+    if (btnRegister) btnRegister.onclick = registerUser;
+    if (btnLogoutTop) btnLogoutTop.onclick = logoutUser;
   }
 
-  if (goToLogin) goToLogin.onclick = showLoginTab;
-  if (goToRegister) goToRegister.onclick = showRegisterTab;
+  async function loginUser() {
+    const {
+      loginEmail,
+      loginPassword,
+      loginMessage
+    } = getDom();
 
-  if (btnLogin) btnLogin.onclick = loginUser;
-  if (btnRegister) btnRegister.onclick = registerUser;
-  if (btnLogoutTop) btnLogoutTop.onclick = logoutUser;
-}
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value.trim();
 
+    if (!email || !password) {
+      App.ui.showMessage(loginMessage, "Uzupełnij wszystkie pola.", "error");
+      return;
+    }
 
-// ===============================
-// LOGOWANIE
-// ===============================
-async function loginUser() {
-  const email = loginEmail.value.trim();
-  const password = loginPassword.value.trim();
+    const { error } = await App.supabase.auth.signInWithPassword({ email, password });
 
-  if (!email || !password) {
-    showMessage(loginMessage, "Uzupełnij wszystkie pola.", "error");
-    return;
+    if (error) {
+      App.ui.showMessage(loginMessage, "Błędny e-mail lub hasło.", "error");
+      return;
+    }
+
+    App.ui.showMessage(loginMessage, "Logowanie...", "success");
+
+    const { data: { user } } = await App.supabase.auth.getUser();
+
+    const { data: profile, error: profileError } = await App.supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      App.ui.showMessage(loginMessage, "Błąd pobierania profilu.", "error");
+      return;
+    }
+
+    currentProfile = profile;
+    App.ui.hideAllPanels();
+
+    if (profile.role === "admin") {
+      App.ui.showSection("adminCard");
+      App.profiles.loadPendingUsers();
+      App.profiles.loadAllUsers();
+      App.tickets.loadTicketsAdmin();
+      App.announcements.loadAnnouncementsAdmin();
+      App.ui.setAuthView(true);
+      return;
+    }
+
+    if (!profile.approved) {
+      App.ui.showSection("loginCard");
+      App.ui.showLoginTab();
+      App.ui.showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
+      App.ui.setAuthView(true);
+      return;
+    }
+
+    if (!profile.wspolnota_id) {
+      App.ui.showSection("selectWspolnotaCard");
+      App.profiles.loadWspolnotyDropdown();
+      App.ui.setAuthView(true);
+      return;
+    }
+
+    App.ui.showSection("mainCard");
+    App.tickets.loadTicketsUser(profile.wspolnota_id);
+    App.announcements.loadAnnouncementsUser();
+    App.ui.setAuthView(true);
   }
 
-  const { error } = await client.auth.signInWithPassword({ email, password });
+  async function registerUser() {
+    const {
+      registerEmail,
+      registerPassword,
+      registerFullname,
+      registerMessage
+    } = getDom();
 
-  if (error) {
-    showMessage(loginMessage, "Błędny e-mail lub hasło.", "error");
-    return;
-  }
+    const email = registerEmail.value.trim();
+    const password = registerPassword.value.trim();
+    const fullname = registerFullname.value.trim();
 
-  showMessage(loginMessage, "Logowanie...", "success");
+    if (!email || !password || !fullname) {
+      App.ui.showMessage(registerMessage, "Uzupełnij wszystkie pola.", "error");
+      return;
+    }
 
-  const { data: { user } } = await client.auth.getUser();
-
-  const { data: profile, error: profileError } = await client
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError) {
-    showMessage(loginMessage, "Błąd pobierania profilu.", "error");
-    return;
-  }
-
-  currentProfile = profile;
-  hideAllPanels();
-
-  // ADMIN
-  if (profile.role === "admin") {
-    showSection("adminCard");
-    loadPendingUsers();
-    loadAllUsers();
-    loadTicketsAdmin();
-    loadAnnouncementsAdmin();
-    setAuthView(true);
-    return;
-  }
-
-  // NIEZATWIERDZONY
-  if (!profile.approved) {
-    showSection("loginCard");
-    showLoginTab();
-    showMessage(loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
-    setAuthView(true);
-    return;
-  }
-
-  // BEZ WSPÓLNOTY
-  if (!profile.wspolnota_id) {
-    showSection("selectWspolnotaCard");
-    loadWspolnotyDropdown();
-    setAuthView(true);
-    return;
-  }
-
-  // UŻYTKOWNIK Z WSPÓLNOTĄ
-  showSection("mainCard");
-  loadTicketsUser(profile.wspolnota_id);
-  loadAnnouncementsUser();
-  setAuthView(true);
-}
-
-
-// ===============================
-// REJESTRACJA
-// ===============================
-async function registerUser() {
-  const email = registerEmail.value.trim();
-  const password = registerPassword.value.trim();
-  const fullname = registerFullname.value.trim();
-
-  if (!email || !password || !fullname) {
-    showMessage(registerMessage, "Uzupełnij wszystkie pola.", "error");
-    return;
-  }
-
-  const { data, error } = await client.auth.signUp({
-    email,
-    password,
-    options: { data: { fullname } }
-  });
-
-  if (error) {
-    showMessage(registerMessage, "Błąd rejestracji.", "error");
-    return;
-  }
-
-  if (data.user) {
-    await client.from("profiles").insert({
-      id: data.user.id,
-      fullname,
-      email: data.user.email,
-      role: "user",
-      approved: false,
-      wspolnota_id: null
+    const { data, error } = await App.supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { fullname } }
     });
 
-    showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
+    if (error) {
+      App.ui.showMessage(registerMessage, "Błąd rejestracji.", "error");
+      return;
+    }
+
+    if (data.user) {
+      await App.supabase.from("profiles").insert({
+        id: data.user.id,
+        fullname,
+        email: data.user.email,
+        role: "user",
+        approved: false,
+        wspolnota_id: null
+      });
+
+      App.ui.showMessage(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
+    }
   }
-}
 
+  async function logoutUser() {
+    const { loginEmail, loginPassword } = getDom();
 
-// ===============================
-// WYLOGOWANIE
-// ===============================
-async function logoutUser() {
-  await client.auth.signOut();
+    await App.supabase.auth.signOut();
 
-  loginEmail.value = "";
-  loginPassword.value = "";
-  currentProfile = null;
+    if (loginEmail) loginEmail.value = "";
+    if (loginPassword) loginPassword.value = "";
+    currentProfile = null;
 
-  hideAllPanels();
-  showSection("loginCard");
-  showLoginTab();
-  setAuthView(false);
-}
+    App.ui.hideAllPanels();
+    App.ui.showSection("loginCard");
+    App.ui.showLoginTab();
+    App.ui.setAuthView(false);
+  }
+
+  function getCurrentProfile() {
+    return currentProfile;
+  }
+
+  return {
+    init,
+    loginUser,
+    registerUser,
+    logoutUser,
+    getCurrentProfile
+  };
+})();
