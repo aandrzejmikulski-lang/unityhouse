@@ -12,15 +12,21 @@ App.supabase = supabase.createClient(
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM READY — Unity House Premium");
 
-  // Inicjalizacja UI
-  App.ui.init();
+  // 🔥 DAJEMY PRZEGLĄDARCE CZAS NA ZAŁADOWANIE ui.js
+  setTimeout(() => {
 
-  // Inicjalizacja modułów
-if (App.ui?.init) App.ui.init();
-if (App.auth?.init) App.auth.init();
-if (App.profiles?.init) App.profiles.init();
-if (App.tickets?.init) App.tickets.init();
-if (App.announcements?.init) App.announcements.init();
+    console.log("INIT START");
+
+    if (App.ui?.init) App.ui.init();
+    if (App.auth?.init) App.auth.init();
+    if (App.profiles?.init) App.profiles.init();
+    if (App.tickets?.init) App.tickets.init();
+    if (App.announcements?.init) App.announcements.init();
+
+    console.log("INIT DONE");
+
+  }, 300); // 300 ms = stabilne ładowanie modułów
+});
 
 
   // Sidebar — aktywne sekcje
