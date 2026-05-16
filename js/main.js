@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const target = item.dataset.target;
 
-      if (profile.role === "admin" && target !== "adminCard") return;
+      // 🔒 Blokada dostępu do panelu admina dla mieszkańca
       if (profile.role === "user" && target === "adminCard") return;
 
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -55,7 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
-  // 🔥 Blokada podwójnego wywołania Supabase
   if (AUTH_LOCK) return;
   AUTH_LOCK = true;
 
@@ -126,10 +125,13 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("USER VIEW aktywny");
       App.ui?.showSection?.("mainCard");
 
+      // 🔒 Mieszkaniec widzi tylko swoje zgłoszenia i ogłoszenia
       App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
       App.announcements?.loadAnnouncementsUser?.();
-    }
 
-    AUTH_LOCK = false;
-  }, 500);
-});
+      // Ukryj elementy admina
+      document.querySelector("#adminCard")?.classList.add("hidden");
+      document.querySelector("#announcementForm")?.classList.add("hidden");
+      document.querySelector("#adminAnnouncements")?.classList.add("hidden");
+      document.querySelector("#pendingUsersList")?.classList.add("hidden");
+      document.querySelector
