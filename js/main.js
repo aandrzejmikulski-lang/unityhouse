@@ -9,6 +9,9 @@ App.supabase = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
 );
 
+// ===============================================
+// DOM READY — główny blok
+// ===============================================
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM READY — Unity House Premium");
 
@@ -22,42 +25,39 @@ document.addEventListener("DOMContentLoaded", () => {
     if (App.announcements?.init) App.announcements.init();
 
   }, 300);
-});
 
-
+  // ===============================================
   // Sidebar — aktywne sekcje
+  // ===============================================
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
       item.classList.add("active");
 
       const target = item.dataset.target;
-      App.ui.showSection(target);
+      App.ui?.showSection?.(target);
     });
   });
 
   // Widok startowy
-  App.ui.hideAllPanels();
-  App.ui.showSection("loginCard");
-  App.ui.showLoginTab();
+  App.ui?.hideAllPanels?.();
+  App.ui?.showSection?.("loginCard");
+  App.ui?.showLoginTab?.();
 });
 
 // ===============================================
 // AUTH STATE CHANGE — pełna obsługa logiki
 // ===============================================
-
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
- if (!session) {
-  App.ui.hideAllPanels();
-  App.ui.showSection("loginCard");
-  App.ui.showLoginTab();
-  App.ui.setAuthView(false);
-  return;
-}
-
-
+  if (!session) {
+    App.ui?.hideAllPanels?.();
+    App.ui?.showSection?.("loginCard");
+    App.ui?.showLoginTab?.();
+    App.ui?.setAuthView?.(false);
+    return;
+  }
 
   const { data: profile, error } = await App.supabase
     .from("profiles")
@@ -67,48 +67,42 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   if (error) {
     console.error("Błąd pobierania profilu:", error);
-    App.ui.showSection("loginCard");
-    App.ui.showLoginTab();
+    App.ui?.showSection?.("loginCard");
+    App.ui?.showLoginTab?.();
     return;
   }
 
-  // Zapis profilu w pamięci modułu auth
-App.auth.setCurrentProfile(profile);
+  App.auth.setCurrentProfile(profile);
 
-
-  // ADMIN
   if (profile.role === "admin") {
-    App.ui.setAuthView(true);
-    App.ui.showSection("adminCard");
+    App.ui?.setAuthView?.(true);
+    App.ui?.showSection?.("adminCard");
 
-    App.profiles.loadPendingUsers();
-    App.profiles.loadAllUsers();
-    App.tickets.loadTicketsAdmin();
-    App.announcements.loadAnnouncementsAdmin();
+    App.profiles?.loadPendingUsers?.();
+    App.profiles?.loadAllUsers?.();
+    App.tickets?.loadTicketsAdmin?.();
+    App.announcements?.loadAnnouncementsAdmin?.();
     return;
   }
 
-  // USER — niezatwierdzony
   if (!profile.approved) {
-    App.ui.showSection("loginCard");
-    App.ui.showLoginTab();
-    App.ui.showMessage(App.ui.dom.loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
-    App.ui.setAuthView(true);
+    App.ui?.showSection?.("loginCard");
+    App.ui?.showLoginTab?.();
+    App.ui?.showMessage?.(App.ui.dom.loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
+    App.ui?.setAuthView?.(true);
     return;
   }
 
-  // USER — brak wspólnoty
   if (!profile.wspolnota_id) {
-    App.ui.setAuthView(true);
-    App.ui.showSection("selectWspolnotaCard");
-    App.profiles.loadWspolnotyDropdown();
+    App.ui?.setAuthView?.(true);
+    App.ui?.showSection?.("selectWspolnotaCard");
+    App.profiles?.loadWspolnotyDropdown?.();
     return;
   }
 
-  // USER — pełny dostęp
-  App.ui.setAuthView(true);
-  App.ui.showSection("mainCard");
+  App.ui?.setAuthView?.(true);
+  App.ui?.showSection?.("mainCard");
 
-  App.tickets.loadTicketsUser(profile.wspolnota_id);
-  App.announcements.loadAnnouncementsUser();
+  App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
+  App.announcements?.loadAnnouncementsUser?.();
 });
