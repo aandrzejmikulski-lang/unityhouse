@@ -82,3 +82,9 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
   App.tickets.loadTicketsUser(profile.wspolnota_id);
   App.announcements.loadAnnouncementsUser();
 });
+// Wymuszenie startowego widoku logowania
+document.addEventListener("DOMContentLoaded", () => {
+  App.ui.hideAllPanels();
+  App.ui.showSection("loginCard");
+  App.ui.showLoginTab();
+});
