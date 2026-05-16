@@ -1,25 +1,38 @@
 window.App = window.App || {};
 
 App.announcements = (() => {
+
   function getDom() {
     return App.ui.dom;
   }
 
   function init() {
+    const profile = App.auth.getCurrentProfile();
+
     const {
       btnAddAnnouncement,
       btnCancelAnnouncement,
       btnSaveAnnouncement
     } = getDom();
 
-    if (btnAddAnnouncement) btnAddAnnouncement.onclick = showAnnouncementForm;
-    if (btnCancelAnnouncement) btnCancelAnnouncement.onclick = hideAnnouncementForm;
-    if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
+    // 🔥 Formularz ogłoszeń tylko dla admina
+    if (profile?.role === "admin") {
+      if (btnAddAnnouncement) btnAddAnnouncement.onclick = showAnnouncementForm;
+      if (btnCancelAnnouncement) btnCancelAnnouncement.onclick = hideAnnouncementForm;
+      if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
 
-    loadAnnouncementsUser();
-    loadAnnouncementsAdmin();
+      loadAnnouncementsAdmin();
+    }
+
+    // 🔥 Mieszkaniec widzi tylko swoje ogłoszenia
+    if (profile?.role === "user") {
+      loadAnnouncementsUser();
+    }
   }
 
+  // ============================
+  // FORMULARZ OGŁOSZEŃ — ADMIN
+  // ============================
   function showAnnouncementForm() {
     const { announcementForm } = getDom();
     if (!announcementForm) return;
@@ -47,6 +60,9 @@ App.announcements = (() => {
   }
 
   async function loadAnnouncementWspolnotyCheckboxes() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     const box = document.getElementById("announcementWspolnoty");
     if (!box) return;
 
@@ -74,7 +90,13 @@ App.announcements = (() => {
     });
   }
 
+  // ============================
+  // ZAPIS OGŁOSZENIA — ADMIN
+  // ============================
   async function saveAnnouncement() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     const {
       announcementTitle,
       announcementContent,
@@ -132,22 +154,19 @@ App.announcements = (() => {
 
     hideAnnouncementForm();
     loadAnnouncementsAdmin();
-    loadAnnouncementsUser();
   }
 
+  // ============================
+  // OGŁOSZENIA — MIESZKANIEC
+  // ============================
   async function loadAnnouncementsUser() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "user") return;
+
     const { userAnnouncements } = getDom();
     if (!userAnnouncements) return;
 
     userAnnouncements.innerHTML = "Ładowanie...";
-
-    const { data: { session } } = await App.supabase.auth.getSession();
-
-    const { data: profile } = await App.supabase
-      .from("profiles")
-      .select("wspolnota_id")
-      .eq("id", session.user.id)
-      .single();
 
     const wsp = profile.wspolnota_id;
 
@@ -197,7 +216,13 @@ App.announcements = (() => {
     });
   }
 
+  // ============================
+  // OGŁOSZENIA — ADMIN
+  // ============================
   async function loadAnnouncementsAdmin() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     const { adminAnnouncements } = getDom();
     if (!adminAnnouncements) return;
 
