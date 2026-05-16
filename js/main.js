@@ -32,3 +32,50 @@ document.addEventListener("DOMContentLoaded", () => {
   App.ui.showSection("loginCard");
   App.ui.showLoginTab();
 });
+App.supabase.auth.onAuthStateChange(async (event, session) => {
+  console.log("AUTH STATE:", event);
+
+  if (!session) {
+    App.auth.logoutUser();
+    return;
+  }
+
+  const { data: profile, error } = await App.supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+  if (error) {
+    console.error("Błąd pobierania profilu:", error);
+    App.ui.showSection("loginCard");
+    App.ui.showLoginTab();
+    return;
+  }
+
+  if (profile.role === "admin") {
+    App.ui.showSection("adminCard");
+    App.profiles.loadPendingUsers();
+    App.profiles.loadAllUsers();
+    App.tickets.loadTicketsAdmin();
+    App.announcements.loadAnnouncementsAdmin();
+    return;
+  }
+
+  if (!profile.approved) {
+    App.ui.showSection("loginCard");
+    App.ui.showLoginTab();
+    App.ui.showMessage(App.ui.dom.loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
+    return;
+  }
+
+  if (!profile.wspolnota_id) {
+    App.ui.showSection("selectWspolnotaCard");
+    App.profiles.loadWspolnotyDropdown();
+    return;
+  }
+
+  App.ui.showSection("mainCard");
+  App.tickets.loadTicketsUser(profile.wspolnota_id);
+  App.announcements.loadAnnouncementsUser();
+});
