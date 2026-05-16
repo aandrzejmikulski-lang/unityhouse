@@ -1,3 +1,8 @@
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("TEST: DOM READY");
+  const loginCard = document.getElementById("loginCard");
+  console.log("loginCard:", loginCard);
+});
 // ===============================================
 // UNITY HOUSE — main.js (FINAL PREMIUM VERSION)
 // ===============================================
