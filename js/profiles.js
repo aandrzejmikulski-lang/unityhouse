@@ -1,6 +1,7 @@
 window.App = window.App || {};
 
 App.profiles = (() => {
+
   function getDom() {
     return App.ui.dom;
   }
@@ -10,6 +11,9 @@ App.profiles = (() => {
     if (btnSaveWspolnota) btnSaveWspolnota.onclick = saveWspolnota;
   }
 
+  // ============================
+  // WSPÓLNOTY
+  // ============================
   async function loadWspolnotyDropdown() {
     const { wspolnotaDropdown, wspolnotaMessage } = getDom();
 
@@ -54,14 +58,28 @@ App.profiles = (() => {
       .update({ wspolnota_id: selectedId })
       .eq("id", session.user.id);
 
+    // 🔥 odśwież profil w pamięci
+    const { data: profile } = await App.supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    App.auth.setCurrentProfile(profile);
+
     App.ui.showSection("mainCard");
     App.tickets.loadTicketsUser(selectedId);
     App.announcements.loadAnnouncementsUser();
   }
 
+  // ============================
+  // ADMIN — tylko admin może to widzieć
+  // ============================
   async function loadPendingUsers() {
-    const { pendingUsersList } = getDom();
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
 
+    const { pendingUsersList } = getDom();
     pendingUsersList.innerHTML = "Ładowanie...";
 
     const { data } = await App.supabase
@@ -98,18 +116,27 @@ App.profiles = (() => {
   }
 
   async function approveUser(id) {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     await App.supabase.from("profiles").update({ approved: true }).eq("id", id);
     loadPendingUsers();
     loadAllUsers();
   }
 
   async function rejectUser(id) {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     await App.supabase.from("profiles").delete().eq("id", id);
     loadPendingUsers();
     loadAllUsers();
   }
 
   async function loadAllUsers() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     const { allUsersList } = getDom();
 
     allUsersList.innerHTML = "Ładowanie...";
