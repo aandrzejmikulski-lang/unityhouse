@@ -1,24 +1,34 @@
 window.App = window.App || {};
 
 App.tickets = (() => {
+
   function getDom() {
     return App.ui.dom;
   }
 
   function init() {
+    const profile = App.auth.getCurrentProfile();
     const { btnAddTicket, btnCancelTicket, btnSaveTicket } = getDom();
 
     if (btnAddTicket) btnAddTicket.onclick = () => App.ui.showSection("ticketForm");
     if (btnCancelTicket) btnCancelTicket.onclick = () => App.ui.showSection("mainCard");
     if (btnSaveTicket) btnSaveTicket.onclick = saveTicket;
 
-    loadWspolnotyFilter();
-
-    const filter = document.getElementById("filterWspolnota");
-    if (filter) filter.onchange = loadTicketsAdmin;
+    // 🔥 Filtr wspólnot tylko dla admina
+    if (profile?.role === "admin") {
+      loadWspolnotyFilter();
+      const filter = document.getElementById("filterWspolnota");
+      if (filter) filter.onchange = loadTicketsAdmin;
+    }
   }
 
+  // ============================
+  // ADMIN — filtr wspólnot
+  // ============================
   async function loadWspolnotyFilter() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     const sel = document.getElementById("filterWspolnota");
     if (!sel) return;
 
@@ -37,6 +47,9 @@ App.tickets = (() => {
     });
   }
 
+  // ============================
+  // ZAPIS ZGŁOSZENIA — mieszkaniec
+  // ============================
   async function saveTicket() {
     const { ticketTitle, ticketDesc, ticketFile } = getDom();
 
@@ -92,12 +105,19 @@ App.tickets = (() => {
     loadTicketsUser(profile.wspolnota_id);
   }
 
+  // ============================
+  // ZGŁOSZENIA — mieszkaniec
+  // ============================
   async function loadTicketsUser(wspolnota_id) {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "user") return;
+
     const { ticketList } = getDom();
 
     ticketList.innerHTML = "Ładowanie...";
 
     const { data: { session } } = await App.supabase.auth.getSession();
+
     const { data, error } = await App.supabase
       .from("tickets")
       .select("*")
@@ -133,10 +153,14 @@ App.tickets = (() => {
     );
   }
 
+  // ============================
+  // ZGŁOSZENIA — admin
+  // ============================
   async function loadTicketsAdmin() {
-    const { adminTickets } = getDom();
-    if (!adminTickets) return;
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
 
+    const { adminTickets } = getDom();
     adminTickets.innerHTML = "Ładowanie...";
 
     const wsp = document.getElementById("filterWspolnota")?.value;
@@ -187,7 +211,13 @@ App.tickets = (() => {
     );
   }
 
+  // ============================
+  // MODAL — admin + mieszkaniec
+  // ============================
   async function openTicketModal(ticketId) {
+    const profile = App.auth.getCurrentProfile();
+    const isAdmin = profile?.role === "admin";
+
     const {
       ticketModal,
       modalTicketTitle,
@@ -206,6 +236,13 @@ App.tickets = (() => {
       .select("*")
       .eq("id", ticketId)
       .single();
+
+    // 🔥 Mieszkaniec może otworzyć TYLKO swoje zgłoszenia
+    if (!isAdmin && ticket.user_id !== profile.id) {
+      ticketModal.classList.add("hidden");
+      alert("Nie masz dostępu do tego zgłoszenia.");
+      return;
+    }
 
     modalTicketTitle.textContent = ticket.title;
     modalTicketDesc.textContent = ticket.description;
@@ -235,9 +272,7 @@ App.tickets = (() => {
       }
     }
 
-    const profile = App.auth.getCurrentProfile();
-    const isAdmin = profile?.role === "admin";
-
+    // 🔥 Przyciski statusu tylko dla admina
     btnStatusNowe.style.display = isAdmin ? "inline-block" : "none";
     btnStatusWTrakcie.style.display = isAdmin ? "inline-block" : "none";
     btnStatusZamkniete.style.display = isAdmin ? "inline-block" : "none";
@@ -250,6 +285,9 @@ App.tickets = (() => {
   }
 
   async function updateTicketStatus(ticketId, newStatus) {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     await App.supabase
       .from("tickets")
       .update({ status: newStatus })
@@ -271,4 +309,3 @@ App.tickets = (() => {
     updateTicketStatus
   };
 })();
-
