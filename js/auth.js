@@ -88,14 +88,10 @@ App.auth = (() => {
     }
   }
 
+  // ✅ JEDYNA ZMIANA — usunięto UI, bo robi to main.js
   async function logoutUser() {
     await App.supabase.auth.signOut();
     currentProfile = null;
-
-    App.ui?.hideAllPanels?.();
-    App.ui?.showSection?.("loginCard");
-    App.ui?.showLoginTab?.();
-    App.ui?.setAuthView?.(false);
   }
 
   function getCurrentProfile() {
