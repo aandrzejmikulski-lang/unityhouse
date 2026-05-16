@@ -262,3 +262,9 @@ textarea:focus {
   max-width: 800px;
   margin: 0 auto 28px;
 }
+.content {
+  display: block !important;
+  grid-column: 2 / 3 !important;
+  width: 100% !important;
+  max-width: none !important;
+}
