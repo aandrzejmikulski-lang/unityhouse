@@ -69,7 +69,15 @@ App.ui = (() => {
     btnLogoutTop: document.getElementById("btnLogoutTop")
   };
 
+  // 🔥 BLOKADA — user NIE MOŻE wejść do adminCard
   function showSection(id) {
+    const profile = App.auth.getCurrentProfile();
+
+    if (id === "adminCard" && profile?.role !== "admin") {
+      console.warn("User próbował wejść do adminCard — zablokowano");
+      id = "mainCard";
+    }
+
     document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
     const el = document.getElementById(id);
     if (el) el.classList.remove("hidden");
@@ -106,19 +114,15 @@ App.ui = (() => {
 
     if (profile.role === "admin") {
       adminItem.style.display = "block";
-      userItem.style.display = "none";
-
-      // admin widzi wszystko
+      userItem.style.display = "block";
       dom.adminCard?.classList.remove("hidden");
 
     } else {
+      // 🔥 TWARDY ZAKAZ ADMINA
       adminItem.style.display = "none";
-      userItem.style.display = "block";
-
-      // mieszkaniec widzi tylko swoje rzeczy
       dom.adminCard?.classList.add("hidden");
-      dom.announcementForm?.classList.add("hidden");
       dom.adminAnnouncements?.classList.add("hidden");
+      dom.announcementForm?.classList.add("hidden");
       dom.pendingUsersList?.classList.add("hidden");
       dom.allUsersList?.classList.add("hidden");
     }
