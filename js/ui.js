@@ -1,7 +1,6 @@
 window.App = window.App || {};
 
 App.ui = (() => {
-  // Pobieranie elementów DOM
   const dom = {
     loginCard: document.getElementById("loginCard"),
     mainCard: document.getElementById("mainCard"),
@@ -87,34 +86,43 @@ App.ui = (() => {
     el.classList.remove("hidden");
   }
 
-function setAuthView(isLoggedIn) {
-  const sidebar = document.querySelector(".sidebar");
-  if (!sidebar) return;
+  // 🔥 KLUCZOWA FUNKCJA — ukrywanie widoków zależnie od roli
+  function setAuthView(isLoggedIn) {
+    const sidebar = document.querySelector(".sidebar");
+    if (!sidebar) return;
 
-  if (isLoggedIn) {
+    if (!isLoggedIn) {
+      sidebar.classList.add("hidden");
+      dom.btnLogoutTop.classList.add("hidden");
+      return;
+    }
+
     sidebar.classList.remove("hidden");
     dom.btnLogoutTop.classList.remove("hidden");
 
     const profile = App.auth.getCurrentProfile();
-
-    // 🔥 Ukrywanie elementów sidebaru zależnie od roli
     const adminItem = document.querySelector("[data-target='adminCard']");
     const userItem = document.querySelector("[data-target='mainCard']");
 
     if (profile.role === "admin") {
       adminItem.style.display = "block";
       userItem.style.display = "none";
+
+      // admin widzi wszystko
+      dom.adminCard?.classList.remove("hidden");
+
     } else {
       adminItem.style.display = "none";
       userItem.style.display = "block";
+
+      // mieszkaniec widzi tylko swoje rzeczy
+      dom.adminCard?.classList.add("hidden");
+      dom.announcementForm?.classList.add("hidden");
+      dom.adminAnnouncements?.classList.add("hidden");
+      dom.pendingUsersList?.classList.add("hidden");
+      dom.allUsersList?.classList.add("hidden");
     }
-
-  } else {
-    sidebar.classList.add("hidden");
-    dom.btnLogoutTop.classList.add("hidden");
   }
-}
-
 
   function showLoginTab() {
     dom.goToLogin.classList.add("active");
@@ -132,9 +140,7 @@ function setAuthView(isLoggedIn) {
 
   function init() {
     const closeModal = document.getElementById("closeModal");
-    if (closeModal) {
-      closeModal.onclick = () => dom.ticketModal.classList.add("hidden");
-    }
+    if (closeModal) closeModal.onclick = () => dom.ticketModal.classList.add("hidden");
 
     if (dom.btnAddTicket) dom.btnAddTicket.onclick = () => showSection("ticketForm");
     if (dom.btnCancelTicket) dom.btnCancelTicket.onclick = () => showSection("mainCard");
