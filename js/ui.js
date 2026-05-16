@@ -87,18 +87,34 @@ App.ui = (() => {
     el.classList.remove("hidden");
   }
 
-  function setAuthView(isLoggedIn) {
-    const sidebar = document.querySelector(".sidebar");
-    if (!sidebar) return;
+function setAuthView(isLoggedIn) {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return;
 
-    if (isLoggedIn) {
-      sidebar.classList.remove("hidden");
-      dom.btnLogoutTop.classList.remove("hidden");
+  if (isLoggedIn) {
+    sidebar.classList.remove("hidden");
+    dom.btnLogoutTop.classList.remove("hidden");
+
+    const profile = App.auth.getCurrentProfile();
+
+    // 🔥 Ukrywanie elementów sidebaru zależnie od roli
+    const adminItem = document.querySelector("[data-target='adminCard']");
+    const userItem = document.querySelector("[data-target='mainCard']");
+
+    if (profile.role === "admin") {
+      adminItem.style.display = "block";
+      userItem.style.display = "none";
     } else {
-      sidebar.classList.add("hidden");
-      dom.btnLogoutTop.classList.add("hidden");
+      adminItem.style.display = "none";
+      userItem.style.display = "block";
     }
+
+  } else {
+    sidebar.classList.add("hidden");
+    dom.btnLogoutTop.classList.add("hidden");
   }
+}
+
 
   function showLoginTab() {
     dom.goToLogin.classList.add("active");
