@@ -25,17 +25,33 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 300);
 
   // ===============================================
-  // Sidebar
-  // ===============================================
-  document.querySelectorAll(".sidebar-item").forEach(item => {
-    item.addEventListener("click", () => {
-      document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
-      item.classList.add("active");
+// Sidebar — aktywne sekcje z kontrolą roli
+// ===============================================
+document.querySelectorAll(".sidebar-item").forEach(item => {
+  item.addEventListener("click", () => {
 
-      const target = item.dataset.target;
-      App.ui?.showSection?.(target);
-    });
+    const profile = App.auth.getCurrentProfile();
+    if (!profile) return;
+
+    const target = item.dataset.target;
+
+    // ADMIN może widzieć tylko adminCard
+    if (profile.role === "admin") {
+      if (target !== "adminCard") return;
+    }
+
+    // USER nie może widzieć adminCard
+    if (profile.role === "user") {
+      if (target === "adminCard") return;
+    }
+
+    document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+    item.classList.add("active");
+
+    App.ui.showSection(target);
   });
+});
+
 
   // Widok startowy
   App.ui?.hideAllPanels?.();
