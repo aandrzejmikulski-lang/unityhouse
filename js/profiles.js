@@ -1,4 +1,5 @@
 window.App = window.App || {};
+
 App.profiles = (() => {
   function getDom() {
     return App.ui.dom;
@@ -11,7 +12,6 @@ App.profiles = (() => {
 
   async function loadWspolnotyDropdown() {
     const { wspolnotaDropdown, wspolnotaMessage } = getDom();
-    if (!wspolnotaDropdown) return;
 
     wspolnotaDropdown.innerHTML = "";
 
@@ -20,8 +20,8 @@ App.profiles = (() => {
       .select("id, nazwa")
       .order("nazwa");
 
-    if (error || !data) {
-      App.ui.showMessage(wspolnotaMessage, "Nie udało się załadować listy wspólnot.", "error");
+    if (error) {
+      App.ui.showMessage(wspolnotaMessage, "Błąd ładowania wspólnot.", "error");
       return;
     }
 
@@ -39,52 +39,36 @@ App.profiles = (() => {
   }
 
   async function saveWspolnota() {
-    const {
-      wspolnotaDropdown,
-      wspolnotaMessage,
-      mainCard
-    } = getDom();
+    const { wspolnotaDropdown, wspolnotaMessage } = getDom();
 
     const selectedId = wspolnotaDropdown.value;
-
     if (!selectedId) {
       App.ui.showMessage(wspolnotaMessage, "Wybierz wspólnotę.", "error");
       return;
     }
 
-    const { data: { session }, error: sessionError } = await App.supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      App.ui.showMessage(wspolnotaMessage, "Brak sesji użytkownika.", "error");
-      return;
-    }
+    const { data: { session } } = await App.supabase.auth.getSession();
 
     await App.supabase
       .from("profiles")
       .update({ wspolnota_id: selectedId })
       .eq("id", session.user.id);
 
-    App.ui.hideAllPanels();
-    if (mainCard) mainCard.classList.remove("hidden");
+    App.ui.showSection("mainCard");
     App.tickets.loadTicketsUser(selectedId);
     App.announcements.loadAnnouncementsUser();
   }
 
   async function loadPendingUsers() {
     const { pendingUsersList } = getDom();
-    if (!pendingUsersList) return;
 
     pendingUsersList.innerHTML = "Ładowanie...";
 
-    const { data, error } = await App.supabase
+    const { data } = await App.supabase
       .from("profiles")
       .select("*")
       .eq("approved", false)
       .eq("role", "user");
-
-    if (error || !data) {
-      pendingUsersList.innerHTML = "<i>Błąd ładowania.</i>";
-      return;
-    }
 
     if (!data.length) {
       pendingUsersList.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
@@ -127,11 +111,10 @@ App.profiles = (() => {
 
   async function loadAllUsers() {
     const { allUsersList } = getDom();
-    if (!allUsersList) return;
 
     allUsersList.innerHTML = "Ładowanie...";
 
-    const { data, error } = await App.supabase
+    const { data } = await App.supabase
       .from("profiles")
       .select(`
         id,
@@ -143,11 +126,6 @@ App.profiles = (() => {
         wspolnoty (nazwa)
       `)
       .order("email");
-
-    if (error || !data) {
-      allUsersList.innerHTML = "<i>Błąd ładowania użytkowników.</i>";
-      return;
-    }
 
     allUsersList.innerHTML = "";
 
