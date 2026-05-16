@@ -1,5 +1,5 @@
 // ===============================================
-// UNITY HOUSE — main.js (FINAL FIXED VERSION)
+// UNITY HOUSE — main.js (STABLE VERSION)
 // ===============================================
 
 window.App = window.App || {};
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const target = item.dataset.target;
 
-      // 🔒 Blokada dostępu do panelu admina dla mieszkańca
+      // 🔒 Mieszkaniec nie może wejść do admina
       if (profile.role === "user" && target === "adminCard") return;
 
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -50,35 +50,51 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================================
-// AUTH STATE CHANGE
+// AUTH STATE CHANGE — stabilna wersja
 // ===============================================
 App.supabase.auth.onAuthStateChange(async (event, session) => {
-  console.log("AUTH STATE:", event);
+  console.log("AUTH STATE:", event, session);
 
   if (AUTH_LOCK) return;
   AUTH_LOCK = true;
 
-  if (!session) {
+  // 🔥 Jeśli Supabase mówi SIGNED_OUT → natychmiast reset
+  if (event === "SIGNED_OUT") {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
     App.ui?.setAuthView?.(false);
-    setTimeout(() => AUTH_LOCK = false, 300);
+    AUTH_LOCK = false;
     return;
   }
 
+  // 🔥 Jeśli sesja jest NULL → wymuszone wylogowanie
+  if (!session) {
+    console.warn("Brak aktywnej sesji — reset");
+    await App.supabase.auth.signOut();
+    App.ui?.hideAllPanels?.();
+    App.ui?.showSection?.("loginCard");
+    App.ui?.showLoginTab?.();
+    App.ui?.setAuthView?.(false);
+    AUTH_LOCK = false;
+    return;
+  }
+
+  // Pobranie profilu
   const { data: profile, error } = await App.supabase
     .from("profiles")
     .select("*")
     .eq("id", session.user.id)
     .single();
 
-  if (error) {
-    console.error("Błąd pobierania profilu:", error);
+  if (error || !profile) {
+    console.error("Błąd profilu:", error);
+    await App.supabase.auth.signOut();
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
-    setTimeout(() => AUTH_LOCK = false, 300);
+    App.ui?.setAuthView?.(false);
+    AUTH_LOCK = false;
     return;
   }
 
@@ -94,7 +110,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       "Twoje konto czeka na zatwierdzenie.",
       "error"
     );
-    setTimeout(() => AUTH_LOCK = false, 300);
+    AUTH_LOCK = false;
     return;
   }
 
@@ -104,11 +120,11 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("selectWspolnotaCard");
     App.profiles?.loadWspolnotyDropdown?.();
-    setTimeout(() => AUTH_LOCK = false, 300);
+    AUTH_LOCK = false;
     return;
   }
 
-  // FINALNE przełączenie widoku — z opóźnieniem
+  // FINALNE przełączenie widoku
   setTimeout(() => {
     App.ui?.setAuthView?.(true);
     App.ui?.hideAllPanels?.();
@@ -121,17 +137,22 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       App.profiles?.loadAllUsers?.();
       App.tickets?.loadTicketsAdmin?.();
       App.announcements?.loadAnnouncementsAdmin?.();
+
     } else {
       console.log("USER VIEW aktywny");
       App.ui?.showSection?.("mainCard");
 
-      // 🔒 Mieszkaniec widzi tylko swoje zgłoszenia i ogłoszenia
       App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
       App.announcements?.loadAnnouncementsUser?.();
 
-      // Ukryj elementy admina
+      // 🔒 Ukryj elementy admina
       document.querySelector("#adminCard")?.classList.add("hidden");
       document.querySelector("#announcementForm")?.classList.add("hidden");
       document.querySelector("#adminAnnouncements")?.classList.add("hidden");
       document.querySelector("#pendingUsersList")?.classList.add("hidden");
-      document.querySelector
+      document.querySelector("#allUsersList")?.classList.add("hidden");
+    }
+
+    AUTH_LOCK = false;
+  }, 300);
+});
