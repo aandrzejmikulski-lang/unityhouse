@@ -91,16 +91,16 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   // User bez wspólnoty
   if (profile.role === "user" && !profile.wspolnota_id) {
-    App.ui?.hideAllPanels?.();
     App.ui?.setAuthView?.(true);
+    App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("selectWspolnotaCard");
     App.profiles?.loadWspolnotyDropdown?.();
     return;
   }
 
   // FINALNE przełączenie widoku
-  App.ui?.hideAllPanels?.();
-  App.ui?.setAuthView?.(true);
+  App.ui?.setAuthView?.(true);   // ← najpierw aktywujemy layout
+  App.ui?.hideAllPanels?.();     // ← dopiero potem czyścimy widoki
 
   if (profile.role === "admin") {
     console.log("ADMIN VIEW aktywny");
