@@ -1,4 +1,6 @@
-alert("TEST MAIN");
+// ===============================================
+// UNITY HOUSE — main.js (FINAL PREMIUM VERSION)
+// ===============================================
 
 window.App = window.App || {};
 
@@ -8,15 +10,18 @@ App.supabase = supabase.createClient(
 );
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM READY");
+  console.log("DOM READY — Unity House Premium");
 
+  // Inicjalizacja UI
   App.ui.init();
+
+  // Inicjalizacja modułów
   App.auth.init();
   App.profiles.init();
   App.tickets.init();
   App.announcements.init();
 
-  // SIDEBAR
+  // Sidebar — aktywne sekcje
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -27,11 +32,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // STARTOWY WIDOK
+  // Widok startowy
   App.ui.hideAllPanels();
   App.ui.showSection("loginCard");
   App.ui.showLoginTab();
 });
+
+// ===============================================
+// AUTH STATE CHANGE — pełna obsługa logiki
+// ===============================================
+
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
@@ -53,8 +63,14 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // Zapis profilu w pamięci modułu auth
+  App.auth._currentProfile = profile;
+
+  // ADMIN
   if (profile.role === "admin") {
+    App.ui.setAuthView(true);
     App.ui.showSection("adminCard");
+
     App.profiles.loadPendingUsers();
     App.profiles.loadAllUsers();
     App.tickets.loadTicketsAdmin();
@@ -62,20 +78,27 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // USER — niezatwierdzony
   if (!profile.approved) {
     App.ui.showSection("loginCard");
     App.ui.showLoginTab();
     App.ui.showMessage(App.ui.dom.loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
+    App.ui.setAuthView(true);
     return;
   }
 
+  // USER — brak wspólnoty
   if (!profile.wspolnota_id) {
+    App.ui.setAuthView(true);
     App.ui.showSection("selectWspolnotaCard");
     App.profiles.loadWspolnotyDropdown();
     return;
   }
 
+  // USER — pełny dostęp
+  App.ui.setAuthView(true);
   App.ui.showSection("mainCard");
+
   App.tickets.loadTicketsUser(profile.wspolnota_id);
   App.announcements.loadAnnouncementsUser();
 });
