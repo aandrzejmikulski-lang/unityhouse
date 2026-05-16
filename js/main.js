@@ -1,5 +1,3 @@
-alert("MAIN START");
-
 window.App = window.App || {};
 
 App.supabase = supabase.createClient(
