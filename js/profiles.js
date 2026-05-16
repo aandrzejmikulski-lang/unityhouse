@@ -1,176 +1,177 @@
-// ===============================
-// INIT
-// ===============================
-function initProfiles() {
-  if (btnSaveWspolnota) btnSaveWspolnota.onclick = saveWspolnota;
-}
-
-
-// ===============================
-// ŁADOWANIE LISTY WSPÓLNOT (DLA UŻYTKOWNIKA)
-// ===============================
-async function loadWspolnotyDropdown() {
-  if (!wspolnotaDropdown) return;
-
-  wspolnotaDropdown.innerHTML = "";
-
-  const { data, error } = await client
-    .from("wspolnoty")
-    .select("id, nazwa")
-    .order("nazwa");
-
-  if (error || !data) {
-    showMessage(wspolnotaMessage, "Nie udało się załadować listy wspólnot.", "error");
-    return;
+window.App = window.App || {};
+App.profiles = (() => {
+  function getDom() {
+    return App.ui.dom;
   }
 
-  const def = document.createElement("option");
-  def.value = "";
-  def.textContent = "Wybierz wspólnotę";
-  wspolnotaDropdown.appendChild(def);
-
-  data.forEach(w => {
-    const opt = document.createElement("option");
-    opt.value = w.id;
-    opt.textContent = w.nazwa;
-    wspolnotaDropdown.appendChild(opt);
-  });
-}
-
-
-// ===============================
-// ZAPIS WYBRANEJ WSPÓLNOTY
-// ===============================
-async function saveWspolnota() {
-  const selectedId = wspolnotaDropdown.value;
-
-  if (!selectedId) {
-    showMessage(wspolnotaMessage, "Wybierz wspólnotę.", "error");
-    return;
+  function init() {
+    const { btnSaveWspolnota } = getDom();
+    if (btnSaveWspolnota) btnSaveWspolnota.onclick = saveWspolnota;
   }
 
-  const { data: { session }, error: sessionError } = await client.auth.getSession();
-  if (sessionError || !session?.user) {
-    showMessage(wspolnotaMessage, "Brak sesji użytkownika.", "error");
-    return;
+  async function loadWspolnotyDropdown() {
+    const { wspolnotaDropdown, wspolnotaMessage } = getDom();
+    if (!wspolnotaDropdown) return;
+
+    wspolnotaDropdown.innerHTML = "";
+
+    const { data, error } = await App.supabase
+      .from("wspolnoty")
+      .select("id, nazwa")
+      .order("nazwa");
+
+    if (error || !data) {
+      App.ui.showMessage(wspolnotaMessage, "Nie udało się załadować listy wspólnot.", "error");
+      return;
+    }
+
+    const def = document.createElement("option");
+    def.value = "";
+    def.textContent = "Wybierz wspólnotę";
+    wspolnotaDropdown.appendChild(def);
+
+    data.forEach(w => {
+      const opt = document.createElement("option");
+      opt.value = w.id;
+      opt.textContent = w.nazwa;
+      wspolnotaDropdown.appendChild(opt);
+    });
   }
 
-  await client
-    .from("profiles")
-    .update({ wspolnota_id: selectedId })
-    .eq("id", session.user.id);
+  async function saveWspolnota() {
+    const {
+      wspolnotaDropdown,
+      wspolnotaMessage,
+      mainCard
+    } = getDom();
 
-  hideAllPanels();
-  mainCard.classList.remove("hidden");
-  loadTicketsUser(selectedId);
-}
+    const selectedId = wspolnotaDropdown.value;
 
+    if (!selectedId) {
+      App.ui.showMessage(wspolnotaMessage, "Wybierz wspólnotę.", "error");
+      return;
+    }
 
-// ===============================
-// OCZEKUJĄCY UŻYTKOWNICY (ADMIN)
-// ===============================
-async function loadPendingUsers() {
-  if (!pendingUsersList) return;
+    const { data: { session }, error: sessionError } = await App.supabase.auth.getSession();
+    if (sessionError || !session?.user) {
+      App.ui.showMessage(wspolnotaMessage, "Brak sesji użytkownika.", "error");
+      return;
+    }
 
-  pendingUsersList.innerHTML = "Ładowanie...";
+    await App.supabase
+      .from("profiles")
+      .update({ wspolnota_id: selectedId })
+      .eq("id", session.user.id);
 
-  const { data, error } = await client
-    .from("profiles")
-    .select("*")
-    .eq("approved", false)
-    .eq("role", "user");
-
-  if (error || !data) {
-    pendingUsersList.innerHTML = "<i>Błąd ładowania.</i>";
-    return;
+    App.ui.hideAllPanels();
+    if (mainCard) mainCard.classList.remove("hidden");
+    App.tickets.loadTicketsUser(selectedId);
+    App.announcements.loadAnnouncementsUser();
   }
 
-  if (!data.length) {
-    pendingUsersList.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
-    return;
+  async function loadPendingUsers() {
+    const { pendingUsersList } = getDom();
+    if (!pendingUsersList) return;
+
+    pendingUsersList.innerHTML = "Ładowanie...";
+
+    const { data, error } = await App.supabase
+      .from("profiles")
+      .select("*")
+      .eq("approved", false)
+      .eq("role", "user");
+
+    if (error || !data) {
+      pendingUsersList.innerHTML = "<i>Błąd ładowania.</i>";
+      return;
+    }
+
+    if (!data.length) {
+      pendingUsersList.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
+      return;
+    }
+
+    pendingUsersList.innerHTML = "";
+
+    data.forEach(u => {
+      const div = document.createElement("div");
+      div.className = "pendingUserItem";
+      div.innerHTML = `
+        <b>${u.fullname}</b> — ${u.email}<br>
+        <button class="btnApproveUser" data-id="${u.id}">Zatwierdź</button>
+        <button class="btnRejectUser" data-id="${u.id}">Odrzuć</button>
+      `;
+      pendingUsersList.appendChild(div);
+    });
+
+    pendingUsersList.querySelectorAll(".btnApproveUser").forEach(btn =>
+      btn.onclick = () => approveUser(btn.dataset.id)
+    );
+
+    pendingUsersList.querySelectorAll(".btnRejectUser").forEach(btn =>
+      btn.onclick = () => rejectUser(btn.dataset.id)
+    );
   }
 
-  pendingUsersList.innerHTML = "";
-
-  data.forEach(u => {
-    const div = document.createElement("div");
-    div.className = "pendingUserItem";
-    div.innerHTML = `
-      <b>${u.fullname}</b> — ${u.email}<br>
-      <button class="btnApproveUser" data-id="${u.id}">Zatwierdź</button>
-      <button class="btnRejectUser" data-id="${u.id}">Odrzuć</button>
-    `;
-    pendingUsersList.appendChild(div);
-  });
-
-  document.querySelectorAll(".btnApproveUser").forEach(btn =>
-    btn.onclick = () => approveUser(btn.dataset.id)
-  );
-
-  document.querySelectorAll(".btnRejectUser").forEach(btn =>
-    btn.onclick = () => rejectUser(btn.dataset.id)
-  );
-}
-
-
-// ===============================
-// ZATWIERDZENIE UŻYTKOWNIKA
-// ===============================
-async function approveUser(id) {
-  await client.from("profiles").update({ approved: true }).eq("id", id);
-  loadPendingUsers();
-  loadAllUsers();
-}
-
-
-// ===============================
-// ODRZUCENIE UŻYTKOWNIKA
-// ===============================
-async function rejectUser(id) {
-  await client.from("profiles").delete().eq("id", id);
-  loadPendingUsers();
-  loadAllUsers();
-}
-
-
-// ===============================
-// WSZYSCY UŻYTKOWNICY (ADMIN)
-// ===============================
-async function loadAllUsers() {
-  if (!allUsersList) return;
-
-  allUsersList.innerHTML = "Ładowanie...";
-
-  const { data, error } = await client
-    .from("profiles")
-    .select(`
-      id,
-      email,
-      fullname,
-      role,
-      approved,
-      wspolnota_id,
-      wspolnoty (nazwa)
-    `)
-    .order("email");
-
-  if (error || !data) {
-    allUsersList.innerHTML = "<i>Błąd ładowania użytkowników.</i>";
-    return;
+  async function approveUser(id) {
+    await App.supabase.from("profiles").update({ approved: true }).eq("id", id);
+    loadPendingUsers();
+    loadAllUsers();
   }
 
-  allUsersList.innerHTML = "";
+  async function rejectUser(id) {
+    await App.supabase.from("profiles").delete().eq("id", id);
+    loadPendingUsers();
+    loadAllUsers();
+  }
 
-  data.forEach(u => {
-    const div = document.createElement("div");
-    div.className = "userItem";
-    div.innerHTML = `
-      <b>${u.fullname}</b> — ${u.email}
-      <br>Wspólnota: ${u.wspolnoty?.nazwa || "brak"}
-      <br>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}
-      <br>Rola: ${u.role}
-      <hr>
-    `;
-    allUsersList.appendChild(div);
-  });
-}
+  async function loadAllUsers() {
+    const { allUsersList } = getDom();
+    if (!allUsersList) return;
+
+    allUsersList.innerHTML = "Ładowanie...";
+
+    const { data, error } = await App.supabase
+      .from("profiles")
+      .select(`
+        id,
+        email,
+        fullname,
+        role,
+        approved,
+        wspolnota_id,
+        wspolnoty (nazwa)
+      `)
+      .order("email");
+
+    if (error || !data) {
+      allUsersList.innerHTML = "<i>Błąd ładowania użytkowników.</i>";
+      return;
+    }
+
+    allUsersList.innerHTML = "";
+
+    data.forEach(u => {
+      const div = document.createElement("div");
+      div.className = "userItem";
+      div.innerHTML = `
+        <b>${u.fullname}</b> — ${u.email}
+        <br>Wspólnota: ${u.wspolnoty?.nazwa || "brak"}
+        <br>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}
+        <br>Rola: ${u.role}
+        <hr>
+      `;
+      allUsersList.appendChild(div);
+    });
+  }
+
+  return {
+    init,
+    loadWspolnotyDropdown,
+    saveWspolnota,
+    loadPendingUsers,
+    approveUser,
+    rejectUser,
+    loadAllUsers
+  };
+})();
