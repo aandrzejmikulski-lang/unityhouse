@@ -12,10 +12,8 @@ App.supabase = supabase.createClient(
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM READY — Unity House Premium");
 
-  // 🔥 DAJEMY PRZEGLĄDARCE CZAS NA ZAŁADOWANIE ui.js
+  // 🔥 dajemy przeglądarce czas na załadowanie ui.js
   setTimeout(() => {
-
-    console.log("INIT START");
 
     if (App.ui?.init) App.ui.init();
     if (App.auth?.init) App.auth.init();
@@ -23,9 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (App.tickets?.init) App.tickets.init();
     if (App.announcements?.init) App.announcements.init();
 
-    console.log("INIT DONE");
-
-  }, 300); // 300 ms = stabilne ładowanie modułów
+  }, 300);
 });
 
 
