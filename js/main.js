@@ -50,10 +50,14 @@ document.addEventListener("DOMContentLoaded", () => {
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
-  if (!session) {
-    App.auth.logoutUser();
-    return;
-  }
+ if (!session) {
+  App.ui.hideAllPanels();
+  App.ui.showSection("loginCard");
+  App.ui.showLoginTab();
+  App.ui.setAuthView(false);
+  return;
+}
+
 
   const { data: profile, error } = await App.supabase
     .from("profiles")
