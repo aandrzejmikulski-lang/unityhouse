@@ -1,4 +1,5 @@
 window.App = window.App || {};
+
 App.announcements = (() => {
   function getDom() {
     return App.ui.dom;
@@ -22,6 +23,7 @@ App.announcements = (() => {
   function showAnnouncementForm() {
     const { announcementForm } = getDom();
     if (!announcementForm) return;
+
     announcementForm.classList.remove("hidden");
     loadAnnouncementWspolnotyCheckboxes();
   }
@@ -36,8 +38,6 @@ App.announcements = (() => {
       announcementTo
     } = getDom();
 
-    if (!announcementForm) return;
-
     announcementForm.classList.add("hidden");
     announcementTitle.value = "";
     announcementContent.value = "";
@@ -49,6 +49,7 @@ App.announcements = (() => {
   async function loadAnnouncementWspolnotyCheckboxes() {
     const box = document.getElementById("announcementWspolnoty");
     if (!box) return;
+
     box.innerHTML = "";
 
     const { data, error } = await App.supabase
@@ -56,8 +57,7 @@ App.announcements = (() => {
       .select("id, nazwa")
       .order("nazwa");
 
-    if (error || !data) {
-      console.error("Błąd ładowania wspólnot:", error);
+    if (error) {
       box.innerHTML = "<i>Błąd ładowania wspólnot.</i>";
       return;
     }
@@ -95,11 +95,7 @@ App.announcements = (() => {
       return;
     }
 
-    const { data: { session }, error: sessionError } = await App.supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      alert("Brak sesji użytkownika.");
-      return;
-    }
+    const { data: { session } } = await App.supabase.auth.getSession();
 
     const { data: ann, error: annError } = await App.supabase
       .from("announcements")
@@ -114,24 +110,23 @@ App.announcements = (() => {
       .select()
       .single();
 
-    if (annError || !ann) {
-      console.error("Błąd zapisu ogłoszenia:", annError);
+    if (annError) {
       alert("Nie udało się zapisać ogłoszenia.");
       return;
     }
 
     if (!isGlobal) {
       const selected = [...document.querySelectorAll(".annWspCheck:checked")].map(c => c.value);
+
       if (selected.length > 0) {
         const rows = selected.map(id => ({
           announcement_id: ann.id,
           wspolnota_id: id
         }));
 
-        const { error: linkError } = await App.supabase
+        await App.supabase
           .from("announcement_wspolnoty")
           .insert(rows);
-        if (linkError) console.error("Błąd zapisu powiązań:", linkError);
       }
     }
 
@@ -146,26 +141,17 @@ App.announcements = (() => {
 
     userAnnouncements.innerHTML = "Ładowanie...";
 
-    const { data: { session }, error: sessionError } = await App.supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      userAnnouncements.innerHTML = "<i>Błąd sesji użytkownika.</i>";
-      return;
-    }
+    const { data: { session } } = await App.supabase.auth.getSession();
 
-    const { data: profile, error: profileError } = await App.supabase
+    const { data: profile } = await App.supabase
       .from("profiles")
       .select("wspolnota_id")
       .eq("id", session.user.id)
       .single();
 
-    if (profileError || !profile) {
-      userAnnouncements.innerHTML = "<i>Błąd profilu użytkownika.</i>";
-      return;
-    }
-
     const wsp = profile.wspolnota_id;
 
-    const { data, error } = await App.supabase
+    const { data } = await App.supabase
       .from("announcements")
       .select(`
         id,
@@ -179,18 +165,12 @@ App.announcements = (() => {
       `)
       .order("created_at", { ascending: false });
 
-    if (error || !data) {
-      console.error("Błąd ładowania ogłoszeń:", error);
-      userAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
-      return;
-    }
-
     const today = new Date().toISOString().split("T")[0];
 
     const filtered = data.filter(a =>
       (a.global ||
-       (a.announcement_wspolnoty && a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp))
-      )
+       (a.announcement_wspolnoty &&
+        a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp)))
       &&
       (a.valid_from === null || a.valid_from <= today)
       &&
@@ -223,7 +203,7 @@ App.announcements = (() => {
 
     adminAnnouncements.innerHTML = "Ładowanie...";
 
-    const { data, error } = await App.supabase
+    const { data } = await App.supabase
       .from("announcements")
       .select(`
         id,
@@ -236,12 +216,6 @@ App.announcements = (() => {
         announcement_wspolnoty (wspolnota_id, wspolnoty (nazwa))
       `)
       .order("created_at", { ascending: false });
-
-    if (error || !data) {
-      console.error("Błąd ładowania ogłoszeń admina:", error);
-      adminAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
-      return;
-    }
 
     if (!data.length) {
       adminAnnouncements.innerHTML = "<i>Brak ogłoszeń.</i>";
