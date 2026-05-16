@@ -1,8 +1,3 @@
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("TEST: DOM READY");
-  const loginCard = document.getElementById("loginCard");
-  console.log("loginCard:", loginCard);
-});
 // ===============================================
 // UNITY HOUSE — main.js (FINAL PREMIUM VERSION)
 // ===============================================
@@ -21,10 +16,12 @@ document.addEventListener("DOMContentLoaded", () => {
   App.ui.init();
 
   // Inicjalizacja modułów
-  App.auth.init();
-  App.profiles.init();
-  App.tickets.init();
-  App.announcements.init();
+if (App.ui?.init) App.ui.init();
+if (App.auth?.init) App.auth.init();
+if (App.profiles?.init) App.profiles.init();
+if (App.tickets?.init) App.tickets.init();
+if (App.announcements?.init) App.announcements.init();
+
 
   // Sidebar — aktywne sekcje
   document.querySelectorAll(".sidebar-item").forEach(item => {
