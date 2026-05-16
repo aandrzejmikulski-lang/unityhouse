@@ -250,3 +250,15 @@ textarea:focus {
 .hidden {
   display: none !important;
 }
+/* Naprawa układu po zalogowaniu */
+.content {
+  grid-column: 2 / 3;
+  width: 100%;
+  max-width: none;
+}
+
+.card {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 28px;
+}
