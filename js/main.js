@@ -1,5 +1,5 @@
 // ===============================================
-// UNITY HOUSE — main.js (FINAL PREMIUM VERSION)
+// UNITY HOUSE — main.js (FINAL CLEAN VERSION)
 // ===============================================
 
 window.App = window.App || {};
@@ -10,24 +10,22 @@ App.supabase = supabase.createClient(
 );
 
 // ===============================================
-// DOM READY — główny blok
+// DOM READY
 // ===============================================
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM READY — Unity House Premium");
 
-  // 🔥 dajemy przeglądarce czas na załadowanie ui.js
+  // 🔥 opóźnienie na załadowanie ui.js
   setTimeout(() => {
-
-    if (App.ui?.init) App.ui.init();
-    if (App.auth?.init) App.auth.init();
-    if (App.profiles?.init) App.profiles.init();
-    if (App.tickets?.init) App.tickets.init();
-    if (App.announcements?.init) App.announcements.init();
-
+    App.ui?.init?.();
+    App.auth?.init?.();
+    App.profiles?.init?.();
+    App.tickets?.init?.();
+    App.announcements?.init?.();
   }, 300);
 
   // ===============================================
-  // Sidebar — aktywne sekcje
+  // Sidebar
   // ===============================================
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
@@ -46,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================================
-// AUTH STATE CHANGE — pełna obsługa logiki
+// AUTH STATE CHANGE
 // ===============================================
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
@@ -74,6 +72,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   App.auth.setCurrentProfile(profile);
 
+  // ADMIN
   if (profile.role === "admin") {
     App.ui?.setAuthView?.(true);
     App.ui?.showSection?.("adminCard");
@@ -85,6 +84,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // USER — niezatwierdzony
   if (!profile.approved) {
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
@@ -93,6 +93,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // USER — brak wspólnoty
   if (!profile.wspolnota_id) {
     App.ui?.setAuthView?.(true);
     App.ui?.showSection?.("selectWspolnotaCard");
@@ -100,6 +101,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
+  // USER — pełny dostęp
   App.ui?.setAuthView?.(true);
   App.ui?.showSection?.("mainCard");
 
