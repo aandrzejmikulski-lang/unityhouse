@@ -1,5 +1,7 @@
 alert("MAIN.JS START");
-
+document.getElementById("loginCard").classList.remove("hidden");
+document.body.style.background = "red"; // TEST
+console.log("Pokazuje loginCard");
 window.App = window.App || {};
 
 // 1) Supabase – na górze, od razu
