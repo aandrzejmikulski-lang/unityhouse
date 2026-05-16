@@ -4,6 +4,9 @@
 
 window.App = window.App || {};
 
+// 🔥 Blokada podwójnego wywołania Supabase
+let AUTH_LOCK = false;
+
 App.supabase = supabase.createClient(
   "https://vswonxgsaqnhzsmzexzh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
@@ -52,11 +55,16 @@ document.addEventListener("DOMContentLoaded", () => {
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
+  // 🔥 Blokada podwójnego wywołania Supabase
+  if (AUTH_LOCK) return;
+  AUTH_LOCK = true;
+
   if (!session) {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
     App.ui?.setAuthView?.(false);
+    setTimeout(() => AUTH_LOCK = false, 300);
     return;
   }
 
@@ -71,6 +79,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
+    setTimeout(() => AUTH_LOCK = false, 300);
     return;
   }
 
@@ -86,6 +95,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       "Twoje konto czeka na zatwierdzenie.",
       "error"
     );
+    setTimeout(() => AUTH_LOCK = false, 300);
     return;
   }
 
@@ -95,6 +105,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("selectWspolnotaCard");
     App.profiles?.loadWspolnotyDropdown?.();
+    setTimeout(() => AUTH_LOCK = false, 300);
     return;
   }
 
@@ -117,4 +128,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
     App.announcements?.loadAnnouncementsUser?.();
   }
+
+  setTimeout(() => AUTH_LOCK = false, 300);
 });
