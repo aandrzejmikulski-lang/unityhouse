@@ -1,5 +1,5 @@
 // ===============================================
-// UNITY HOUSE — main.js (FINAL CLEAN VERSION)
+// UNITY HOUSE — main.js (FINAL FIXED VERSION)
 // ===============================================
 
 window.App = window.App || {};
@@ -15,24 +15,19 @@ App.supabase = supabase.createClient(
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM READY — Unity House Premium");
 
-  // 🔥 opóźnienie na załadowanie ui.js
   setTimeout(() => {
-    // Inicjalizacja modułów
     App.ui?.init?.();
     App.auth?.init?.();
     App.profiles?.init?.();
     App.tickets?.init?.();
     App.announcements?.init?.();
 
-    // Widok startowy — ekran logowania
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
   }, 300);
 
-  // ===============================================
-  // Sidebar — aktywne sekcje z kontrolą roli
-  // ===============================================
+  // Sidebar z kontrolą roli
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       const profile = App.auth.getCurrentProfile();
@@ -40,10 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const target = item.dataset.target;
 
-      // ADMIN może widzieć tylko adminCard
       if (profile.role === "admin" && target !== "adminCard") return;
-
-      // USER nie może widzieć adminCard
       if (profile.role === "user" && target === "adminCard") return;
 
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -60,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
 App.supabase.auth.onAuthStateChange(async (event, session) => {
   console.log("AUTH STATE:", event);
 
-  // Brak sesji — wracamy do logowania
   if (!session) {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
@@ -69,7 +60,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // Pobranie profilu
   const { data: profile, error } = await App.supabase
     .from("profiles")
     .select("*")
@@ -86,7 +76,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   App.auth.setCurrentProfile(profile);
 
-  // USER — niezatwierdzony
+  // Konto niezatwierdzone
   if (!profile.approved) {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
@@ -96,12 +86,11 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       "Twoje konto czeka na zatwierdzenie.",
       "error"
     );
-    App.ui?.setAuthView?.(true);
     return;
   }
 
-  // USER — brak wspólnoty
-  if (!profile.wspolnota_id && profile.role === "user") {
+  // User bez wspólnoty
+  if (profile.role === "user" && !profile.wspolnota_id) {
     App.ui?.hideAllPanels?.();
     App.ui?.setAuthView?.(true);
     App.ui?.showSection?.("selectWspolnotaCard");
@@ -109,7 +98,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // Ustawienie widoku po zalogowaniu
+  // FINALNE przełączenie widoku
   App.ui?.hideAllPanels?.();
   App.ui?.setAuthView?.(true);
 
