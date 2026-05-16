@@ -5,28 +5,31 @@ let currentProfile = null;
 // ===============================
 function initAuth() {
 
-  // zabezpieczenie — jeśli elementów nie ma, nie inicjujemy
-  if (!btnLoginTop || !btnRegisterTop || !btnLogoutTop) return;
+  // NIE BLOKUJEMY CAŁEJ INICJALIZACJI
+  // zamiast tego sprawdzamy każdy przycisk osobno
 
-  // przełączanie widoków logowania/rejestracji
-  btnLoginTop.onclick = () => {
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
-    showLoginTab();
-  };
+  if (btnLoginTop) {
+    btnLoginTop.onclick = () => {
+      hideAllPanels();
+      loginCard.classList.remove("hidden");
+      showLoginTab();
+    };
+  }
 
-  btnRegisterTop.onclick = () => {
-    hideAllPanels();
-    loginCard.classList.remove("hidden");
-    showRegisterTab();
-  };
+  if (btnRegisterTop) {
+    btnRegisterTop.onclick = () => {
+      hideAllPanels();
+      loginCard.classList.remove("hidden");
+      showRegisterTab();
+    };
+  }
 
-  goToLogin.onclick = showLoginTab;
-  goToRegister.onclick = showRegisterTab;
+  if (goToLogin) goToLogin.onclick = showLoginTab;
+  if (goToRegister) goToRegister.onclick = showRegisterTab;
 
-  btnLogin.onclick = loginUser;
-  btnRegister.onclick = registerUser;
-  btnLogoutTop.onclick = logoutUser;
+  if (btnLogin) btnLogin.onclick = loginUser;
+  if (btnRegister) btnRegister.onclick = registerUser;
+  if (btnLogoutTop) btnLogoutTop.onclick = logoutUser;
 }
 
 
