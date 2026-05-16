@@ -59,6 +59,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 }
 
 
+
   const { data: profile, error } = await App.supabase
     .from("profiles")
     .select("*")
@@ -73,7 +74,8 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
   }
 
   // Zapis profilu w pamięci modułu auth
-  App.auth._currentProfile = profile;
+App.auth.setCurrentProfile(profile);
+
 
   // ADMIN
   if (profile.role === "admin") {
