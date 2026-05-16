@@ -27,57 +27,7 @@ App.auth = (() => {
     if (btnRegister) btnRegister.onclick = registerUser;
     if (btnLogoutTop) btnLogoutTop.onclick = logoutUser;
 
-    // OBSŁUGA SESJI — NAJWAŻNIEJSZE
-    App.supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!session) {
-        currentProfile = null;
-        App.ui?.hideAllPanels?.();
-        App.ui?.showSection?.("loginCard");
-        App.ui?.showLoginTab?.();
-        App.ui?.setAuthView?.(false);
-        return;
-      }
-
-      const { data: { user } } = await App.supabase.auth.getUser();
-      const { data: profile } = await App.supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      currentProfile = profile;
-
-      App.ui?.hideAllPanels?.();
-
-      if (profile.role === "admin") {
-        App.ui?.showSection?.("adminCard");
-        App.profiles?.loadPendingUsers?.();
-        App.profiles?.loadAllUsers?.();
-        App.tickets?.loadTicketsAdmin?.();
-        App.announcements?.loadAnnouncementsAdmin?.();
-        App.ui?.setAuthView?.(true);
-        return;
-      }
-
-      if (!profile.approved) {
-        App.ui?.showSection?.("loginCard");
-        App.ui?.showMessage?.(getDom().loginMessage, "Twoje konto czeka na zatwierdzenie.", "error");
-        App.ui?.setAuthView?.(true);
-        return;
-      }
-
-      if (!profile.wspolnota_id) {
-        App.ui?.showSection?.("selectWspolnotaCard");
-        App.profiles?.loadWspolnotyDropdown?.();
-        App.ui?.setAuthView?.(true);
-        return;
-      }
-
-      App.ui?.showSection?.("mainCard");
-      App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
-      App.announcements?.loadAnnouncementsUser?.();
-      App.ui?.setAuthView?.(true);
-    });
+    // ❌ USUNIĘTO OBSŁUGĘ onAuthStateChange — robi to main.js
   }
 
   async function loginUser() {
