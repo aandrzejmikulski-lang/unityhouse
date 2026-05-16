@@ -116,11 +116,23 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     App.profiles?.loadWspolnotyDropdown?.();
     return;
   }
+// Ustawienie widoku po zalogowaniu
+App.ui?.hideAllPanels?.();
+App.ui?.setAuthView?.(true);
 
-  // USER — pełny dostęp
-  App.ui?.setAuthView?.(true);
+if (profile.role === "admin") {
+  App.ui?.showSection?.("adminCard");
+  console.log("ADMIN VIEW aktywny");
+
+  App.profiles?.loadPendingUsers?.();
+  App.profiles?.loadAllUsers?.();
+  App.tickets?.loadTicketsAdmin?.();
+  App.announcements?.loadAnnouncementsAdmin?.();
+} else {
   App.ui?.showSection?.("mainCard");
+  console.log("USER VIEW aktywny");
 
   App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
   App.announcements?.loadAnnouncementsUser?.();
+}
 });
