@@ -11,7 +11,7 @@
   <!-- SUPABASE -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
-  <!-- AUTOMATYCZNE WERSJONOWANIE WSZYSTKICH JS -->
+  <!-- AUTOMATYCZNE WERSJONOWANIE (bez błędu składniowego) -->
   <script>
     const v = Date.now();
     const scripts = [
@@ -23,7 +23,10 @@
       "js/main.js"
     ];
     scripts.forEach(src => {
-      document.write(`<script defer src="${src}?v=${v}"><\\/script>`);
+      const s = document.createElement("script");
+      s.src = `${src}?v=${v}`;
+      s.defer = true;
+      document.head.appendChild(s);
     });
   </script>
 </head>
@@ -209,17 +212,4 @@
         <div class="modal-content">
           <button id="closeModal" class="modal-close">×</button>
           <h2 id="modalTicketTitle"></h2>
-          <p id="modalTicketDesc"></p>
-          <p id="modalTicketStatus"></p>
-          <div id="modalTicketFiles"></div>
-
-          <button id="btnStatusNowe" class="btn ghost">Nowe</button>
-          <button id="btnStatusWTrakcie" class="btn ghost">W trakcie</button>
-          <button id="btnStatusZamkniete" class="btn ghost">Zamknięte</button>
-        </div>
-      </div>
-
-    </main>
-  </div>
-</body>
-</html>
+          <p
