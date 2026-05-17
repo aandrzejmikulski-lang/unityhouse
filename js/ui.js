@@ -110,7 +110,6 @@ App.ui = (() => {
 
     const profile = App.auth.getCurrentProfile();
 
-    // Sidebar items
     const adminItem = document.querySelector("[data-target='adminCard']");
     const wspolnotyItem = document.querySelector("[data-target='wspolnotaCard']");
     const selectItem = document.querySelector("[data-target='selectWspolnotaCard']");
@@ -119,7 +118,6 @@ App.ui = (() => {
     const userItem = document.querySelector("[data-target='mainCard']");
 
     if (profile.role === "admin") {
-      // 🔥 Admin widzi wszystko
       adminItem.style.display = "block";
       wspolnotyItem.style.display = "block";
       selectItem.style.display = "block";
@@ -128,7 +126,6 @@ App.ui = (() => {
       userItem.style.display = "block";
       dom.adminCard?.classList.remove("hidden");
     } else {
-      // 🔒 Mieszkaniec widzi tylko swój panel, wybór wspólnoty i zgłoszenia
       adminItem.style.display = "none";
       wspolnotyItem.style.display = "none";
       announcementItem.style.display = "none";
@@ -138,8 +135,14 @@ App.ui = (() => {
       dom.pendingUsersList?.classList.add("hidden");
       dom.allUsersList?.classList.add("hidden");
 
-      // 🔥 Pozostają tylko te sekcje:
-      selectItem.style.display = "block";
+      // 🔥 „Wybór wspólnoty” tylko jeśli user NIE ma wspólnoty
+      if (!profile.wspolnota_id) {
+        selectItem.style.display = "block";
+      } else {
+        selectItem.style.display = "none";
+      }
+
+      // Zawsze dostępne:
       ticketItem.style.display = "block";
       userItem.style.display = "block";
     }
