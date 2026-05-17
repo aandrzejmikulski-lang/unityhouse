@@ -10,16 +10,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   // ---------------------------------------------
   // SUPABASE
   // ---------------------------------------------
-App.supabase = supabase.createClient(
-  "https://vswonxgsaqnhzsmzexzh.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
-  {
-    auth: {
-      storage: window.sessionStorage,
-      persistSession: true
+  App.supabase = supabase.createClient(
+    "https://vswonxgsaqnhzsmzexzh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
+    {
+      auth: {
+        storage: window.sessionStorage,
+        persistSession: true
+      }
     }
-  }
-);
+  );
 
   console.log("Supabase initialized");
 
@@ -88,20 +88,6 @@ App.supabase = supabase.createClient(
     App.ui.hideAllPanels();
 
     // ---------------------------------------------
-    // UKRYWANIE ELEMENTÓW SIDEBARU WG ROLI
-    // ---------------------------------------------
-    const btnAdmin = document.querySelector('[data-target="adminCard"]');
-    const btnUser = document.querySelector('[data-target="mainCard"]');
-
-    if (profile.role === "admin") {
-      btnAdmin?.classList.remove("hidden");
-      btnUser?.classList.add("hidden");
-    } else {
-      btnAdmin?.classList.add("hidden");
-      btnUser?.classList.remove("hidden");
-    }
-
-    // ---------------------------------------------
     // 1. Konto niezatwierdzone
     // ---------------------------------------------
     if (!profile.approved) {
@@ -124,13 +110,14 @@ App.supabase = supabase.createClient(
     // 3. ADMIN
     // ---------------------------------------------
     if (profile.role === "admin") {
+      // pokaż tylko panel admina
       App.ui.showSection("adminCard");
       document.getElementById("adminCard")?.classList.remove("hidden");
       document.getElementById("mainCard")?.classList.add("hidden");
+      document.getElementById("adminAnnouncementsCard")?.classList.remove("hidden");
 
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
-
       document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
@@ -143,15 +130,15 @@ App.supabase = supabase.createClient(
     // ---------------------------------------------
     // 4. NORMALNY UŻYTKOWNIK
     // ---------------------------------------------
+    // pokaż tylko panel użytkownika
     App.ui.showSection("mainCard");
+    document.getElementById("mainCard")?.classList.remove("hidden");
+    document.getElementById("adminCard")?.classList.add("hidden");
+    document.getElementById("adminAnnouncementsCard")?.classList.add("hidden");
 
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
-
     document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
-
-    document.getElementById("adminCard")?.classList.add("hidden");
-    document.getElementById("adminAnnouncementsCard")?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
