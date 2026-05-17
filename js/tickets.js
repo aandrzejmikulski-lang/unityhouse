@@ -2,9 +2,6 @@ window.App = window.App || {};
 
 App.tickets = (() => {
 
-  // ============================================
-  // INICJALIZACJA
-  // ============================================
   function init() {
     const dom = App.ui.dom;
 
@@ -16,9 +13,6 @@ App.tickets = (() => {
     if (dom.filterWspolnota) dom.filterWspolnota.onchange = loadTicketsAdmin;
   }
 
-  // ============================================
-  // ZAPIS ZGŁOSZENIA (USER)
-  // ============================================
   async function saveTicket() {
     const dom = App.ui.dom;
     const profile = App.auth.getCurrentProfile();
@@ -70,9 +64,6 @@ App.tickets = (() => {
     loadTicketsUser(profile.wspolnota_id);
   }
 
-  // ============================================
-  // ŁADOWANIE ZGŁOSZEŃ — USER
-  // ============================================
   async function loadTicketsUser(wspolnotaId) {
     const dom = App.ui.dom;
 
@@ -97,9 +88,6 @@ App.tickets = (() => {
     attachTicketClickHandlers(data);
   }
 
-  // ============================================
-  // ŁADOWANIE ZGŁOSZEŃ — ADMIN
-  // ============================================
   async function loadTicketsAdmin() {
     const dom = App.ui.dom;
     const wsp = dom.filterWspolnota.value;
@@ -116,7 +104,7 @@ App.tickets = (() => {
     const { data, error } = await query;
 
     if (error) {
-      console.error(error);
+      console.error("Błąd ładowania zgłoszeń admina:", error);
       dom.adminTickets.innerHTML = "<p>Błąd ładowania zgłoszeń.</p>";
       return;
     }
@@ -130,9 +118,6 @@ App.tickets = (() => {
     attachTicketClickHandlers(data);
   }
 
-  // ============================================
-  // RENDER POJEDYNCZEGO ZGŁOSZENIA
-  // ============================================
   function renderTicketItem(t) {
     return `
       <div class="ticket-item" data-id="${t.id}">
@@ -154,14 +139,10 @@ App.tickets = (() => {
     }
   }
 
-  // ============================================
-  // OBSŁUGA MODALA
-  // ============================================
   function attachTicketClickHandlers(data) {
     data.forEach(t => {
       const el = document.querySelector(`.ticket-item[data-id="${t.id}"]`);
       if (!el) return;
-
       el.onclick = () => openModal(t);
     });
   }
@@ -181,9 +162,6 @@ App.tickets = (() => {
     dom.ticketModal.classList.remove("hidden");
   }
 
-  // ============================================
-  // ZMIANA STATUSU (ADMIN)
-  // ============================================
   async function updateStatus(newStatus) {
     const dom = App.ui.dom;
     const id = dom.ticketModal.dataset.id;
@@ -203,26 +181,29 @@ App.tickets = (() => {
     loadTicketsAdmin();
   }
 
-  // ============================================
-  // PUBLIC API
-  // ============================================
+  async function loadWspolnotyFilter() {
+    const dom = App.ui.dom;
+
+    const { data, error } = await App.supabase
+      .from("wspolnoty")
+      .select("*")
+      .order("nazwa");
+
+    if (error) {
+      console.error("Błąd ładowania wspólnot:", error);
+      return;
+    }
+
+    dom.filterWspolnota.innerHTML = `
+      <option value="">Wszystkie wspólnoty</option>
+      ${data.map(w => `<option value="${w.id}">${w.nazwa}</option>`).join("")}
+    `;
+  }
+
   return {
     init,
     loadTicketsUser,
     loadTicketsAdmin,
-    loadWspolnotyFilter: async () => {
-      const dom = App.ui.dom;
-
-      const { data } = await App.supabase
-        .from("wspolnoty")
-        .select("*")
-        .order("name");
-
-      dom.filterWspolnota.innerHTML = `
-        <option value="">Wszystkie wspólnoty</option>
-        ${data.map(w => `<option value="${w.id}">${w.name}</option>`).join("")}
-      `;
-    }
+    loadWspolnotyFilter
   };
-
 })();
