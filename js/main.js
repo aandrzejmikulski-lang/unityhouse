@@ -60,7 +60,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   // 🔥 SIGNED_OUT → pełny reset profilu
   if (event === "SIGNED_OUT") {
-    App.auth.setCurrentProfile(null);   // ← FIX
+    App.auth.setCurrentProfile(null);
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
@@ -69,21 +69,14 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // 🔥 Brak sesji → reset profilu
-  if (!session) {
-    console.warn("Brak aktywnej sesji — reset");
-    App.auth.setCurrentProfile(null);   // ← FIX
-    await App.supabase.auth.signOut();
-    App.ui?.hideAllPanels?.();
-    App.ui?.showSection?.("loginCard");
-    App.ui?.showLoginTab?.();
-    App.ui?.setAuthView?.(false);
+  // ❗ Supabase wysyła INITIAL_SESSION z session=null — NIE wylogowujemy wtedy
+  if (!session && event !== "SIGNED_OUT") {
     AUTH_LOCK = false;
     return;
   }
 
   // 🔥 ZAWSZE czyścimy profil przed pobraniem nowego
-  App.auth.setCurrentProfile(null);   // ← FIX
+  App.auth.setCurrentProfile(null);
 
   // Pobranie profilu
   const { data: profile, error } = await App.supabase
@@ -142,7 +135,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       App.profiles?.loadPendingUsers?.();
       App.profiles?.loadAllUsers?.();
 
-      App.tickets?.loadWspolnotyFilter?.();   // ← 🔥 TWOJA DOPINKA
+      App.tickets?.loadWspolnotyFilter?.();
       App.tickets?.loadTicketsAdmin?.();
 
       App.announcements?.loadAnnouncementsAdmin?.();
