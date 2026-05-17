@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
     App.ui?.showLoginTab?.();
   }, 300);
 
-  // Sidebar z kontrolą roli
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       const profile = App.auth.getCurrentProfile();
@@ -38,7 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const target = item.dataset.target;
 
-      // 🔒 Mieszkaniec nie może wejść do admina
       if (profile.role === "user" && target === "adminCard") return;
 
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -58,7 +56,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
   if (AUTH_LOCK) return;
   AUTH_LOCK = true;
 
-  // 🔥 SIGNED_OUT → pełny reset profilu
   if (event === "SIGNED_OUT") {
     App.auth.setCurrentProfile(null);
     App.ui?.hideAllPanels?.();
@@ -69,16 +66,13 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // ❗ Supabase wysyła INITIAL_SESSION z session=null — NIE wylogowujemy wtedy
   if (!session && event !== "SIGNED_OUT") {
     AUTH_LOCK = false;
     return;
   }
 
-  // 🔥 ZAWSZE czyścimy profil przed pobraniem nowego
   App.auth.setCurrentProfile(null);
 
-  // Pobranie profilu
   const { data: profile, error } = await App.supabase
     .from("profiles")
     .select("*")
@@ -99,7 +93,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   App.auth.setCurrentProfile(profile);
 
-  // Konto niezatwierdzone
   if (!profile.approved) {
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
@@ -113,7 +106,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // User bez wspólnoty
   if (profile.role === "user" && !profile.wspolnota_id) {
     App.ui?.setAuthView?.(true);
     App.ui?.hideAllPanels?.();
@@ -123,7 +115,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // FINALNE przełączenie widoku
   setTimeout(() => {
     App.ui?.setAuthView?.(true);
     App.ui?.hideAllPanels?.();
@@ -147,7 +138,6 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
       App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
       App.announcements?.loadAnnouncementsUser?.();
 
-      // 🔒 Ukryj elementy admina
       document.querySelector("#adminCard")?.classList.add("hidden");
       document.querySelector("#announcementForm")?.classList.add("hidden");
       document.querySelector("#adminAnnouncements")?.classList.add("hidden");
