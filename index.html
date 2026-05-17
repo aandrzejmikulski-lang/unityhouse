@@ -189,31 +189,12 @@
   </div>
 
   <!-- SCRIPTS -->
-  <script>
-    const loadSupabase = document.createElement("script");
-    loadSupabase.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
-
-    loadSupabase.onload = () => {
-      const v = Date.now();
-      const scripts = [
-        "js/ui.js",
-        "js/auth.js",
-        "js/profiles.js",
-        "js/tickets.js",
-        "js/announcements.js",
-        "js/main.js"
-      ];
-
-      scripts.forEach(src => {
-        const s = document.createElement("script");
-        s.src = `${src}?v=${v}`;
-        s.defer = true;
-        document.head.appendChild(s);
-      });
-    };
-
-    document.head.appendChild(loadSupabase);
-  </script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/auth.js" defer></script>
+  <script src="js/profiles.js" defer></script>
+  <script src="js/tickets.js" defer></script>
+  <script src="js/announcements.js" defer></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
