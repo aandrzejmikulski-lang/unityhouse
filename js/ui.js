@@ -28,7 +28,7 @@ App.ui.hideLoader = function () {
 };
 
 // ---------------------------------------------
-// UKRYWANIE WSZYSTKICH PANELi
+// UKRYWANIE WSZYSTKICH PANELI
 // ---------------------------------------------
 App.ui.hideAllPanels = function () {
   const sections = document.querySelectorAll("section, .modal");
@@ -65,6 +65,14 @@ App.ui.initSidebar = function () {
     item.addEventListener("click", () => {
       const target = item.dataset.target;
       App.ui.setActiveSidebar(target);
+
+      // 🔧 Poprawka: jeśli admin kliknie „Ogłoszenia”, pokaż jego wersję
+      const profile = App.auth?.currentProfile;
+      if (profile?.role === "admin" && target === "userAnnouncementsCard") {
+        App.ui.showSection("adminAnnouncementsCard");
+        return;
+      }
+
       App.ui.showSection(target);
     });
   });
