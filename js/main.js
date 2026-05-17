@@ -18,6 +18,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   console.log("Supabase initialized");
 
   // ---------------------------------------------
+  // 🔥 WYMUSZONY RESET SESJI (najważniejsze!)
+  // ---------------------------------------------
+  try {
+    const tokenKey = Object.keys(localStorage).find(k => k.includes("sb-"));
+    if (tokenKey) {
+      console.log("Czyszczę starą sesję Supabase:", tokenKey);
+      localStorage.removeItem(tokenKey);
+    }
+    await App.supabase.auth.signOut();
+  } catch (e) {
+    console.warn("Błąd resetu sesji:", e);
+  }
+
+  // ---------------------------------------------
   // INICJALIZACJA MODUŁÓW
   // ---------------------------------------------
   App.ui.init();
