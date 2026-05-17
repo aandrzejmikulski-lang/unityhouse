@@ -18,20 +18,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   console.log("Supabase initialized");
 
   // ---------------------------------------------
-  // 🔥 WYMUSZONY RESET SESJI (najważniejsze!)
-  // ---------------------------------------------
-  try {
-    const tokenKey = Object.keys(localStorage).find(k => k.includes("sb-"));
-    if (tokenKey) {
-      console.log("Czyszczę starą sesję Supabase:", tokenKey);
-      localStorage.removeItem(tokenKey);
-    }
-    await App.supabase.auth.signOut();
-  } catch (e) {
-    console.warn("Błąd resetu sesji:", e);
-  }
-
-  // ---------------------------------------------
   // INICJALIZACJA MODUŁÓW
   // ---------------------------------------------
   App.ui.init();
@@ -60,20 +46,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   // START
   // ---------------------------------------------
   await handleSession();
-// 🔧 Wymuszenie odświeżenia sesji Supabase
-try {
-  const { data: { session } } = await App.supabase.auth.getSession();
-  if (!session) {
-    console.log("Brak aktywnej sesji — czyszczę token i wymuszam ponowne logowanie");
-    await App.supabase.auth.signOut();
-    localStorage.clear();
-    App.ui.showSection("loginCard");
-  } else {
-    console.log("Sesja Supabase odświeżona:", session.user.email);
-  }
-} catch (e) {
-  console.warn("Błąd odświeżania sesji:", e);
-}
 
   // ---------------------------------------------
   // FUNKCJE
@@ -109,11 +81,6 @@ try {
     // ---------------------------------------------
     App.ui.hideAllPanels();
 
-    document.getElementById("adminCard")?.classList.add("hidden");
-    document.getElementById("mainCard")?.classList.add("hidden");
-    document.getElementById("selectWspolnotaCard")?.classList.add("hidden");
-    document.getElementById("loginCard")?.classList.add("hidden");
-
     // ---------------------------------------------
     // 1. Konto niezatwierdzone
     // ---------------------------------------------
@@ -138,20 +105,9 @@ try {
     // ---------------------------------------------
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
-      // 🔧 Jeśli admin kliknie „Ogłoszenia”, pokaż też sekcję userAnnouncementsCard
-document.getElementById("userAnnouncementsCard")?.classList.remove("hidden");
-document.getElementById("userAnnouncementsCard").style.display = "block";
 
-// 🔧 Odsłoń cały panel ogłoszeń admina
-document.getElementById("adminAnnouncementsCard")?.classList.remove("hidden");
-document.getElementById("adminAnnouncementsCard").style.display = "block";
-
-      // pokaż sidebar i logout
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
-
-      // 🔥 KLUCZOWA POPRAWKA — odsłaniamy kartę ogłoszeń admina
-      document.getElementById("adminAnnouncementsCard")?.classList.remove("hidden");
 
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
@@ -165,7 +121,6 @@ document.getElementById("adminAnnouncementsCard").style.display = "block";
     // ---------------------------------------------
     App.ui.showSection("mainCard");
 
-    // pokaż sidebar i logout
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
 
