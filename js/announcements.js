@@ -2,281 +2,167 @@ window.App = window.App || {};
 
 App.announcements = (() => {
 
-  function getDom() {
-    return App.ui.dom;
-  }
-
+  // ============================================
+  // INICJALIZACJA
+  // ============================================
   function init() {
-    const {
-      btnAddAnnouncement,
-      btnCancelAnnouncement,
-      btnSaveAnnouncement
-    } = getDom();
+    const dom = App.ui.dom;
 
-    if (btnAddAnnouncement) btnAddAnnouncement.onclick = showAnnouncementForm;
-    if (btnCancelAnnouncement) btnCancelAnnouncement.onclick = hideAnnouncementForm;
-    if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
+    if (dom.btnAddAnnouncement) dom.btnAddAnnouncement.onclick = saveAnnouncement;
+
+    // Ładowanie wspólnot do formularza ogłoszeń (admin)
+    loadWspolnotyForAnnouncements();
   }
 
-  function showAnnouncementForm() {
-    const { announcementForm } = getDom();
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    if (!announcementForm) return;
-
-    announcementForm.classList.remove("hidden");
-    loadAnnouncementWspolnotyCheckboxes();
-  }
-
-  function hideAnnouncementForm() {
-    const {
-      announcementForm,
-      announcementTitle,
-      announcementContent,
-      announcementGlobal,
-      announcementFrom,
-      announcementTo
-    } = getDom();
-
-    if (!announcementForm) return;
-
-    announcementForm.classList.add("hidden");
-    announcementTitle.value = "";
-    announcementContent.value = "";
-    announcementGlobal.checked = false;
-    announcementFrom.value = "";
-    announcementTo.value = "";
-  }
-
-  async function loadAnnouncementWspolnotyCheckboxes() {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    const box = document.getElementById("announcementWspolnoty");
-    if (!box) return;
-
-    box.innerHTML = "";
+  // ============================================
+  // ŁADOWANIE WSPÓLNOT DO FORMULARZA (ADMIN)
+  // ============================================
+  async function loadWspolnotyForAnnouncements() {
+    const dom = App.ui.dom;
 
     const { data, error } = await App.supabase
       .from("wspolnoty")
-      .select("id, nazwa")
+      .select("*")
       .order("nazwa");
 
     if (error) {
-      console.error("Błąd ładowania wspólnot dla ogłoszeń:", error);
-      box.innerHTML = "<i>Błąd ładowania wspólnot.</i>";
+      console.error("Błąd ładowania wspólnot:", error);
       return;
     }
 
-    if (!data || !data.length) {
-      box.innerHTML = "<i>Brak zdefiniowanych wspólnot.</i>";
-      return;
-    }
-
-    data.forEach(w => {
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <label>
-          <input type="checkbox" class="annWspCheck" value="${w.id}">
-          ${w.nazwa}
-        </label>
-      `;
-      box.appendChild(div);
-    });
+    dom.announcementWspolnoty.innerHTML = `
+      <option value="ALL">📢 Wszystkie wspólnoty</option>
+      ${data.map(w => `<option value="${w.id}">${w.nazwa}</option>`).join("")}
+    `;
   }
 
+  // ============================================
+  // ZAPIS OGŁOSZENIA (ADMIN)
+  // ============================================
   async function saveAnnouncement() {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
+    const dom = App.ui.dom;
 
-    const {
-      announcementTitle,
-      announcementContent,
-      announcementGlobal,
-      announcementFrom,
-      announcementTo
-    } = getDom();
+    const title = dom.announcementTitle.value.trim();
+    const content = dom.announcementContent.value.trim();
 
-    const title = announcementTitle.value.trim();
-    const content = announcementContent.value.trim();
-    const isGlobal = announcementGlobal.checked;
-
-    const validFrom = announcementFrom.value || null;
-    const validTo = announcementTo.value || null;
+    const selected = [...dom.announcementWspolnoty.selectedOptions].map(o => o.value);
 
     if (!title || !content) {
       alert("Uzupełnij tytuł i treść ogłoszenia.");
       return;
     }
 
-    const { data: { session } } = await App.supabase.auth.getSession();
+    let wspolnoty_ids = null;
 
-    const { data: ann, error: annError } = await App.supabase
-      .from("announcements")
-      .insert({
-        title,
-        content,
-        author_id: session.user.id,
-        global: isGlobal,
-        valid_from: validFrom,
-        valid_to: validTo
-      })
-      .select()
-      .single();
+    // ALL = ogłoszenie globalne
+    if (!(selected.length === 1 && selected[0] === "ALL")) {
+      wspolnoty_ids = selected;
+    }
 
-    if (annError) {
-      console.error("Błąd zapisu ogłoszenia:", annError);
+    const { error } = await App.supabase.from("announcements").insert({
+      title,
+      content,
+      wspolnoty_ids
+    });
+
+    if (error) {
+      console.error("Błąd zapisu ogłoszenia:", error);
       alert("Nie udało się zapisać ogłoszenia.");
       return;
     }
 
-    if (!isGlobal) {
-      const selected = [...document.querySelectorAll(".annWspCheck:checked")].map(c => c.value);
+    dom.announcementTitle.value = "";
+    dom.announcementContent.value = "";
+    dom.announcementWspolnoty.selectedIndex = 0;
 
-      if (selected.length > 0) {
-        const rows = selected.map(id => ({
-          announcement_id: ann.id,
-          wspolnota_id: id
-        }));
-
-        await App.supabase
-          .from("announcement_wspolnoty")
-          .insert(rows);
-      }
-    }
-
-    hideAnnouncementForm();
     loadAnnouncementsAdmin();
   }
 
+  // ============================================
+  // ŁADOWANIE OGŁOSZEŃ — ADMIN
+  // ============================================
+  async function loadAnnouncementsAdmin() {
+    const dom = App.ui.dom;
+
+    const { data, error } = await App.supabase
+      .from("announcements")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Błąd ładowania ogłoszeń admina:", error);
+      dom.adminAnnouncements.innerHTML = "<p>Błąd ładowania ogłoszeń.</p>";
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      dom.adminAnnouncements.innerHTML = "<p>Brak ogłoszeń.</p>";
+      return;
+    }
+
+    dom.adminAnnouncements.innerHTML = data.map(renderAnnouncementAdmin).join("");
+  }
+
+  function renderAnnouncementAdmin(a) {
+    return `
+      <div class="announcement-item">
+        <h4>${a.title}</h4>
+        <p>${a.content}</p>
+        <p><strong>Widoczne dla:</strong> ${
+          !a.wspolnoty_ids ? "📢 Wszystkie wspólnoty" :
+          a.wspolnoty_ids.length === 1 ? `1 wspólnota` :
+          `${a.wspolnoty_ids.length} wspólnot`
+        }</p>
+      </div>
+    `;
+  }
+
+  // ============================================
+  // ŁADOWANIE OGŁOSZEŃ — USER
+  // ============================================
   async function loadAnnouncementsUser() {
+    const dom = App.ui.dom;
     const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "user") return;
-
-    const { userAnnouncements } = getDom();
-    if (!userAnnouncements) return;
-
-    userAnnouncements.innerHTML = "Ładowanie...";
 
     const wsp = profile.wspolnota_id;
 
     const { data, error } = await App.supabase
       .from("announcements")
-      .select(`
-        id,
-        title,
-        content,
-        created_at,
-        global,
-        valid_from,
-        valid_to,
-        announcement_wspolnoty (wspolnota_id)
-      `)
+      .select("*")
+      .or(`wspolnoty_ids.is.null,wspolnoty_ids.cs.{${wsp}}`)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Błąd ładowania ogłoszeń (user):", error);
-      userAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
+      console.error("Błąd ładowania ogłoszeń:", error);
+      dom.userAnnouncements.innerHTML = "<p>Błąd ładowania ogłoszeń.</p>";
       return;
     }
 
-    const today = new Date().toISOString().split("T")[0];
-
-    const filtered = data.filter(a =>
-      (a.global ||
-       (a.announcement_wspolnoty &&
-        a.announcement_wspolnoty.some(x => x.wspolnota_id === wsp)))
-      &&
-      (a.valid_from === null || a.valid_from <= today)
-      &&
-      (a.valid_to === null || a.valid_to >= today)
-    );
-
-    if (!filtered.length) {
-      userAnnouncements.innerHTML = "<i>Brak ogłoszeń.</i>";
+    if (!data || data.length === 0) {
+      dom.userAnnouncements.innerHTML = "<p>Brak ogłoszeń.</p>";
       return;
     }
 
-    userAnnouncements.innerHTML = "";
-
-    filtered.forEach(a => {
-      const div = document.createElement("div");
-      div.className = "announcementItem";
-      div.innerHTML = `
-        <b>${a.title}</b><br>
-        <small>${new Date(a.created_at).toLocaleString()}</small><br>
-        ${a.content}
-        <hr>
-      `;
-      userAnnouncements.appendChild(div);
-    });
+    dom.userAnnouncements.innerHTML = data.map(renderAnnouncementUser).join("");
   }
 
-  async function loadAnnouncementsAdmin() {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    const { adminAnnouncements } = getDom();
-    if (!adminAnnouncements) return;
-
-    adminAnnouncements.innerHTML = "Ładowanie...";
-
-    const { data, error } = await App.supabase
-      .from("announcements")
-      .select(`
-        id,
-        title,
-        content,
-        created_at,
-        global,
-        valid_from,
-        valid_to,
-        announcement_wspolnoty (wspolnota_id, wspolnoty (nazwa))
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Błąd ładowania ogłoszeń (admin):", error);
-      adminAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
-      return;
-    }
-
-    if (!data.length) {
-      adminAnnouncements.innerHTML = "<i>Brak ogłoszeń.</i>";
-      return;
-    }
-
-    adminAnnouncements.innerHTML = "";
-
-    data.forEach(a => {
-      const wsp = a.global
-        ? "Wszystkie wspólnoty"
-        : (a.announcement_wspolnoty || [])
-            .map(x => x.wspolnoty?.nazwa || "—")
-            .join(", ");
-
-      const div = document.createElement("div");
-      div.className = "announcementItem";
-      div.innerHTML = `
-        <b>${a.title}</b><br>
-        <small>${new Date(a.created_at).toLocaleString()}</small><br>
-        <b>Wyświetlaj:</b> ${a.valid_from || "—"} → ${a.valid_to || "bez końca"}<br>
-        <b>Dotyczy:</b> ${wsp}<br><br>
-        ${a.content}
-        <hr>
-      `;
-      adminAnnouncements.appendChild(div);
-    });
+  function renderAnnouncementUser(a) {
+    return `
+      <div class="announcement-item">
+        <h4>${a.title}</h4>
+        <p>${a.content}</p>
+      </div>
+    `;
   }
 
+  // ============================================
+  // PUBLIC API
+  // ============================================
   return {
     init,
-    showAnnouncementForm,
-    hideAnnouncementForm,
-    loadAnnouncementWspolnotyCheckboxes,
-    saveAnnouncement,
+    loadAnnouncementsAdmin,
     loadAnnouncementsUser,
-    loadAnnouncementsAdmin
+    loadWspolnotyForAnnouncements
   };
+
 })();
