@@ -8,10 +8,10 @@
   <!-- STYLE -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- SUPABASE (poprawny import biblioteki) -->
+  <!-- SUPABASE (musi być załadowane jako pierwsze, bez defer) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
-  <!-- AUTOMATYCZNE WERSJONOWANIE -->
+  <!-- AUTOMATYCZNE WERSJONOWANIE SKRYPTÓW APLIKACJI -->
   <script>
     const v = Date.now();
     const scripts = [
@@ -211,8 +211,6 @@
       <div id="ticketModal" class="modal hidden">
         <div class="modal-content">
           <button id="closeModal" class="modal-close">×</button>
-          <h2 id="modalTicketTitle"></h2>
-          <p id="modalTicketDesc"></p>
           <h2 id="modalTicketTitle"></h2>
           <p id="modalTicketDesc"></p>
           <p id="modalTicketStatus"></p>
