@@ -7,6 +7,10 @@ App.auth = (() => {
     currentProfile = p;
   }
 
+  function getCurrentProfile() {
+    return currentProfile;
+  }
+
   function getDom() {
     return App.ui?.dom || {};
   }
@@ -26,8 +30,6 @@ App.auth = (() => {
     if (btnLogin) btnLogin.onclick = loginUser;
     if (btnRegister) btnRegister.onclick = registerUser;
     if (btnLogoutTop) btnLogoutTop.onclick = logoutUser;
-
-    // ❌ USUNIĘTO OBSŁUGĘ onAuthStateChange — robi to main.js
   }
 
   async function loginUser() {
@@ -35,6 +37,9 @@ App.auth = (() => {
 
     const email = loginEmail?.value.trim();
     const password = loginPassword?.value.trim();
+
+    // 🔥 FIX — zawsze czyścimy stary profil
+    currentProfile = null;
 
     if (!email || !password) {
       App.ui?.showMessage?.(loginMessage, "Uzupełnij wszystkie pola.", "error");
@@ -88,14 +93,9 @@ App.auth = (() => {
     }
   }
 
-  // ✅ JEDYNA ZMIANA — usunięto UI, bo robi to main.js
   async function logoutUser() {
+    currentProfile = null;   // ← FIX
     await App.supabase.auth.signOut();
-    currentProfile = null;
-  }
-
-  function getCurrentProfile() {
-    return currentProfile;
   }
 
   return {
