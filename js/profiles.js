@@ -1,78 +1,145 @@
-window.App = window.App || {};
+// =============================================
+// UNITY HOUSE — PROFILES MODULE
+// Zarządza wspólnotami, użytkownikami, listami
+// oczekujących i wszystkimi profilami
+// =============================================
 
+window.App = window.App || {};
 App.profiles = (() => {
 
-  function init() {}
-
+  // ---------------------------------------------
+  // ŁADOWANIE LISTY WSPÓLNOT DO DROPDOWNU
+  // ---------------------------------------------
   async function loadWspolnotyDropdown() {
-    const dom = App.ui.dom;
+    const select = document.getElementById("wspolnotaSelect");
+    if (!select) return;
+
+    select.innerHTML = `<option value="">Ładowanie...</option>`;
 
     const { data, error } = await App.supabase
       .from("wspolnoty")
       .select("*")
-      .order("nazwa");
+      .order("nazwa", { ascending: true });
 
     if (error) {
-      console.error("Błąd ładowania wspólnot:", error);
+      select.innerHTML = `<option value="">Błąd ładowania</option>`;
       return;
     }
 
-    dom.wspolnotaSelect.innerHTML = data
+    select.innerHTML = data
       .map(w => `<option value="${w.id}">${w.nazwa}</option>`)
       .join("");
   }
 
-  async function loadPendingUsers() {
-    const dom = App.ui.dom;
+  // ---------------------------------------------
+  // ŁADOWANIE WSPÓLNOT DO OGŁOSZEŃ (ADMIN)
+  // ---------------------------------------------
+  async function loadWspolnotyForAnnouncements() {
+    const select = document.getElementById("announcementWspolnoty");
+    if (!select) return;
 
     const { data, error } = await App.supabase
-      .from("profiles")
+      .from("wspolnoty")
       .select("*")
-      .eq("approved", false);
+      .order("nazwa", { ascending: true });
 
-    if (error) {
-      console.error("Błąd ładowania oczekujących użytkowników:", error);
-      dom.pendingUsersList.innerHTML = "<p>Błąd ładowania.</p>";
-      return;
-    }
+    if (error) return;
 
-    if (!data || data.length === 0) {
-      dom.pendingUsersList.innerHTML = "<p>Brak oczekujących użytkowników.</p>";
-      return;
-    }
-
-    dom.pendingUsersList.innerHTML = data
-      .map(u => `<div>${u.fullname || u.email} (${u.role})</div>`)
+    select.innerHTML = data
+      .map(w => `<option value="${w.id}">${w.nazwa}</option>`)
       .join("");
   }
 
-  async function loadAllUsers() {
-    const dom = App.ui.dom;
+  // ---------------------------------------------
+  // ŁADOWANIE LISTY UŻYTKOWNIKÓW OCZEKUJĄCYCH
+  // ---------------------------------------------
+  async function loadPendingUsers() {
+    const container = document.getElementById("pendingUsersList");
+    if (!container) return;
+
+    container.innerHTML = `<p class="muted">Ładowanie...</p>`;
 
     const { data, error } = await App.supabase
       .from("profiles")
-      .select("*");
+      .select("id, fullname, email, wspolnota_id, approved")
+      .eq("approved", false);
 
     if (error) {
-      console.error("Błąd ładowania użytkowników:", error);
-      dom.allUsersList.innerHTML = "<p>Błąd ładowania.</p>";
+      container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
       return;
     }
 
-    if (!data || data.length === 0) {
-      dom.allUsersList.innerHTML = "<p>Brak użytkowników.</p>";
+    if (!data.length) {
+      container.innerHTML = `<p class="muted">Brak oczekujących użytkowników.</p>`;
       return;
     }
 
-    dom.allUsersList.innerHTML = data
-      .map(u => `<div>${u.fullname || u.email} (${u.role})</div>`)
+    container.innerHTML = data
+      .map(u => `
+        <div class="announcementItem">
+          <b>${u.fullname || "Bez nazwy"}</b><br>
+          <small>${u.email}</small><br>
+          <button class="btn primary" onclick="App.profiles.approveUser('${u.id}')">Zatwierdź</button>
+        </div>
+      `)
+      .join("");
+  }
+
+  // ---------------------------------------------
+  // ZATWIERDZANIE UŻYTKOWNIKA
+  // ---------------------------------------------
+  async function approveUser(userId) {
+    await App.supabase
+      .from("profiles")
+      .update({ approved: true })
+      .eq("id", userId);
+
+    loadPendingUsers();
+    loadAllUsers();
+  }
+
+  // ---------------------------------------------
+  // ŁADOWANIE WSZYSTKICH UŻYTKOWNIKÓW
+  // ---------------------------------------------
+  async function loadAllUsers() {
+    const container = document.getElementById("allUsersList");
+    if (!container) return;
+
+    container.innerHTML = `<p class="muted">Ładowanie...</p>`;
+
+    const { data, error } = await App.supabase
+      .from("profiles")
+      .select("id, fullname, email, wspolnota_id, approved, role")
+      .order("fullname", { ascending: true });
+
+    if (error) {
+      container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
+      return;
+    }
+
+    if (!data.length) {
+      container.innerHTML = `<p class="muted">Brak użytkowników.</p>`;
+      return;
+    }
+
+    container.innerHTML = data
+      .map(u => `
+        <div class="announcementItem">
+          <b>${u.fullname || "Bez nazwy"}</b> (${u.role})<br>
+          <small>${u.email}</small><br>
+          <small>Wspólnota: ${u.wspolnota_id || "—"}</small><br>
+          <small>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}</small>
+        </div>
+      `)
       .join("");
   }
 
   return {
-    init,
     loadWspolnotyDropdown,
+    loadWspolnotyForAnnouncements,
     loadPendingUsers,
-    loadAllUsers
+    loadAllUsers,
+    approveUser
   };
+
 })();
