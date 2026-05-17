@@ -2,21 +2,14 @@ window.App = window.App || {};
 
 App.announcements = (() => {
 
-  // ============================================
-  // INICJALIZACJA
-  // ============================================
   function init() {
     const dom = App.ui.dom;
 
     if (dom.btnAddAnnouncement) dom.btnAddAnnouncement.onclick = saveAnnouncement;
 
-    // Ładowanie wspólnot do formularza ogłoszeń (admin)
     loadWspolnotyForAnnouncements();
   }
 
-  // ============================================
-  // ŁADOWANIE WSPÓLNOT DO FORMULARZA (ADMIN)
-  // ============================================
   async function loadWspolnotyForAnnouncements() {
     const dom = App.ui.dom;
 
@@ -36,15 +29,11 @@ App.announcements = (() => {
     `;
   }
 
-  // ============================================
-  // ZAPIS OGŁOSZENIA (ADMIN)
-  // ============================================
   async function saveAnnouncement() {
     const dom = App.ui.dom;
 
     const title = dom.announcementTitle.value.trim();
     const content = dom.announcementContent.value.trim();
-
     const selected = [...dom.announcementWspolnoty.selectedOptions].map(o => o.value);
 
     if (!title || !content) {
@@ -54,7 +43,6 @@ App.announcements = (() => {
 
     let wspolnoty_ids = null;
 
-    // ALL = ogłoszenie globalne
     if (!(selected.length === 1 && selected[0] === "ALL")) {
       wspolnoty_ids = selected;
     }
@@ -78,9 +66,6 @@ App.announcements = (() => {
     loadAnnouncementsAdmin();
   }
 
-  // ============================================
-  // ŁADOWANIE OGŁOSZEŃ — ADMIN
-  // ============================================
   async function loadAnnouncementsAdmin() {
     const dom = App.ui.dom;
 
@@ -117,13 +102,9 @@ App.announcements = (() => {
     `;
   }
 
-  // ============================================
-  // ŁADOWANIE OGŁOSZEŃ — USER
-  // ============================================
   async function loadAnnouncementsUser() {
     const dom = App.ui.dom;
     const profile = App.auth.getCurrentProfile();
-
     const wsp = profile.wspolnota_id;
 
     const { data, error } = await App.supabase
@@ -155,9 +136,6 @@ App.announcements = (() => {
     `;
   }
 
-  // ============================================
-  // PUBLIC API
-  // ============================================
   return {
     init,
     loadAnnouncementsAdmin,
