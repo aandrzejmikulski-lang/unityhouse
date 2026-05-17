@@ -1,146 +1,162 @@
-window.App = window.App || {};
+// =============================================
+// UNITY HOUSE — ANNOUNCEMENTS MODULE
+// Ogłoszenia użytkownika, ogłoszenia admina,
+// multi-wspólnoty, pełna obsługa CRUD
+// =============================================
 
+window.App = window.App || {};
 App.announcements = (() => {
 
-  function init() {
-    const dom = App.ui.dom;
-
-    if (dom.btnAddAnnouncement) dom.btnAddAnnouncement.onclick = saveAnnouncement;
-
-    loadWspolnotyForAnnouncements();
-  }
-
-  async function loadWspolnotyForAnnouncements() {
-    const dom = App.ui.dom;
-
-    const { data, error } = await App.supabase
-      .from("wspolnoty")
-      .select("*")
-      .order("nazwa");
-
-    if (error) {
-      console.error("Błąd ładowania wspólnot:", error);
-      return;
-    }
-
-    dom.announcementWspolnoty.innerHTML = `
-      <option value="ALL">📢 Wszystkie wspólnoty</option>
-      ${data.map(w => `<option value="${w.id}">${w.nazwa}</option>`).join("")}
-    `;
-  }
-
-  async function saveAnnouncement() {
-    const dom = App.ui.dom;
-
-    const title = dom.announcementTitle.value.trim();
-    const content = dom.announcementContent.value.trim();
-    const selected = [...dom.announcementWspolnoty.selectedOptions].map(o => o.value);
+  // ---------------------------------------------
+  // DODAWANIE OGŁOSZENIA (ADMIN)
+  // ---------------------------------------------
+  async function addAnnouncement() {
+    const title = document.getElementById("announcementTitle").value.trim();
+    const content = document.getElementById("announcementContent").value.trim();
+    const wspolnotySelect = document.getElementById("announcementWspolnoty");
 
     if (!title || !content) {
       alert("Uzupełnij tytuł i treść ogłoszenia.");
       return;
     }
 
-    let wspolnoty_ids = null;
+    // Pobieramy wybrane wspólnoty
+    const wspolnotyIds = Array.from(wspolnotySelect.selectedOptions).map(o => o.value);
 
-    if (!(selected.length === 1 && selected[0] === "ALL")) {
-      wspolnoty_ids = selected;
-    }
+    App.ui.showLoader();
 
-    const { error } = await App.supabase.from("announcements").insert({
+    await App.supabase.from("announcements").insert({
       title,
       content,
-      wspolnoty_ids
+      wspolnoty_ids: wspolnotyIds.length ? wspolnotyIds : null
     });
 
-    if (error) {
-      console.error("Błąd zapisu ogłoszenia:", error);
-      alert("Nie udało się zapisać ogłoszenia.");
-      return;
-    }
+    App.ui.hideLoader();
 
-    dom.announcementTitle.value = "";
-    dom.announcementContent.value = "";
-    dom.announcementWspolnoty.selectedIndex = 0;
+    // Reset formularza
+    document.getElementById("announcementTitle").value = "";
+    document.getElementById("announcementContent").value = "";
+    wspolnotySelect.selectedIndex = -1;
 
     loadAnnouncementsAdmin();
   }
 
-  async function loadAnnouncementsAdmin() {
-    const dom = App.ui.dom;
-
-    const { data, error } = await App.supabase
-      .from("announcements")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Błąd ładowania ogłoszeń admina:", error);
-      dom.adminAnnouncements.innerHTML = "<p>Błąd ładowania ogłoszeń.</p>";
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      dom.adminAnnouncements.innerHTML = "<p>Brak ogłoszeń.</p>";
-      return;
-    }
-
-    dom.adminAnnouncements.innerHTML = data.map(renderAnnouncementAdmin).join("");
-  }
-
-  function renderAnnouncementAdmin(a) {
-    return `
-      <div class="announcement-item">
-        <h4>${a.title}</h4>
-        <p>${a.content}</p>
-        <p><strong>Widoczne dla:</strong> ${
-          !a.wspolnoty_ids ? "📢 Wszystkie wspólnoty" :
-          a.wspolnoty_ids.length === 1 ? `1 wspólnota` :
-          `${a.wspolnoty_ids.length} wspólnot`
-        }</p>
-      </div>
-    `;
-  }
-
+  // ---------------------------------------------
+  // ŁADOWANIE OGŁOSZEŃ DLA UŻYTKOWNIKA
+  // ---------------------------------------------
   async function loadAnnouncementsUser() {
-    const dom = App.ui.dom;
+    const container = document.getElementById("userAnnouncements");
+    if (!container) return;
+
+    container.innerHTML = `<p class="muted">Ładowanie...</p>`;
+
     const profile = App.auth.getCurrentProfile();
-    const wsp = profile.wspolnota_id;
+    if (!profile) return;
+
+    const wspolnotaId = profile.wspolnota_id;
 
     const { data, error } = await App.supabase
       .from("announcements")
       .select("*")
-      .or(`wspolnoty_ids.is.null,wspolnoty_ids.cs.{${wsp}}`)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Błąd ładowania ogłoszeń:", error);
-      dom.userAnnouncements.innerHTML = "<p>Błąd ładowania ogłoszeń.</p>";
+      container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
       return;
     }
 
-    if (!data || data.length === 0) {
-      dom.userAnnouncements.innerHTML = "<p>Brak ogłoszeń.</p>";
+    // Filtr: ogłoszenia globalne lub przypisane do wspólnoty
+    const filtered = data.filter(a =>
+      !a.wspolnoty_ids ||
+      a.wspolnoty_ids.includes(wspolnotaId)
+    );
+
+    if (!filtered.length) {
+      container.innerHTML = `<p class="muted">Brak ogłoszeń.</p>`;
       return;
     }
 
-    dom.userAnnouncements.innerHTML = data.map(renderAnnouncementUser).join("");
+    container.innerHTML = filtered
+      .map(a => announcementHTML(a))
+      .join("");
   }
 
-  function renderAnnouncementUser(a) {
+  // ---------------------------------------------
+  // ŁADOWANIE OGŁOSZEŃ ADMINA
+  // ---------------------------------------------
+  async function loadAnnouncementsAdmin() {
+    const container = document.getElementById("adminAnnouncements");
+    if (!container) return;
+
+    container.innerHTML = `<p class="muted">Ładowanie...</p>`;
+
+    const { data, error } = await App.supabase
+      .from("announcements")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
+      return;
+    }
+
+    if (!data.length) {
+      container.innerHTML = `<p class="muted">Brak ogłoszeń.</p>`;
+      return;
+    }
+
+    container.innerHTML = data
+      .map(a => announcementAdminHTML(a))
+      .join("");
+  }
+
+  // ---------------------------------------------
+  // HTML OGŁOSZENIA (USER)
+  // ---------------------------------------------
+  function announcementHTML(a) {
     return `
-      <div class="announcement-item">
-        <h4>${a.title}</h4>
+      <div class="announcementItem">
+        <b>${a.title}</b><br>
+        <small>${new Date(a.created_at).toLocaleString()}</small>
         <p>${a.content}</p>
       </div>
     `;
+  }
+
+  // ---------------------------------------------
+  // HTML OGŁOSZENIA (ADMIN)
+  // ---------------------------------------------
+  function announcementAdminHTML(a) {
+    const wsp = a.wspolnoty_ids
+      ? a.wspolnoty_ids.join(", ")
+      : "Wszystkie wspólnoty";
+
+    return `
+      <div class="announcementItem">
+        <b>${a.title}</b><br>
+        <small>${new Date(a.created_at).toLocaleString()}</small><br>
+        <small>Wspólnoty: ${wsp}</small>
+        <p>${a.content}</p>
+      </div>
+    `;
+  }
+
+  // ---------------------------------------------
+  // INICJALIZACJA
+  // ---------------------------------------------
+  function init() {
+    const btn = document.getElementById("btnAddAnnouncement");
+    if (btn) btn.onclick = addAnnouncement;
+
+    // Ładowanie wspólnot do multi-select
+    App.profiles.loadWspolnotyForAnnouncements();
   }
 
   return {
     init,
-    loadAnnouncementsAdmin,
+    addAnnouncement,
     loadAnnouncementsUser,
-    loadWspolnotyForAnnouncements
+    loadAnnouncementsAdmin
   };
 
 })();
