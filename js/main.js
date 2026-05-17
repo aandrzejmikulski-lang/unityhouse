@@ -87,6 +87,13 @@ App.supabase = supabase.createClient(
     // ---------------------------------------------
     App.ui.hideAllPanels();
 
+    // 🔒 DODANE: Ukryj elementy admina dla zwykłego użytkownika
+    if (profile.role !== "admin") {
+      document.getElementById("adminCard")?.classList.add("hidden");
+      document.querySelector('[data-target="adminCard"]')?.classList.add("hidden");
+      document.getElementById("adminAnnouncementsCard")?.classList.add("hidden");
+    }
+
     // ---------------------------------------------
     // 1. Konto niezatwierdzone
     // ---------------------------------------------
@@ -115,7 +122,7 @@ App.supabase = supabase.createClient(
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
 
-      // 🔧 DODANE: ukryj "Logowanie"
+      // 🔧 ukryj "Logowanie"
       document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
@@ -133,7 +140,7 @@ App.supabase = supabase.createClient(
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
 
-    // 🔧 DODANE: ukryj "Logowanie"
+    // 🔧 ukryj "Logowanie"
     document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
