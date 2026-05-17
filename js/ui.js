@@ -29,9 +29,10 @@ App.ui.hideLoader = function () {
 
 // ---------------------------------------------
 // UKRYWANIE WSZYSTKICH PANELI
+// (POPRAWIONE — USUNIĘTO .card)
 // ---------------------------------------------
 App.ui.hideAllPanels = function () {
-  const sections = document.querySelectorAll("section, .modal, .card");
+  const sections = document.querySelectorAll("section, .modal");
   sections.forEach((el) => el.classList.add("hidden"));
 };
 
