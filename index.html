@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unity House — Panel</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
@@ -19,35 +19,42 @@
 
   <!-- APP SHELL -->
   <div class="app-shell">
+
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-glass">
         <div class="logo">UNITY HOUSE</div>
+
         <nav class="sidebar-nav">
           <div class="sidebar-item active" data-target="loginCard">Logowanie</div>
           <div class="sidebar-item" data-target="mainCard">Zgłoszenia</div>
           <div class="sidebar-item" data-target="userAnnouncementsCard">Ogłoszenia</div>
           <div class="sidebar-item" data-target="adminCard">Panel admina</div>
         </nav>
-        <button class="btn ghost logout-btn" id="btnLogout">Wyloguj</button>
+
+        <button id="btnLogout" class="btn ghost logout-btn">Wyloguj</button>
       </div>
     </aside>
 
     <!-- CONTENT -->
     <main class="content">
+
       <!-- LOGOWANIE -->
       <section id="loginCard">
         <div class="card fade-in">
           <h2>Logowanie</h2>
           <div id="loginMessage" class="muted"></div>
+
           <div class="field">
             <span>E-mail</span>
             <input id="loginEmail" type="email" placeholder="Twój e-mail" />
           </div>
+
           <div class="field">
             <span>Hasło</span>
             <input id="loginPassword" type="password" placeholder="Hasło" />
           </div>
+
           <button id="btnLogin" class="btn primary full">Zaloguj</button>
         </div>
       </section>
@@ -56,9 +63,11 @@
       <section id="selectWspolnotaCard" class="hidden">
         <div class="card fade-in">
           <h2>Wybierz wspólnotę</h2>
+
           <div class="field">
             <select id="wspolnotaSelect"></select>
           </div>
+
           <button id="btnSaveWspolnota" class="btn primary full">Zapisz</button>
         </div>
       </section>
@@ -72,19 +81,23 @@
 
         <div class="card fade-in">
           <h3>Nowe zgłoszenie</h3>
+
           <div class="form-row">
             <div class="field">
               <span>Tytuł zgłoszenia</span>
               <input id="ticketTitle" placeholder="Tytuł" />
             </div>
+
             <div class="field">
               <span>Opis zgłoszenia</span>
               <textarea id="ticketDesc" placeholder="Opis"></textarea>
             </div>
           </div>
+
           <div class="field">
             <input id="ticketFile" type="file" />
           </div>
+
           <button id="btnSaveTicket" class="btn primary full">Wyślij zgłoszenie</button>
         </div>
       </section>
@@ -99,56 +112,71 @@
 
       <!-- PANEL ADMINA -->
       <section id="adminCard" class="hidden">
+
         <!-- ZGŁOSZENIA ADMIN -->
-        <div id="adminTicketsCard" class="card fade-in">
+        <div id="adminTicketsCard" class="card fade-in hidden">
           <h2>Zgłoszenia — admin</h2>
+
           <div class="field">
             <span>Filtr wspólnoty</span>
             <select id="filterWspolnota"></select>
           </div>
+
           <div id="adminTickets"></div>
         </div>
 
         <!-- OGŁOSZENIA ADMIN -->
-        <div id="adminAnnouncementsCard" class="card fade-in">
+        <div id="adminAnnouncementsCard" class="card fade-in hidden">
           <h2>Ogłoszenia — admin</h2>
+
           <h3>Nowe ogłoszenie</h3>
+
           <div class="field">
             <span>Tytuł ogłoszenia</span>
             <input id="announcementTitle" placeholder="Tytuł" />
           </div>
+
           <div class="field">
             <span>Treść ogłoszenia</span>
             <textarea id="announcementContent" placeholder="Treść"></textarea>
           </div>
+
           <div class="field">
             <span>Wybierz wspólnoty (CTRL + klik = wiele)</span>
             <select id="announcementWspolnoty" multiple></select>
           </div>
+
           <button id="btnAddAnnouncement" class="btn primary full">Dodaj ogłoszenie</button>
+
           <hr />
+
           <h3>Lista ogłoszeń</h3>
           <div id="adminAnnouncements"></div>
         </div>
 
         <!-- UŻYTKOWNICY ADMIN -->
-        <div id="adminUsersCard" class="card fade-in">
+        <div id="adminUsersCard" class="card fade-in hidden">
           <h2>Użytkownicy</h2>
+
           <h3>Oczekujący</h3>
           <div id="pendingUsersList"></div>
+
           <h3>Wszyscy</h3>
           <div id="allUsersList"></div>
         </div>
+
       </section>
 
       <!-- MODAL ZGŁOSZENIA -->
       <div id="ticketModal" class="modal hidden">
         <div class="modal-content fade-in">
           <button id="btnCloseModal" class="modal-close">&times;</button>
+
           <h3 id="modalTicketTitle"></h3>
           <p id="modalTicketDesc"></p>
           <p id="modalTicketStatus"></p>
           <div id="modalTicketFiles"></div>
+
           <div class="form-row">
             <button id="btnStatusNowe" class="btn ghost">Nowe</button>
             <button id="btnStatusWTrakcie" class="btn ghost">W trakcie</button>
@@ -156,6 +184,7 @@
           </div>
         </div>
       </div>
+
     </main>
   </div>
 
@@ -163,8 +192,8 @@
   <script>
     const loadSupabase = document.createElement("script");
     loadSupabase.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
+
     loadSupabase.onload = () => {
-      console.log("✅ Supabase załadowane — inicjalizacja aplikacji...");
       const v = Date.now();
       const scripts = [
         "js/ui.js",
@@ -174,14 +203,17 @@
         "js/announcements.js",
         "js/main.js"
       ];
+
       scripts.forEach(src => {
         const s = document.createElement("script");
-        s.src = `${src}?v=${v}&cacheBust=${Math.random()}`;
+        s.src = `${src}?v=${v}`;
         s.defer = true;
         document.head.appendChild(s);
       });
     };
+
     document.head.appendChild(loadSupabase);
   </script>
+
 </body>
 </html>
