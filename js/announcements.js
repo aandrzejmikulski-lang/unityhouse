@@ -18,9 +18,6 @@ App.announcements = (() => {
     if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
   }
 
-  // ============================
-  // FORMULARZ OGŁOSZEŃ — ADMIN
-  // ============================
   function showAnnouncementForm() {
     const { announcementForm } = getDom();
     const profile = App.auth.getCurrentProfile();
@@ -89,9 +86,6 @@ App.announcements = (() => {
     });
   }
 
-  // ============================
-  // ZAPIS OGŁOSZENIA — ADMIN
-  // ============================
   async function saveAnnouncement() {
     const profile = App.auth.getCurrentProfile();
     if (!profile || profile.role !== "admin") return;
@@ -132,6 +126,7 @@ App.announcements = (() => {
       .single();
 
     if (annError) {
+      console.error("Błąd zapisu ogłoszenia:", annError);
       alert("Nie udało się zapisać ogłoszenia.");
       return;
     }
@@ -155,9 +150,6 @@ App.announcements = (() => {
     loadAnnouncementsAdmin();
   }
 
-  // ============================
-  // OGŁOSZENIA — MIESZKANIEC
-  // ============================
   async function loadAnnouncementsUser() {
     const profile = App.auth.getCurrentProfile();
     if (!profile || profile.role !== "user") return;
@@ -221,9 +213,6 @@ App.announcements = (() => {
     });
   }
 
-  // ============================
-  // OGŁOSZENIA — ADMIN
-  // ============================
   async function loadAnnouncementsAdmin() {
     const profile = App.auth.getCurrentProfile();
     if (!profile || profile.role !== "admin") return;
