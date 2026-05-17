@@ -28,7 +28,7 @@ App.ui.hideLoader = function () {
 };
 
 // ---------------------------------------------
-// UKRYWANIE WSZYSTKICH PANELI
+// UKRYWANIE WSZYSTKICH PANELi
 // ---------------------------------------------
 App.ui.hideAllPanels = function () {
   const sections = document.querySelectorAll("section, .modal");
@@ -116,6 +116,12 @@ App.ui.init = function () {
   App.ui.initSidebar();
   App.ui.hideAllPanels();
   App.ui.showSection("loginCard");
+
+  // 🔧 Poprawka: ukryj sidebar i przycisk Wyloguj przed zalogowaniem
+  const sidebar = document.querySelector(".sidebar");
+  const btnLogout = document.getElementById("btnLogout");
+  if (sidebar) sidebar.classList.add("hidden");
+  if (btnLogout) btnLogout.classList.add("hidden");
 };
 
 console.log("UI module loaded");
