@@ -28,6 +28,26 @@ App.announcements = (() => {
     App.ui.showLoader();
 
     await App.supabase.from("announcements").insert({
+      const { data, error } = await App.supabase
+  .from("announcements")
+  .insert({
+    title,
+    content,
+    wspolnoty_ids: wspolnotyIds.length ? wspolnotyIds : null,
+    valid_from: validFrom,
+    valid_to: validTo
+  })
+  .select();
+
+console.log("INSERT RESULT:", data, error);
+
+if (error) {
+  alert("Błąd zapisu ogłoszenia: " + error.message);
+  console.error(error);
+  App.ui.hideLoader();
+  return;
+}
+
       title,
       content,
       wspolnoty_ids: wspolnotyIds.length ? wspolnotyIds : null,
