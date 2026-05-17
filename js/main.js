@@ -125,6 +125,8 @@ App.supabase = supabase.createClient(
     // ---------------------------------------------
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
+      document.getElementById("adminCard")?.classList.remove("hidden");
+      document.getElementById("mainCard")?.classList.add("hidden");
 
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
