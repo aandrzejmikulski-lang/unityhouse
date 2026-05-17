@@ -6,7 +6,7 @@
 
 window.App = window.App || {};
 
-(async () => {
+window.addEventListener("DOMContentLoaded", async () => {
 
   // ---------------------------------------------
   // 1. INICJALIZACJA SUPABASE
@@ -19,12 +19,16 @@ window.App = window.App || {};
   console.log("Supabase initialized");
 
   // ---------------------------------------------
-  // 2. INICJALIZACJA MODUŁÓW
+  // 2. INICJALIZACJA MODUŁÓW (dopiero po DOM)
   // ---------------------------------------------
-  App.ui.init();
-  App.auth.init();
-  App.tickets.init();
-  App.announcements.init();
+  if (App.ui && App.auth && App.tickets && App.announcements && App.profiles) {
+    App.ui.init();
+    App.auth.init();
+    App.tickets.init();
+    App.announcements.init();
+  } else {
+    console.error("❌ Niektóre moduły nie zostały załadowane.");
+  }
 
   // ---------------------------------------------
   // 3. OBSŁUGA ZMIAN SESJI
@@ -45,6 +49,11 @@ window.App = window.App || {};
 
   // ---------------------------------------------
   // 4. START APLIKACJI — SPRAWDZENIE SESJI
+  // ---------------------------------------------
+  await handleSession();
+
+  // ---------------------------------------------
+  // FUNKCJE WEWNĘTRZNE
   // ---------------------------------------------
   async function handleSession() {
     App.ui.showLoader();
@@ -68,13 +77,9 @@ window.App = window.App || {};
 
     App.ui.hideLoader();
 
-    // Routing zależny od profilu
     route(profile);
   }
 
-  // ---------------------------------------------
-  // 5. ROUTING GLOBALNY
-  // ---------------------------------------------
   function route(profile) {
     App.ui.hideAllPanels();
 
@@ -106,9 +111,4 @@ window.App = window.App || {};
     App.announcements.loadAnnouncementsUser();
   }
 
-  // ---------------------------------------------
-  // 6. URUCHOMIENIE STARTOWE
-  // ---------------------------------------------
-  await handleSession();
-
-})();
+});
