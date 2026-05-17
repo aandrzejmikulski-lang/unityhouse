@@ -11,21 +11,22 @@
   <!-- SUPABASE -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
-  <!-- AUTOMATYCZNE WERSJONOWANIE JS -->
+  <!-- AUTOMATYCZNE WERSJONOWANIE WSZYSTKICH JS -->
   <script>
     const v = Date.now();
-    document.write('<script defer src="js/ui.js?v=' + v + '"><\\/script>');
-    document.write('<script defer src="js/auth.js?v=' + v + '"><\\/script>');
-    document.write('<script defer src="js/profiles.js?v=' + v + '"><\\/script>');
-    document.write('<script defer src="js/tickets.js?v=' + v + '"><\\/script>');
-    document.write('<script defer src="js/announcements.js?v=' + v + '"><\\/script>');
-    document.write('<script defer src="js/main.js?v=' + v + '"><\\/script>');
+    const scripts = [
+      "js/ui.js",
+      "js/auth.js",
+      "js/profiles.js",
+      "js/tickets.js",
+      "js/announcements.js",
+      "js/main.js"
+    ];
+    scripts.forEach(src => {
+      document.write(`<script defer src="${src}?v=${v}"><\\/script>`);
+    });
   </script>
 </head>
-
-<script>
-  console.log("INLINE TEST działa");
-</script>
 
 <body>
   <div class="app-shell">
