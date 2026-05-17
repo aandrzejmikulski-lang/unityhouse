@@ -27,33 +27,26 @@ App.announcements = (() => {
 
     App.ui.showLoader();
 
-    await App.supabase.from("announcements").insert({
-      const { data, error } = await App.supabase
-  .from("announcements")
-  .insert({
-    title,
-    content,
-    wspolnoty_ids: wspolnotyIds.length ? wspolnotyIds : null,
-    valid_from: validFrom,
-    valid_to: validTo
-  })
-  .select();
+    // POPRAWNY INSERT
+    const { data, error } = await App.supabase
+      .from("announcements")
+      .insert({
+        title,
+        content,
+        wspolnoty_ids: wspolnotyIds.length ? wspolnotyIds : null,
+        valid_from: validFrom,
+        valid_to: validTo
+      })
+      .select();
 
-console.log("INSERT RESULT:", data, error);
+    console.log("INSERT RESULT:", data, error);
 
-if (error) {
-  alert("Błąd zapisu ogłoszenia: " + error.message);
-  console.error(error);
-  App.ui.hideLoader();
-  return;
-}
-
-      title,
-      content,
-      wspolnoty_ids: wspolnotyIds.length ? wspolnotyIds : null,
-      valid_from: validFrom,
-      valid_to: validTo
-    });
+    if (error) {
+      alert("Błąd zapisu ogłoszenia: " + error.message);
+      console.error(error);
+      App.ui.hideLoader();
+      return;
+    }
 
     App.ui.hideLoader();
 
@@ -91,7 +84,6 @@ if (error) {
       return;
     }
 
-    // Filtr: ogłoszenia globalne lub przypisane do wspólnoty + aktywne wg dat
     const today = new Date().toISOString().split("T")[0];
 
     const filtered = data.filter(a => {
@@ -168,7 +160,6 @@ if (error) {
       ? new Date(a.valid_to).toLocaleDateString()
       : "—";
 
-    // Status kolorowy
     const today = new Date().toISOString().split("T")[0];
     let status = "";
     if (a.valid_from && a.valid_from > today) status = "⚪ zaplanowane";
@@ -194,7 +185,6 @@ if (error) {
     const btn = document.getElementById("btnAddAnnouncement");
     if (btn) btn.onclick = addAnnouncement;
 
-    // Ładowanie wspólnot do multi-select
     App.profiles.loadWspolnotyForAnnouncements();
   }
 
