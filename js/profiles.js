@@ -2,184 +2,77 @@ window.App = window.App || {};
 
 App.profiles = (() => {
 
-  function getDom() {
-    return App.ui.dom;
-  }
-
-  function init() {
-    const { btnSaveWspolnota } = getDom();
-    if (btnSaveWspolnota) btnSaveWspolnota.onclick = saveWspolnota;
-  }
+  function init() {}
 
   async function loadWspolnotyDropdown() {
-    const { wspolnotaDropdown, wspolnotaMessage } = getDom();
-
-    if (!wspolnotaDropdown) return;
-
-    wspolnotaDropdown.innerHTML = "";
+    const dom = App.ui.dom;
 
     const { data, error } = await App.supabase
       .from("wspolnoty")
-      .select("id, nazwa")
+      .select("*")
       .order("nazwa");
 
     if (error) {
       console.error("Błąd ładowania wspólnot:", error);
-      App.ui.showMessage(wspolnotaMessage, "Błąd ładowania wspólnot.", "error");
       return;
     }
 
-    if (!data || !data.length) {
-      App.ui.showMessage(wspolnotaMessage, "Brak zdefiniowanych wspólnot.", "error");
-      return;
-    }
-
-    const def = document.createElement("option");
-    def.value = "";
-    def.textContent = "Wybierz wspólnotę";
-    wspolnotaDropdown.appendChild(def);
-
-    data.forEach(w => {
-      const opt = document.createElement("option");
-      opt.value = w.id;
-      opt.textContent = w.nazwa;
-      wspolnotaDropdown.appendChild(opt);
-    });
-  }
-
-  async function saveWspolnota() {
-    const { wspolnotaDropdown, wspolnotaMessage } = getDom();
-
-    const selectedId = wspolnotaDropdown.value;
-    if (!selectedId) {
-      App.ui.showMessage(wspolnotaMessage, "Wybierz wspólnotę.", "error");
-      return;
-    }
-
-    const { data: { session } } = await App.supabase.auth.getSession();
-
-    await App.supabase
-      .from("profiles")
-      .update({ wspolnota_id: selectedId })
-      .eq("id", session.user.id);
-
-    const { data: profile } = await App.supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    App.auth.setCurrentProfile(profile);
-
-    App.ui.showSection("mainCard");
-    App.tickets.loadTicketsUser(selectedId);
-    App.announcements.loadAnnouncementsUser();
-
-    App.ui.setAuthView(true);
+    dom.wspolnotaSelect.innerHTML = data
+      .map(w => `<option value="${w.id}">${w.nazwa}</option>`)
+      .join("");
   }
 
   async function loadPendingUsers() {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
+    const dom = App.ui.dom;
 
-    const { pendingUsersList } = getDom();
-    pendingUsersList.innerHTML = "Ładowanie...";
-
-    const { data } = await App.supabase
+    const { data, error } = await App.supabase
       .from("profiles")
       .select("*")
-      .eq("approved", false)
-      .eq("role", "user");
+      .eq("approved", false);
 
-    if (!data.length) {
-      pendingUsersList.innerHTML = "<i>Brak oczekujących użytkowników.</i>";
+    if (error) {
+      console.error("Błąd ładowania oczekujących użytkowników:", error);
+      dom.pendingUsersList.innerHTML = "<p>Błąd ładowania.</p>";
       return;
     }
 
-    pendingUsersList.innerHTML = "";
+    if (!data || data.length === 0) {
+      dom.pendingUsersList.innerHTML = "<p>Brak oczekujących użytkowników.</p>";
+      return;
+    }
 
-    data.forEach(u => {
-      const div = document.createElement("div");
-      div.className = "pendingUserItem";
-      div.innerHTML = `
-        <b>${u.fullname}</b> — ${u.email}<br>
-        <button class="btnApproveUser" data-id="${u.id}">Zatwierdź</button>
-        <button class="btnRejectUser" data-id="${u.id}">Odrzuć</button>
-      `;
-      pendingUsersList.appendChild(div);
-    });
-
-    pendingUsersList.querySelectorAll(".btnApproveUser").forEach(btn =>
-      btn.onclick = () => approveUser(btn.dataset.id)
-    );
-
-    pendingUsersList.querySelectorAll(".btnRejectUser").forEach(btn =>
-      btn.onclick = () => rejectUser(btn.dataset.id)
-    );
-  }
-
-  async function approveUser(id) {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    await App.supabase.from("profiles").update({ approved: true }).eq("id", id);
-    loadPendingUsers();
-    loadAllUsers();
-  }
-
-  async function rejectUser(id) {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    await App.supabase.from("profiles").delete().eq("id", id);
-    loadPendingUsers();
-    loadAllUsers();
+    dom.pendingUsersList.innerHTML = data
+      .map(u => `<div>${u.fullname || u.email} (${u.role})</div>`)
+      .join("");
   }
 
   async function loadAllUsers() {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
+    const dom = App.ui.dom;
 
-    const { allUsersList } = getDom();
-
-    allUsersList.innerHTML = "Ładowanie...";
-
-    const { data } = await App.supabase
+    const { data, error } = await App.supabase
       .from("profiles")
-      .select(`
-        id,
-        email,
-        fullname,
-        role,
-        approved,
-        wspolnota_id,
-        wspolnoty (nazwa)
-      `)
-      .order("email");
+      .select("*");
 
-    allUsersList.innerHTML = "";
+    if (error) {
+      console.error("Błąd ładowania użytkowników:", error);
+      dom.allUsersList.innerHTML = "<p>Błąd ładowania.</p>";
+      return;
+    }
 
-    data.forEach(u => {
-      const div = document.createElement("div");
-      div.className = "userItem";
-      div.innerHTML = `
-        <b>${u.fullname}</b> — ${u.email}
-        <br>Wspólnota: ${u.wspolnoty?.nazwa || "brak"}
-        <br>Status: ${u.approved ? "zatwierdzony" : "oczekujący"}
-        <br>Rola: ${u.role}
-        <hr>
-      `;
-      allUsersList.appendChild(div);
-    });
+    if (!data || data.length === 0) {
+      dom.allUsersList.innerHTML = "<p>Brak użytkowników.</p>";
+      return;
+    }
+
+    dom.allUsersList.innerHTML = data
+      .map(u => `<div>${u.fullname || u.email} (${u.role})</div>`)
+      .join("");
   }
 
   return {
     init,
     loadWspolnotyDropdown,
-    saveWspolnota,
     loadPendingUsers,
-    approveUser,
-    rejectUser,
     loadAllUsers
   };
 })();
