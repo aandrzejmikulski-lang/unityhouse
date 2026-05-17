@@ -46,6 +46,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   // START
   // ---------------------------------------------
   await handleSession();
+// 🔧 Wymuszenie odświeżenia sesji Supabase
+try {
+  const { data: { session } } = await App.supabase.auth.getSession();
+  if (!session) {
+    console.log("Brak aktywnej sesji — czyszczę token i wymuszam ponowne logowanie");
+    await App.supabase.auth.signOut();
+    localStorage.clear();
+    App.ui.showSection("loginCard");
+  } else {
+    console.log("Sesja Supabase odświeżona:", session.user.email);
+  }
+} catch (e) {
+  console.warn("Błąd odświeżania sesji:", e);
+}
 
   // ---------------------------------------------
   // FUNKCJE
