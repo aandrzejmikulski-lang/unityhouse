@@ -31,6 +31,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   App.profiles.init?.();
   App.tickets.init?.();
   App.announcements.init?.();
+
   // ---------------------------------------------
   // LOGOUT
   // ---------------------------------------------
@@ -40,12 +41,12 @@ window.addEventListener("DOMContentLoaded", async () => {
       try {
         await App.supabase.auth.signOut();
         window.sessionStorage.clear();
-        App.ui.showSection("loginCard");
       } catch (e) {
         console.warn("Błąd wylogowania:", e);
       }
     });
   }
+
   // ---------------------------------------------
   // OBSŁUGA SESJI
   // ---------------------------------------------
@@ -53,6 +54,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.log("Auth event:", event);
 
     if (event === "SIGNED_OUT") {
+      App.ui.hideAllPanels();
+      document.querySelector(".sidebar")?.classList.add("hidden");
+      document.getElementById("btnLogout")?.classList.add("hidden");
       App.ui.showSection("loginCard");
       return;
     }
@@ -124,7 +128,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     // 3. ADMIN
     // ---------------------------------------------
     if (profile.role === "admin") {
-      // pokaż tylko panel admina
       App.ui.showSection("adminCard");
       document.getElementById("adminCard")?.classList.remove("hidden");
       document.getElementById("mainCard")?.classList.add("hidden");
@@ -144,7 +147,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     // ---------------------------------------------
     // 4. NORMALNY UŻYTKOWNIK
     // ---------------------------------------------
-    // pokaż tylko panel użytkownika
     App.ui.showSection("mainCard");
     document.getElementById("mainCard")?.classList.remove("hidden");
     document.getElementById("adminCard")?.classList.add("hidden");
