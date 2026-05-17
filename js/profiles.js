@@ -11,9 +11,6 @@ App.profiles = (() => {
     if (btnSaveWspolnota) btnSaveWspolnota.onclick = saveWspolnota;
   }
 
-  // ============================
-  // WSPÓLNOTY
-  // ============================
   async function loadWspolnotyDropdown() {
     const { wspolnotaDropdown, wspolnotaMessage } = getDom();
 
@@ -66,7 +63,6 @@ App.profiles = (() => {
       .update({ wspolnota_id: selectedId })
       .eq("id", session.user.id);
 
-    // 🔥 odśwież profil w pamięci
     const { data: profile } = await App.supabase
       .from("profiles")
       .select("*")
@@ -79,13 +75,9 @@ App.profiles = (() => {
     App.tickets.loadTicketsUser(selectedId);
     App.announcements.loadAnnouncementsUser();
 
-    // 🔥 Odśwież widok — ukryje „Wybór wspólnoty”
     App.ui.setAuthView(true);
   }
 
-  // ============================
-  // ADMIN — tylko admin może to widzieć
-  // ============================
   async function loadPendingUsers() {
     const profile = App.auth.getCurrentProfile();
     if (!profile || profile.role !== "admin") return;
