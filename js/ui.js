@@ -1,185 +1,115 @@
 window.App = window.App || {};
 
 App.ui = (() => {
+  const dom = {
+    loginCard: document.querySelector("#loginCard"),
+    selectWspolnotaCard: document.querySelector("#selectWspolnotaCard"),
+    mainCard: document.querySelector("#mainCard"),
+    adminCard: document.querySelector("#adminCard"),
+    userAnnouncementsCard: document.querySelector("#userAnnouncementsCard"),
+    adminTicketsCard: document.querySelector("#adminTicketsCard"),
+    adminAnnouncementsCard: document.querySelector("#adminAnnouncementsCard"),
+    adminUsersCard: document.querySelector("#adminUsersCard"),
 
-  function getDom() {
-    return {
-      loginCard: document.getElementById("loginCard"),
-      mainCard: document.getElementById("mainCard"),
-      adminCard: document.getElementById("adminCard"),
-      wspolnotaCard: document.getElementById("wspolnotaCard"),
-      selectWspolnotaCard: document.getElementById("selectWspolnotaCard"),
-      ticketForm: document.getElementById("ticketForm"),
-      announcementForm: document.getElementById("announcementForm"),
+    loginMessage: document.querySelector("#loginMessage"),
+    loginEmail: document.querySelector("#loginEmail"),
+    loginPassword: document.querySelector("#loginPassword"),
+    btnLogin: document.querySelector("#btnLogin"),
 
-      loginMessage: document.getElementById("loginMessage"),
-      registerMessage: document.getElementById("registerMessage"),
+    wspolnotaSelect: document.querySelector("#wspolnotaSelect"),
+    btnSaveWspolnota: document.querySelector("#btnSaveWspolnota"),
 
-      loginEmail: document.getElementById("loginEmail"),
-      loginPassword: document.getElementById("loginPassword"),
-      registerEmail: document.getElementById("registerEmail"),
-      registerPassword: document.getElementById("registerPassword"),
-      registerFullname: document.getElementById("registerFullname"),
+    ticketList: document.querySelector("#ticketList"),
+    ticketTitle: document.querySelector("#ticketTitle"),
+    ticketDesc: document.querySelector("#ticketDesc"),
+    ticketFile: document.querySelector("#ticketFile"),
+    btnSaveTicket: document.querySelector("#btnSaveTicket"),
 
-      goToLogin: document.getElementById("goToLogin"),
-      goToRegister: document.getElementById("goToRegister"),
-      loginForm: document.getElementById("loginForm"),
-      registerCard: document.getElementById("registerCard"),
+    filterWspolnota: document.querySelector("#filterWspolnota"),
+    adminTickets: document.querySelector("#adminTickets"),
 
-      wspolnotaDropdown: document.getElementById("wspolnotaDropdown"),
-      wspolnotaMessage: document.getElementById("wspolnotaMessage"),
+    announcementTitle: document.querySelector("#announcementTitle"),
+    announcementContent: document.querySelector("#announcementContent"),
+    announcementWspolnoty: document.querySelector("#announcementWspolnoty"),
+    btnAddAnnouncement: document.querySelector("#btnAddAnnouncement"),
+    adminAnnouncements: document.querySelector("#adminAnnouncements"),
+    userAnnouncements: document.querySelector("#userAnnouncements"),
 
-      pendingUsersList: document.getElementById("pendingUsersList"),
-      allUsersList: document.getElementById("allUsersList"),
+    pendingUsersList: document.querySelector("#pendingUsersList"),
+    allUsersList: document.querySelector("#allUsersList"),
 
-      ticketTitle: document.getElementById("ticketTitle"),
-      ticketDesc: document.getElementById("ticketDesc"),
-      ticketFile: document.getElementById("ticketFile"),
-      ticketList: document.getElementById("ticketList"),
-      adminTickets: document.getElementById("adminTickets"),
+    ticketModal: document.querySelector("#ticketModal"),
+    modalTicketTitle: document.querySelector("#modalTicketTitle"),
+    modalTicketDesc: document.querySelector("#modalTicketDesc"),
+    modalTicketStatus: document.querySelector("#modalTicketStatus"),
+    modalTicketFiles: document.querySelector("#modalTicketFiles"),
+    btnStatusNowe: document.querySelector("#btnStatusNowe"),
+    btnStatusWTrakcie: document.querySelector("#btnStatusWTrakcie"),
+    btnStatusZamkniete: document.querySelector("#btnStatusZamkniete"),
+    btnCloseModal: document.querySelector("#btnCloseModal"),
 
-      ticketModal: document.getElementById("ticketModal"),
-      modalTicketTitle: document.getElementById("modalTicketTitle"),
-      modalTicketDesc: document.getElementById("modalTicketDesc"),
-      modalTicketStatus: document.getElementById("modalTicketStatus"),
-      modalTicketFiles: document.getElementById("modalTicketFiles"),
+    loaderOverlay: document.querySelector("#loaderOverlay")
+  };
 
-      btnStatusNowe: document.getElementById("btnStatusNowe"),
-      btnStatusWTrakcie: document.getElementById("btnStatusWTrakcie"),
-      btnStatusZamkniete: document.getElementById("btnStatusZamkniete"),
-
-      btnAddTicket: document.getElementById("btnAddTicket"),
-      btnCancelTicket: document.getElementById("btnCancelTicket"),
-      btnSaveTicket: document.getElementById("btnSaveTicket"),
-      btnSaveWspolnota: document.getElementById("btnSaveWspolnota"),
-      btnLogin: document.getElementById("btnLogin"),
-      btnRegister: document.getElementById("btnRegister"),
-
-      announcementTitle: document.getElementById("announcementTitle"),
-      announcementContent: document.getElementById("announcementContent"),
-      announcementGlobal: document.getElementById("announcementGlobal"),
-      announcementFrom: document.getElementById("announcementFrom"),
-      announcementTo: document.getElementById("announcementTo"),
-
-      btnAddAnnouncement: document.getElementById("btnAddAnnouncement"),
-      btnCancelAnnouncement: document.getElementById("btnCancelAnnouncement"),
-      btnSaveAnnouncement: document.getElementById("btnSaveAnnouncement"),
-
-      userAnnouncements: document.getElementById("userAnnouncements"),
-      adminAnnouncements: document.getElementById("adminAnnouncements"),
-
-      btnLogoutTop: document.getElementById("btnLogoutTop")
-    };
+  function init() {
+    if (dom.btnCloseModal) {
+      dom.btnCloseModal.onclick = () => dom.ticketModal.classList.add("hidden");
+    }
   }
 
   function showSection(id) {
-    const profile = App.auth.getCurrentProfile();
+    [
+      dom.loginCard,
+      dom.selectWspolnotaCard,
+      dom.mainCard,
+      dom.adminCard,
+      dom.userAnnouncementsCard,
+      dom.adminTicketsCard,
+      dom.adminAnnouncementsCard,
+      dom.adminUsersCard
+    ].forEach(el => el && el.classList.add("hidden"));
 
-    if (id === "adminCard" && profile?.role !== "admin") {
-      id = "mainCard";
-    }
-
-    document.querySelectorAll("main .card")
-      .forEach(sec => sec.classList.add("hidden"));
-
-    const el = document.getElementById(id);
+    const el = document.querySelector(`#${id}`);
     if (el) el.classList.remove("hidden");
   }
 
   function hideAllPanels() {
-    document.querySelectorAll("main .card")
-      .forEach(sec => sec.classList.add("hidden"));
-  }
-
-  function showMessage(el, text, type = "info") {
-    if (!el) return;
-    el.textContent = text;
-    el.className = "message " + type;
-    el.classList.remove("hidden");
-  }
-
-  function setAuthView(isLoggedIn) {
-    const dom = getDom();
-    const sidebar = document.querySelector(".sidebar");
-    if (!sidebar) return;
-
-    if (!isLoggedIn) {
-      sidebar.classList.add("hidden");
-      dom.btnLogoutTop?.classList.add("hidden");
-      return;
-    }
-
-    sidebar.classList.remove("hidden");
-    dom.btnLogoutTop?.classList.remove("hidden");
-
-    const profile = App.auth.getCurrentProfile();
-
-    const adminItem = document.querySelector("[data-target='adminCard']");
-    const wspolnotyItem = document.querySelector("[data-target='wspolnotaCard']");
-    const selectItem = document.querySelector("[data-target='selectWspolnotaCard']");
-    const ticketItem = document.querySelector("[data-target='ticketForm']");
-    const announcementItem = document.querySelector("[data-target='announcementForm']");
-    const userItem = document.querySelector("[data-target='mainCard']");
-
-    if (profile.role === "admin") {
-      adminItem.style.display = "block";
-      wspolnotyItem.style.display = "block";
-      announcementItem.style.display = "block";
-
-      selectItem.style.display = "none";
-      ticketItem.style.display = "none";
-      userItem.style.display = "none";
-
-    } else {
-      adminItem.style.display = "none";
-      wspolnotyItem.style.display = "none";
-      announcementItem.style.display = "none";
-
-      if (!profile.wspolnota_id) {
-        selectItem.style.display = "block";
-      } else {
-        selectItem.style.display = "none";
-      }
-
-      ticketItem.style.display = "block";
-      userItem.style.display = "block";
-    }
+    [dom.mainCard, dom.adminCard, dom.userAnnouncementsCard].forEach(el => el && el.classList.add("hidden"));
   }
 
   function showLoginTab() {
-    const dom = getDom();
-    dom.goToLogin.classList.add("active");
-    dom.goToRegister.classList.remove("active");
-    dom.loginForm.classList.remove("hidden");
-    dom.registerCard.classList.add("hidden");
+    showSection("loginCard");
   }
 
-  function showRegisterTab() {
-    const dom = getDom();
-    dom.goToLogin.classList.remove("active");
-    dom.goToRegister.classList.add("active");
-    dom.loginForm.classList.add("hidden");
-    dom.registerCard.classList.remove("hidden");
+  function setAuthView(isAuth) {
+    if (!isAuth) {
+      showSection("loginCard");
+    }
   }
 
-  function init() {
-    const dom = getDom();
+  function showMessage(container, text, type = "info") {
+    if (!container) return;
+    container.textContent = text;
+    container.className = type;
+  }
 
-    const closeModal = document.getElementById("closeModal");
-    if (closeModal) closeModal.onclick = () => dom.ticketModal.classList.add("hidden");
+  function showLoader() {
+    dom.loaderOverlay?.classList.remove("hidden");
+  }
 
-    if (dom.btnAddTicket) dom.btnAddTicket.onclick = () => showSection("ticketForm");
-    if (dom.btnCancelTicket) dom.btnCancelTicket.onclick = () => showSection("mainCard");
+  function hideLoader() {
+    dom.loaderOverlay?.classList.add("hidden");
   }
 
   return {
+    dom,
     init,
     showSection,
     hideAllPanels,
-    showMessage,
-    setAuthView,
     showLoginTab,
-    showRegisterTab,
-    get dom() { return getDom(); }
+    setAuthView,
+    showMessage,
+    showLoader,
+    hideLoader
   };
 })();
