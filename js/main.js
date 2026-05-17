@@ -88,6 +88,20 @@ App.supabase = supabase.createClient(
     App.ui.hideAllPanels();
 
     // ---------------------------------------------
+    // UKRYWANIE ELEMENTÓW SIDEBARU WG ROLI
+    // ---------------------------------------------
+    const btnAdmin = document.querySelector('[data-target="adminCard"]');
+    const btnUser = document.querySelector('[data-target="mainCard"]');
+
+    if (profile.role === "admin") {
+      btnAdmin?.classList.remove("hidden");
+      btnUser?.classList.add("hidden");
+    } else {
+      btnAdmin?.classList.add("hidden");
+      btnUser?.classList.remove("hidden");
+    }
+
+    // ---------------------------------------------
     // 1. Konto niezatwierdzone
     // ---------------------------------------------
     if (!profile.approved) {
@@ -115,7 +129,6 @@ App.supabase = supabase.createClient(
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
 
-      // 🔧 ukryj "Logowanie"
       document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
@@ -133,12 +146,9 @@ App.supabase = supabase.createClient(
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
 
-    // 🔧 ukryj "Logowanie"
     document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
-    // 🔒 UKRYJ PANEL ADMINA TYLKO DLA USERA
     document.getElementById("adminCard")?.classList.add("hidden");
-    document.querySelector('[data-target="adminCard"]')?.classList.add("hidden");
     document.getElementById("adminAnnouncementsCard")?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
