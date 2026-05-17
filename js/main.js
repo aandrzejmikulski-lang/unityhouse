@@ -141,7 +141,10 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
       App.profiles?.loadPendingUsers?.();
       App.profiles?.loadAllUsers?.();
+
+      App.tickets?.loadWspolnotyFilter?.();   // ← 🔥 TWOJA DOPINKA
       App.tickets?.loadTicketsAdmin?.();
+
       App.announcements?.loadAnnouncementsAdmin?.();
 
     } else {
