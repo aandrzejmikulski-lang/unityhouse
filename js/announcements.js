@@ -7,27 +7,15 @@ App.announcements = (() => {
   }
 
   function init() {
-    const profile = App.auth.getCurrentProfile();
-
     const {
       btnAddAnnouncement,
       btnCancelAnnouncement,
       btnSaveAnnouncement
     } = getDom();
 
-    // 🔥 Formularz ogłoszeń tylko dla admina
-    if (profile?.role === "admin") {
-      if (btnAddAnnouncement) btnAddAnnouncement.onclick = showAnnouncementForm;
-      if (btnCancelAnnouncement) btnCancelAnnouncement.onclick = hideAnnouncementForm;
-      if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
-
-      loadAnnouncementsAdmin();
-    }
-
-    // 🔥 Mieszkaniec widzi tylko swoje ogłoszenia
-    if (profile?.role === "user") {
-      loadAnnouncementsUser();
-    }
+    if (btnAddAnnouncement) btnAddAnnouncement.onclick = showAnnouncementForm;
+    if (btnCancelAnnouncement) btnCancelAnnouncement.onclick = hideAnnouncementForm;
+    if (btnSaveAnnouncement) btnSaveAnnouncement.onclick = saveAnnouncement;
   }
 
   // ============================
@@ -35,6 +23,9 @@ App.announcements = (() => {
   // ============================
   function showAnnouncementForm() {
     const { announcementForm } = getDom();
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
     if (!announcementForm) return;
 
     announcementForm.classList.remove("hidden");
@@ -50,6 +41,8 @@ App.announcements = (() => {
       announcementFrom,
       announcementTo
     } = getDom();
+
+    if (!announcementForm) return;
 
     announcementForm.classList.add("hidden");
     announcementTitle.value = "";
@@ -74,7 +67,13 @@ App.announcements = (() => {
       .order("nazwa");
 
     if (error) {
+      console.error("Błąd ładowania wspólnot dla ogłoszeń:", error);
       box.innerHTML = "<i>Błąd ładowania wspólnot.</i>";
+      return;
+    }
+
+    if (!data || !data.length) {
+      box.innerHTML = "<i>Brak zdefiniowanych wspólnot.</i>";
       return;
     }
 
@@ -170,7 +169,7 @@ App.announcements = (() => {
 
     const wsp = profile.wspolnota_id;
 
-    const { data } = await App.supabase
+    const { data, error } = await App.supabase
       .from("announcements")
       .select(`
         id,
@@ -183,6 +182,12 @@ App.announcements = (() => {
         announcement_wspolnoty (wspolnota_id)
       `)
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Błąd ładowania ogłoszeń (user):", error);
+      userAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
+      return;
+    }
 
     const today = new Date().toISOString().split("T")[0];
 
@@ -228,7 +233,7 @@ App.announcements = (() => {
 
     adminAnnouncements.innerHTML = "Ładowanie...";
 
-    const { data } = await App.supabase
+    const { data, error } = await App.supabase
       .from("announcements")
       .select(`
         id,
@@ -241,6 +246,12 @@ App.announcements = (() => {
         announcement_wspolnoty (wspolnota_id, wspolnoty (nazwa))
       `)
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Błąd ładowania ogłoszeń (admin):", error);
+      adminAnnouncements.innerHTML = "<i>Błąd ładowania ogłoszeń.</i>";
+      return;
+    }
 
     if (!data.length) {
       adminAnnouncements.innerHTML = "<i>Brak ogłoszeń.</i>";
