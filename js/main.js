@@ -76,9 +76,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   function route(profile) {
     console.log("Routing profile:", profile);
 
+    // ---------------------------------------------
+    // GLOBALNE UKRYCIE WSZYSTKIEGO
+    // ---------------------------------------------
     App.ui.hideAllPanels();
 
+    document.getElementById("adminCard")?.classList.add("hidden");
+    document.getElementById("mainCard")?.classList.add("hidden");
+    document.getElementById("selectWspolnotaCard")?.classList.add("hidden");
+    document.getElementById("loginCard")?.classList.add("hidden");
+
+    // ---------------------------------------------
     // 1. Konto niezatwierdzone
+    // ---------------------------------------------
     if (!profile.approved) {
       App.ui.showSection("loginCard");
       document.getElementById("loginMessage").innerText =
@@ -86,18 +96,22 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // ---------------------------------------------
     // 2. Użytkownik bez wspólnoty (ale NIE admin)
+    // ---------------------------------------------
     if (!profile.wspolnota_id && profile.role !== "admin") {
       App.ui.showSection("selectWspolnotaCard");
       App.profiles.loadWspolnotyDropdown();
       return;
     }
 
-    // 3. Admin
+    // ---------------------------------------------
+    // 3. ADMIN
+    // ---------------------------------------------
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
 
-      // 🔧 Po zalogowaniu pokaż sidebar i przycisk Wyloguj
+      // pokaż sidebar i logout
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
 
@@ -108,10 +122,12 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // 4. Normalny użytkownik
+    // ---------------------------------------------
+    // 4. NORMALNY UŻYTKOWNIK
+    // ---------------------------------------------
     App.ui.showSection("mainCard");
 
-    // 🔧 Po zalogowaniu pokaż sidebar i przycisk Wyloguj
+    // pokaż sidebar i logout
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
 
