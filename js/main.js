@@ -110,6 +110,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     // ---------------------------------------------
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
+      // 🔧 Jeśli admin kliknie „Ogłoszenia”, pokaż też sekcję userAnnouncementsCard
+document.getElementById("userAnnouncementsCard")?.classList.remove("hidden");
+document.getElementById("userAnnouncementsCard").style.display = "block";
+
 // 🔧 Odsłoń cały panel ogłoszeń admina
 document.getElementById("adminAnnouncementsCard")?.classList.remove("hidden");
 document.getElementById("adminAnnouncementsCard").style.display = "block";
