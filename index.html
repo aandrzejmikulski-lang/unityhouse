@@ -2,13 +2,123 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>Unity House – Panel mieszkańca</title>
+  <title>Unity House – Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
 
-  <!-- STYLE -->
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="loaderOverlay" class="hidden">
+    <div class="loader-box">
+      <div class="spinner"></div>
+      <p>Unity House – trwa wczytywanie…</p>
+    </div>
+  </div>
 
-  <!-- SUPABASE LOADER (bezpieczna inicjalizacja) -->
+  <div id="app">
+
+    <!-- KARTA LOGOWANIA -->
+    <section id="loginCard">
+      <h2>Logowanie</h2>
+      <div id="loginMessage"></div>
+      <input id="loginEmail" type="email" placeholder="E-mail" />
+      <input id="loginPassword" type="password" placeholder="Hasło" />
+      <button id="btnLogin">Zaloguj</button>
+    </section>
+
+    <!-- WYBÓR WSPÓLNOTY DLA USERA -->
+    <section id="selectWspolnotaCard" class="hidden">
+      <h2>Wybierz wspólnotę</h2>
+      <select id="wspolnotaSelect"></select>
+      <button id="btnSaveWspolnota">Zapisz</button>
+    </section>
+
+    <!-- PANEL USERA -->
+    <section id="mainCard" class="hidden">
+      <aside>
+        <div class="sidebar-item active" data-target="mainCard">Zgłoszenia</div>
+        <div class="sidebar-item" data-target="userAnnouncementsCard">Ogłoszenia</div>
+      </aside>
+      <main>
+        <h2>Twoje zgłoszenia</h2>
+        <div id="ticketList"></div>
+
+        <h3>Nowe zgłoszenie</h3>
+        <input id="ticketTitle" placeholder="Tytuł zgłoszenia" />
+        <textarea id="ticketDesc" placeholder="Opis zgłoszenia"></textarea>
+        <input id="ticketFile" type="file" />
+        <button id="btnSaveTicket">Wyślij zgłoszenie</button>
+      </main>
+    </section>
+
+    <!-- OGŁOSZENIA USERA -->
+    <section id="userAnnouncementsCard" class="hidden">
+      <h2>Ogłoszenia</h2>
+      <div id="userAnnouncements"></div>
+    </section>
+
+    <!-- PANEL ADMINA -->
+    <section id="adminCard" class="hidden">
+      <aside>
+        <div class="sidebar-item active" data-target="adminTicketsCard">Zgłoszenia</div>
+        <div class="sidebar-item" data-target="adminAnnouncementsCard">Ogłoszenia</div>
+        <div class="sidebar-item" data-target="adminUsersCard">Użytkownicy</div>
+      </aside>
+      <main>
+        <!-- ZGŁOSZENIA ADMIN -->
+        <section id="adminTicketsCard">
+          <h2>Zgłoszenia – admin</h2>
+          <label>Filtr wspólnoty:</label>
+          <select id="filterWspolnota"></select>
+          <div id="adminTickets"></div>
+        </section>
+
+        <!-- OGŁOSZENIA ADMIN -->
+        <section id="adminAnnouncementsCard" class="hidden">
+          <h2>Ogłoszenia – admin</h2>
+
+          <h3>Nowe ogłoszenie</h3>
+          <input id="announcementTitle" placeholder="Tytuł ogłoszenia" />
+          <textarea id="announcementContent" placeholder="Treść ogłoszenia"></textarea>
+
+          <label>Wybierz wspólnoty (CTRL + klik = wiele):</label>
+          <select id="announcementWspolnoty" multiple></select>
+
+          <button id="btnAddAnnouncement">Dodaj ogłoszenie</button>
+
+          <hr />
+          <h3>Lista ogłoszeń</h3>
+          <div id="adminAnnouncements"></div>
+        </section>
+
+        <!-- UŻYTKOWNICY ADMIN -->
+        <section id="adminUsersCard" class="hidden">
+          <h2>Użytkownicy</h2>
+          <h3>Oczekujący</h3>
+          <div id="pendingUsersList"></div>
+          <h3>Wszyscy</h3>
+          <div id="allUsersList"></div>
+        </section>
+      </main>
+    </section>
+
+    <!-- MODAL ZGŁOSZENIA -->
+    <div id="ticketModal" class="hidden">
+      <div class="modal-content">
+        <h3 id="modalTicketTitle"></h3>
+        <p id="modalTicketDesc"></p>
+        <p id="modalTicketStatus"></p>
+        <div id="modalTicketFiles"></div>
+        <button id="btnStatusNowe">Oznacz jako nowe</button>
+        <button id="btnStatusWTrakcie">W trakcie</button>
+        <button id="btnStatusZamkniete">Zamknięte</button>
+        <button id="btnCloseModal">Zamknij</button>
+      </div>
+    </div>
+
+  </div>
+
   <script>
     const loadSupabase = document.createElement("script");
     loadSupabase.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
@@ -25,207 +135,12 @@
       ];
       scripts.forEach(src => {
         const s = document.createElement("script");
-        s.src = `${src}?v=${v}`;
+        s.src = `${src}?v=${v}&cacheBust=${Math.random()}`;
         s.defer = true;
         document.head.appendChild(s);
       });
     };
     document.head.appendChild(loadSupabase);
   </script>
-</head>
-
-<body>
-  <div class="app-shell">
-
-    <!-- FLOATING GLASS SIDEBAR -->
-    <aside class="sidebar hidden">
-      <div class="sidebar-glass">
-        <div class="logo">Unity House</div>
-
-        <nav class="sidebar-nav">
-          <div class="sidebar-item" data-target="mainCard">Panel mieszkańca</div>
-          <div class="sidebar-item" data-target="adminCard">Panel administratora</div>
-          <div class="sidebar-item" data-target="wspolnotaCard">Wspólnoty</div>
-          <div class="sidebar-item" data-target="selectWspolnotaCard">Wybór wspólnoty</div>
-          <div class="sidebar-item" data-target="ticketForm">Nowe zgłoszenie</div>
-          <div class="sidebar-item" data-target="announcementForm">Nowe ogłoszenie</div>
-        </nav>
-
-        <button id="btnLogoutTop" class="btn ghost hidden logout-btn">
-          Wyloguj
-        </button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="content">
-
-      <!-- LOGOWANIE -->
-      <section class="card auth-card" id="loginCard">
-        <h1>Panel mieszkańca</h1>
-        <p class="muted">
-          Zgłaszaj usterki, załączaj zdjęcia, śledź status spraw – wszystko w jednym miejscu.
-        </p>
-
-        <div class="tabs">
-          <button class="tab active" id="goToLogin">Logowanie</button>
-          <button class="tab" id="goToRegister">Rejestracja</button>
-        </div>
-
-        <div id="loginForm">
-          <label class="field">
-            <span>Email</span>
-            <input type="email" id="loginEmail" />
-          </label>
-          <label class="field">
-            <span>Hasło</span>
-            <input type="password" id="loginPassword" />
-          </label>
-          <button id="btnLogin" class="btn primary full">Zaloguj</button>
-          <div id="loginMessage" class="message hidden"></div>
-        </div>
-
-        <div id="registerCard" class="hidden">
-          <label class="field">
-            <span>Imię i nazwisko</span>
-            <input type="text" id="registerFullname" />
-          </label>
-          <label class="field">
-            <span>Email</span>
-            <input type="email" id="registerEmail" />
-          </label>
-          <label class="field">
-            <span>Hasło</span>
-            <input type="password" id="registerPassword" />
-          </label>
-          <button id="btnRegister" class="btn primary full">Załóż konto</button>
-          <div id="registerMessage" class="message hidden"></div>
-        </div>
-      </section>
-
-      <!-- PANEL MIESZKAŃCA -->
-      <section class="card hidden" id="mainCard">
-        <header class="card-header">
-          <div>
-            <h2>Twoje zgłoszenia</h2>
-            <p class="muted">Dodawaj zgłoszenia, załączaj pliki, śledź status.</p>
-          </div>
-          <button id="btnAddTicket" class="btn primary">Nowe zgłoszenie</button>
-        </header>
-
-        <div id="ticketList"></div>
-
-        <h3>Ogłoszenia</h3>
-        <div id="userAnnouncements"></div>
-      </section>
-
-      <!-- PANEL ADMINA -->
-      <section class="card hidden" id="adminCard">
-        <h2>Panel administratora</h2>
-
-        <h3>Oczekujący użytkownicy</h3>
-        <div id="pendingUsersList"></div>
-
-        <h3>Wszyscy użytkownicy</h3>
-        <div id="allUsersList"></div>
-
-        <h3>Zgłoszenia wspólnoty</h3>
-        <select id="filterWspolnota">
-          <option value="">Wszystkie wspólnoty</option>
-        </select>
-        <div id="adminTickets"></div>
-
-        <h3>Ogłoszenia</h3>
-        <button id="btnAddAnnouncement" class="btn primary">Dodaj ogłoszenie</button>
-        <div id="adminAnnouncements"></div>
-      </section>
-
-      <!-- WSPÓLNOTY -->
-      <section class="card hidden" id="wspolnotaCard">
-        <h2>Wspólnoty</h2>
-        <input type="text" id="newWspolnotaName" placeholder="Nazwa wspólnoty" />
-        <button id="btnAddWspolnota" class="btn primary">Dodaj</button>
-        <div id="wspolnotyList"></div>
-      </section>
-
-      <!-- WYBÓR WSPÓLNOTY -->
-      <section class="card hidden" id="selectWspolnotaCard">
-        <h2>Wybierz wspólnotę</h2>
-        <select id="wspolnotaDropdown"></select>
-        <button id="btnSaveWspolnota" class="btn primary">Zapisz</button>
-        <div id="wspolnotaMessage" class="message hidden"></div>
-      </section>
-
-      <!-- FORMULARZ ZGŁOSZENIA -->
-      <section class="card hidden" id="ticketForm">
-        <h2>Nowe zgłoszenie</h2>
-        <label class="field">
-          <span>Tytuł</span>
-          <input type="text" id="ticketTitle" />
-        </label>
-        <label class="field">
-          <span>Opis</span>
-          <textarea id="ticketDesc"></textarea>
-        </label>
-        <label class="field">
-          <span>Załącznik</span>
-          <input type="file" id="ticketFile" />
-        </label>
-        <button id="btnSaveTicket" class="btn primary">Zapisz</button>
-        <button id="btnCancelTicket" class="btn ghost">Anuluj</button>
-      </section>
-
-      <!-- FORMULARZ OGŁOSZENIA -->
-      <section class="card hidden" id="announcementForm">
-        <h2>Nowe ogłoszenie</h2>
-
-        <label class="field">
-          <span>Tytuł</span>
-          <input type="text" id="announcementTitle" />
-        </label>
-
-        <label class="field">
-          <span>Treść</span>
-          <textarea id="announcementContent"></textarea>
-        </label>
-
-        <label class="field checkbox-inline">
-          <input type="checkbox" id="announcementGlobal" />
-          <span>Ogłoszenie globalne</span>
-        </label>
-
-        <div id="announcementWspolnoty"></div>
-
-        <label class="field">
-          <span>Wyświetlaj od</span>
-          <input type="date" id="announcementFrom" />
-        </label>
-
-        <label class="field">
-          <span>Wyświetlaj do</span>
-          <input type="date" id="announcementTo" />
-        </label>
-
-        <button id="btnSaveAnnouncement" class="btn primary">Zapisz</button>
-        <button id="btnCancelAnnouncement" class="btn ghost">Anuluj</button>
-      </section>
-
-      <!-- MODAL ZGŁOSZENIA -->
-      <div id="ticketModal" class="modal hidden">
-        <div class="modal-content
-          <button id="closeModal" class="modal-close">×</button>
-          <h2 id="modalTicketTitle"></h2>
-          <p id="modalTicketDesc"></p>
-          <p id="modalTicketStatus"></p>
-          <div id="modalTicketFiles"></div>
-
-          <button id="btnStatusNowe" class="btn ghost">Nowe</button>
-          <button id="btnStatusWTrakcie" class="btn ghost">W trakcie</button>
-          <button id="btnStatusZamkniete" class="btn ghost">Zamknięte</button>
-        </div>
-      </div>
-
-    </main>
-  </div>
 </body>
 </html>
