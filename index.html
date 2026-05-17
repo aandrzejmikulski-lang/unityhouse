@@ -8,7 +8,8 @@
   <!-- STYLE -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- ⚠️ USUNIĘTO skrypt Supabase z CDN (powodował konflikt) -->
+  <!-- SUPABASE (poprawny import biblioteki) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
   <!-- AUTOMATYCZNE WERSJONOWANIE -->
   <script>
@@ -210,6 +211,8 @@
       <div id="ticketModal" class="modal hidden">
         <div class="modal-content">
           <button id="closeModal" class="modal-close">×</button>
+          <h2 id="modalTicketTitle"></h2>
+          <p id="modalTicketDesc"></p>
           <h2 id="modalTicketTitle"></h2>
           <p id="modalTicketDesc"></p>
           <p id="modalTicketStatus"></p>
