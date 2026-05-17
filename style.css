@@ -48,7 +48,7 @@ body {
   background: linear-gradient(160deg, #0a0c12 0%, #0b0d13 40%, #05060a 100%);
   color: var(--text);
   font-family: var(--font-sans);
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* =========================================
@@ -357,4 +357,135 @@ select:focus {
 
 .muted {
   color: var(--text-muted);
+}
+
+/* =========================================
+   SCROLLBAR (DARK NEON)
+   ========================================= */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-soft);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* =========================================
+   TABLES (OPTIONAL — ADMIN LISTS)
+   ========================================= */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.table th {
+  color: #a5b4fc;
+  font-weight: 500;
+  text-align: left;
+}
+
+.table tr:hover td {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+/* =========================================
+   BADGES (STATUSY)
+   ========================================= */
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge.green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.badge.yellow {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.badge.red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* =========================================
+   FILE INPUT
+   ========================================= */
+
+input[type="file"] {
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  background: var(--accent-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+input[type="file"]::-webkit-file-upload-button:hover {
+  background: var(--accent);
+  border-color: var(--border-strong);
+}
+
+/* =========================================
+   FORMS LAYOUT
+   ========================================= */
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row .field {
+  flex: 1;
+}
+
+/* =========================================
+   ANIMATIONS
+   ========================================= */
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.35s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
