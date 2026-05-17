@@ -7,72 +7,32 @@ App.tickets = (() => {
   }
 
   function init() {
-    const { btnAddTicket, btnCancelTicket, btnSaveTicket } = getDom();
+    const {
+      btnSaveTicket,
+      btnCancelTicket
+    } = getDom();
 
-    if (btnAddTicket) btnAddTicket.onclick = () => App.ui.showSection("ticketForm");
-    if (btnCancelTicket) btnCancelTicket.onclick = () => App.ui.showSection("mainCard");
     if (btnSaveTicket) btnSaveTicket.onclick = saveTicket;
-
-    // 🔥 Zawsze podpina onchange — rola sprawdzana w loadTicketsAdmin
-    const filter = document.getElementById("filterWspolnota");
-    if (filter) filter.onchange = loadTicketsAdmin;
+    if (btnCancelTicket) btnCancelTicket.onclick = () => App.ui.showSection("mainCard");
   }
 
-  // ============================
-  // ADMIN — filtr wspólnot
-  // ============================
-  async function loadWspolnotyFilter() {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    const sel = document.getElementById("filterWspolnota");
-    if (!sel) return;
-
-    sel.innerHTML = `<option value="">Wszystkie wspólnoty</option>`;
-
-    const { data, error } = await App.supabase
-      .from("wspolnoty")
-      .select("id, nazwa")
-      .order("nazwa");
-
-    if (error) {
-      console.error("Błąd ładowania wspólnot do filtra:", error);
-      return;
-    }
-
-    if (!data || !data.length) return;
-
-    data.forEach(w => {
-      const opt = document.createElement("option");
-      opt.value = w.id;
-      opt.textContent = w.nazwa;
-      sel.appendChild(opt);
-    });
-  }
-
-  // ============================
-  // ZAPIS ZGŁOSZENIA — mieszkaniec
-  // ============================
   async function saveTicket() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "user") return;
+
     const { ticketTitle, ticketDesc, ticketFile } = getDom();
 
     const title = ticketTitle.value.trim();
     const desc = ticketDesc.value.trim();
 
     if (!title || !desc) {
-      alert("Uzupełnij tytuł i opis.");
+      alert("Uzupełnij tytuł i opis zgłoszenia.");
       return;
     }
 
     const { data: { session } } = await App.supabase.auth.getSession();
 
-    const { data: profile } = await App.supabase
-      .from("profiles")
-      .select("wspolnota_id")
-      .eq("id", session.user.id)
-      .single();
-
-    const { data: ticket } = await App.supabase
+    const { data: ticket, error } = await App.supabase
       .from("tickets")
       .insert({
         title,
@@ -84,19 +44,22 @@ App.tickets = (() => {
       .select()
       .single();
 
+    if (error) {
+      console.error("Błąd zapisu zgłoszenia:", error);
+      alert("Nie udało się zapisać zgłoszenia.");
+      return;
+    }
+
     if (ticketFile.files.length > 0) {
       const file = ticketFile.files[0];
-      const filePath = `${ticket.id}/${file.name}`;
+      const path = `${ticket.id}/${file.name}`;
 
       const { error: uploadError } = await App.supabase.storage
-        .from("tickets-files")
-        .upload(filePath, file);
+        .from("ticket_files")
+        .upload(path, file);
 
-      if (!uploadError) {
-        await App.supabase.from("ticket_files").insert({
-          ticket_id: ticket.id,
-          file_path: filePath
-        });
+      if (uploadError) {
+        console.error("Błąd uploadu pliku:", uploadError);
       }
     }
 
@@ -108,27 +71,29 @@ App.tickets = (() => {
     loadTicketsUser(profile.wspolnota_id);
   }
 
-  // ============================
-  // ZGŁOSZENIA — mieszkaniec
-  // ============================
-  async function loadTicketsUser(wspolnota_id) {
+  async function loadTicketsUser(wspolnotaId) {
     const profile = App.auth.getCurrentProfile();
     if (!profile || profile.role !== "user") return;
 
     const { ticketList } = getDom();
+    if (!ticketList) return;
 
     ticketList.innerHTML = "Ładowanie...";
 
-    const { data: { session } } = await App.supabase.auth.getSession();
-
     const { data, error } = await App.supabase
       .from("tickets")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .eq("wspolnota_id", wspolnota_id)
+      .select(`
+        id,
+        title,
+        description,
+        status,
+        created_at
+      `)
+      .eq("wspolnota_id", wspolnotaId)
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("Błąd ładowania zgłoszeń (user):", error);
       ticketList.innerHTML = "<i>Błąd ładowania zgłoszeń.</i>";
       return;
     }
@@ -142,31 +107,60 @@ App.tickets = (() => {
 
     data.forEach(t => {
       const div = document.createElement("div");
-      div.className = "ticketItem announcementItem";
+      div.className = "ticketItem";
       div.innerHTML = `
         <b>${t.title}</b><br>
+        <small>${new Date(t.created_at).toLocaleString()}</small><br>
         Status: ${t.status}<br>
-        <button class="btnOpenTicket btn ghost" data-id="${t.id}">Otwórz</button>
+        ${t.description}
+        <hr>
       `;
       ticketList.appendChild(div);
     });
-
-    ticketList.querySelectorAll(".btnOpenTicket").forEach(btn =>
-      btn.onclick = () => openTicketModal(btn.dataset.id)
-    );
   }
 
-  // ============================
-  // ZGŁOSZENIA — admin
-  // ============================
-  async function loadTicketsAdmin() {
+  async function loadWspolnotyFilter() {
+    const profile = App.auth.getCurrentProfile();
+    if (!profile || profile.role !== "admin") return;
+
+    const select = document.getElementById("ticketsWspolnotaFilter");
+    if (!select) return;
+
+    select.innerHTML = "";
+
+    const { data, error } = await App.supabase
+      .from("wspolnoty")
+      .select("id, nazwa")
+      .order("nazwa");
+
+    if (error) {
+      console.error("Błąd ładowania wspólnot (filter):", error);
+      return;
+    }
+
+    const def = document.createElement("option");
+    def.value = "";
+    def.textContent = "Wszystkie wspólnoty";
+    select.appendChild(def);
+
+    data.forEach(w => {
+      const opt = document.createElement("option");
+      opt.value = w.id;
+      opt.textContent = w.nazwa;
+      select.appendChild(opt);
+    });
+
+    select.onchange = () => loadTicketsAdmin(select.value);
+  }
+
+  async function loadTicketsAdmin(wspolnotaId = "") {
     const profile = App.auth.getCurrentProfile();
     if (!profile || profile.role !== "admin") return;
 
     const { adminTickets } = getDom();
-    adminTickets.innerHTML = "Ładowanie...";
+    if (!adminTickets) return;
 
-    const wsp = document.getElementById("filterWspolnota")?.value;
+    adminTickets.innerHTML = "Ładowanie...";
 
     let query = App.supabase
       .from("tickets")
@@ -176,16 +170,19 @@ App.tickets = (() => {
         description,
         status,
         created_at,
-        wspolnota_id,
-        wspolnoty (nazwa)
+        wspolnoty (nazwa),
+        profiles (fullname, email)
       `)
       .order("created_at", { ascending: false });
 
-    if (wsp) query = query.eq("wspolnota_id", wsp);
+    if (wspolnotaId) {
+      query = query.eq("wspolnota_id", wspolnotaId);
+    }
 
     const { data, error } = await query;
 
     if (error) {
+      console.error("Błąd ładowania zgłoszeń (admin):", error);
       adminTickets.innerHTML = "<i>Błąd ładowania zgłoszeń.</i>";
       return;
     }
@@ -199,114 +196,25 @@ App.tickets = (() => {
 
     data.forEach(t => {
       const div = document.createElement("div");
-      div.className = "ticketItem announcementItem";
+      div.className = "ticketItem";
       div.innerHTML = `
         <b>${t.title}</b><br>
-        Wspólnota: ${t.wspolnoty?.nazwa || "brak"}<br>
-        Status: ${t.status}<br>
-        <button class="btnOpenTicket btn ghost" data-id="${t.id}">Otwórz</button>
+        <small>${new Date(t.created_at).toLocaleString()}</small><br>
+        Wspólnota: ${t.wspolnoty?.nazwa || "—"}<br>
+        Zgłaszający: ${t.profiles?.fullname || "—"} (${t.profiles?.email || "—"})<br>
+        Status: ${t.status}<br><br>
+        ${t.description}
+        <hr>
       `;
       adminTickets.appendChild(div);
     });
-
-    adminTickets.querySelectorAll(".btnOpenTicket").forEach(btn =>
-      btn.onclick = () => openTicketModal(btn.dataset.id)
-    );
-  }
-
-  // ============================
-  // MODAL — admin + mieszkaniec
-  // ============================
-  async function openTicketModal(ticketId) {
-    const profile = App.auth.getCurrentProfile();
-    const isAdmin = profile?.role === "admin";
-
-    const {
-      ticketModal,
-      modalTicketTitle,
-      modalTicketDesc,
-      modalTicketStatus,
-      modalTicketFiles,
-      btnStatusNowe,
-      btnStatusWTrakcie,
-      btnStatusZamkniete
-    } = getDom();
-
-    ticketModal.classList.remove("hidden");
-
-    const { data: ticket } = await App.supabase
-      .from("tickets")
-      .select("*")
-      .eq("id", ticketId)
-      .single();
-
-    if (!isAdmin && ticket.user_id !== profile.id) {
-      ticketModal.classList.add("hidden");
-      alert("Nie masz dostępu do tego zgłoszenia.");
-      return;
-    }
-
-    modalTicketTitle.textContent = ticket.title;
-    modalTicketDesc.textContent = ticket.description;
-    modalTicketStatus.textContent = "Status: " + ticket.status;
-
-    const { data: files } = await App.supabase
-      .from("ticket_files")
-      .select("*")
-      .eq("ticket_id", ticketId);
-
-    modalTicketFiles.innerHTML = "";
-
-    if (!files || !files.length) {
-      modalTicketFiles.innerHTML = "<i>Brak plików</i>";
-    } else {
-      for (const f of files) {
-        const { data: urlData } = await App.supabase.storage
-          .from("tickets-files")
-          .createSignedUrl(f.file_path, 3600);
-
-        const a = document.createElement("a");
-        a.href = urlData.signedUrl;
-        a.textContent = f.file_path.split("/")[1];
-        a.target = "_blank";
-        modalTicketFiles.appendChild(a);
-        modalTicketFiles.appendChild(document.createElement("br"));
-      }
-    }
-
-    btnStatusNowe.style.display = isAdmin ? "inline-block" : "none";
-    btnStatusWTrakcie.style.display = isAdmin ? "inline-block" : "none";
-    btnStatusZamkniete.style.display = isAdmin ? "inline-block" : "none";
-
-    if (isAdmin) {
-      btnStatusNowe.onclick = () => updateTicketStatus(ticketId, "nowe");
-      btnStatusWTrakcie.onclick = () => updateTicketStatus(ticketId, "w_trakcie");
-      btnStatusZamkniete.onclick = () => updateTicketStatus(ticketId, "zamkniete");
-    }
-  }
-
-  async function updateTicketStatus(ticketId, newStatus) {
-    const profile = App.auth.getCurrentProfile();
-    if (!profile || profile.role !== "admin") return;
-
-    await App.supabase
-      .from("tickets")
-      .update({ status: newStatus })
-      .eq("id", ticketId);
-
-    const { ticketModal } = getDom();
-    ticketModal.classList.add("hidden");
-
-    loadTicketsAdmin();
   }
 
   return {
     init,
-    loadWspolnotyFilter,
     saveTicket,
     loadTicketsUser,
-    loadTicketsAdmin,
-    openTicketModal,
-    updateTicketStatus
+    loadWspolnotyFilter,
+    loadTicketsAdmin
   };
 })();
