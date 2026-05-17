@@ -1,7 +1,6 @@
 // =============================================
 // UNITY HOUSE — AUTH MODULE
-// Logowanie, wylogowanie, pobieranie profilu,
-// routing po zalogowaniu, wybór wspólnoty
+// Logowanie, wylogowanie, pobieranie profilu
 // =============================================
 
 window.App = window.App || {};
@@ -18,11 +17,6 @@ App.auth = (() => {
       loginEmail: document.getElementById("loginEmail"),
       loginPassword: document.getElementById("loginPassword"),
       loginMessage: document.getElementById("loginMessage"),
-
-      registerEmail: document.getElementById("registerEmail"),
-      registerPassword: document.getElementById("registerPassword"),
-      registerFullname: document.getElementById("registerFullname"),
-      registerMessage: document.getElementById("registerMessage"),
 
       wspolnotaSelect: document.getElementById("wspolnotaSelect"),
       btnSaveWspolnota: document.getElementById("btnSaveWspolnota"),
@@ -71,67 +65,17 @@ App.auth = (() => {
     }
 
     App.ui.showMessage(loginMessage, "Logowanie...", "success");
-
-    await loadProfileAfterLogin();
   }
 
   // ---------------------------------------------
-  // POBRANIE PROFILU PO ZALOGOWANIU
+  // WYLOGOWANIE
   // ---------------------------------------------
-  async function loadProfileAfterLogin() {
-    const { data: { user } } = await App.supabase.auth.getUser();
+  async function logoutUser() {
+    await App.supabase.auth.signOut();
+    currentProfile = null;
 
-    if (!user) {
-      App.ui.hideLoader();
-      return;
-    }
-
-    const { data: profile } = await App.supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    currentProfile = profile;
-
-    App.ui.hideLoader();
-    routeAfterLogin(profile);
-  }
-
-  // ---------------------------------------------
-  // ROUTING PO ZALOGOWANIU
-  // ---------------------------------------------
-  function routeAfterLogin(profile) {
     App.ui.hideAllPanels();
-
-    if (!profile.approved) {
-      App.ui.showSection("loginCard");
-      App.ui.showMessage(
-        document.getElementById("loginMessage"),
-        "Twoje konto czeka na zatwierdzenie.",
-        "error"
-      );
-      return;
-    }
-
-    if (!profile.wspolnota_id) {
-      App.ui.showSection("selectWspolnotaCard");
-      App.profiles.loadWspolnotyDropdown();
-      return;
-    }
-
-    if (profile.role === "admin") {
-      App.ui.showSection("adminCard");
-      App.profiles.loadPendingUsers();
-      App.profiles.loadAllUsers();
-      App.tickets.loadTicketsAdmin();
-      App.announcements.loadAnnouncementsAdmin();
-      return;
-    }
-
-    App.ui.showSection("mainCard");
-    App.tickets.loadTicketsUser(profile.wspolnota_id);
-    App.announcements.loadAnnouncementsUser();
+    App.ui.showSection("loginCard");
   }
 
   // ---------------------------------------------
@@ -151,24 +95,8 @@ App.auth = (() => {
       .eq("id", user.id);
 
     currentProfile.wspolnota_id = wspolnotaId;
-
-    routeAfterLogin(currentProfile);
   }
 
-  // ---------------------------------------------
-  // WYLOGOWANIE
-  // ---------------------------------------------
-  async function logoutUser() {
-    await App.supabase.auth.signOut();
-    currentProfile = null;
-
-    App.ui.hideAllPanels();
-    App.ui.showSection("loginCard");
-  }
-
-  // ---------------------------------------------
-  // GETTER PROFILU
-  // ---------------------------------------------
   function getCurrentProfile() {
     return currentProfile;
   }
