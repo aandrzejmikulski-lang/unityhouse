@@ -11,16 +11,18 @@
   <!-- SUPABASE -->
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 
-  <!-- APP MODULES -->
-<script defer src="./js/ui.js"></script>
-
-
-  <script defer src="js/auth.js"></script>
-  <script defer src="js/profiles.js"></script>
-  <script defer src="js/tickets.js"></script>
-  <script defer src="js/announcements.js"></script>
-  <script defer src="js/main.js"></script>
+  <!-- AUTOMATYCZNE WERSJONOWANIE JS -->
+  <script>
+    const v = Date.now();
+    document.write('<script defer src="js/ui.js?v=' + v + '"><\\/script>');
+    document.write('<script defer src="js/auth.js?v=' + v + '"><\\/script>');
+    document.write('<script defer src="js/profiles.js?v=' + v + '"><\\/script>');
+    document.write('<script defer src="js/tickets.js?v=' + v + '"><\\/script>');
+    document.write('<script defer src="js/announcements.js?v=' + v + '"><\\/script>');
+    document.write('<script defer src="js/main.js?v=' + v + '"><\\/script>');
+  </script>
 </head>
+
 <script>
   console.log("INLINE TEST działa");
 </script>
