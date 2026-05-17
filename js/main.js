@@ -1,14 +1,19 @@
 // ===============================================
-// UNITY HOUSE — main.js (SAFE INIT VERSION)
+// UNITY HOUSE — main.js (FINAL WORKING VERSION)
 // ===============================================
 
 window.App = window.App || {};
+App.supabase = null;
 
+// 🔥 Blokada podwójnego wywołania Supabase
 let AUTH_LOCK = false;
 
+// ===============================================
+// INICJALIZACJA SUPABASE
+// ===============================================
 function initSupabaseClient() {
   if (!window.supabase) {
-    console.error("Supabase nie jest dostępne (supabase is not defined). Sprawdź <script> w index.html.");
+    console.error("Supabase nie jest dostępne (supabase is not defined).");
     return;
   }
 
@@ -17,6 +22,20 @@ function initSupabaseClient() {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
   );
 
+  console.log("✅ Klient Supabase utworzony:", App.supabase);
+
+  // Po utworzeniu klienta — inicjalizacja modułów
+  App.ui?.init?.();
+  App.auth?.init?.();
+  App.profiles?.init?.();
+  App.tickets?.init?.();
+  App.announcements?.init?.();
+
+  App.ui?.hideAllPanels?.();
+  App.ui?.showSection?.("loginCard");
+  App.ui?.showLoginTab?.();
+
+  // Nasłuchiwanie zmian stanu autoryzacji
   App.supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("AUTH STATE:", event, session);
 
@@ -117,34 +136,20 @@ function initSupabaseClient() {
   });
 }
 
-// DOM READY
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM READY — Unity House Premium");
-
-  // 1. Najpierw bezpiecznie inicjalizujemy Supabase
+// ===============================================
+// START — po pełnym załadowaniu strony
+// ===============================================
+window.addEventListener("load", () => {
+  console.log("DOM w pełni załadowany — inicjalizacja Supabase...");
   initSupabaseClient();
 
-  // 2. Potem UI / auth / reszta modułów
-  setTimeout(() => {
-    App.ui?.init?.();
-    App.auth?.init?.();
-    App.profiles?.init?.();
-    App.tickets?.init?.();
-    App.announcements?.init?.();
-
-    App.ui?.hideAllPanels?.();
-    App.ui?.showSection?.("loginCard");
-    App.ui?.showLoginTab?.();
-  }, 300);
-
-  // 3. Sidebar
+  // Sidebar — aktywacja na klik
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       const profile = App.auth.getCurrentProfile();
       if (!profile) return;
 
       const target = item.dataset.target;
-
       if (profile.role === "user" && target === "adminCard") return;
 
       document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
