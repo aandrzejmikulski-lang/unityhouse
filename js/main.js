@@ -96,6 +96,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     // 3. Admin
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
+
+      // 🔧 Po zalogowaniu pokaż sidebar i przycisk Wyloguj
+      document.querySelector(".sidebar")?.classList.remove("hidden");
+      document.getElementById("btnLogout")?.classList.remove("hidden");
+
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
       App.tickets.loadTicketsAdmin();
@@ -105,6 +110,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     // 4. Normalny użytkownik
     App.ui.showSection("mainCard");
+
+    // 🔧 Po zalogowaniu pokaż sidebar i przycisk Wyloguj
+    document.querySelector(".sidebar")?.classList.remove("hidden");
+    document.getElementById("btnLogout")?.classList.remove("hidden");
+
     App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
   }
