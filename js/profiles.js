@@ -17,6 +17,8 @@ App.profiles = (() => {
   async function loadWspolnotyDropdown() {
     const { wspolnotaDropdown, wspolnotaMessage } = getDom();
 
+    if (!wspolnotaDropdown) return;
+
     wspolnotaDropdown.innerHTML = "";
 
     const { data, error } = await App.supabase
@@ -25,7 +27,13 @@ App.profiles = (() => {
       .order("nazwa");
 
     if (error) {
+      console.error("Błąd ładowania wspólnot:", error);
       App.ui.showMessage(wspolnotaMessage, "Błąd ładowania wspólnot.", "error");
+      return;
+    }
+
+    if (!data || !data.length) {
+      App.ui.showMessage(wspolnotaMessage, "Brak zdefiniowanych wspólnot.", "error");
       return;
     }
 
@@ -70,6 +78,9 @@ App.profiles = (() => {
     App.ui.showSection("mainCard");
     App.tickets.loadTicketsUser(selectedId);
     App.announcements.loadAnnouncementsUser();
+
+    // 🔥 Odśwież widok — ukryje „Wybór wspólnoty”
+    App.ui.setAuthView(true);
   }
 
   // ============================
