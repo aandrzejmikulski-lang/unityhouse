@@ -29,7 +29,6 @@ App.ui.hideLoader = function () {
 
 // ---------------------------------------------
 // UKRYWANIE WSZYSTKICH PANELI
-// (POPRAWIONE — USUNIĘTO .card)
 // ---------------------------------------------
 App.ui.hideAllPanels = function () {
   const sections = document.querySelectorAll("section, .modal");
@@ -100,6 +99,15 @@ window.addEventListener("click", (e) => {
     App.ui.closeModal();
   }
 });
+
+// ---------------------------------------------
+// KOMUNIKATY
+// ---------------------------------------------
+App.ui.showMessage = function (element, text, type = "info") {
+  if (!element) return;
+  element.innerText = text;
+  element.className = `muted ${type}`;
+};
 
 // ---------------------------------------------
 // INICJALIZACJA UI
