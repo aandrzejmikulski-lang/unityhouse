@@ -69,7 +69,6 @@ App.ui = (() => {
     btnLogoutTop: document.getElementById("btnLogoutTop")
   };
 
-  // 🔒 User NIE MOŻE wejść do adminCard
   function showSection(id) {
     const profile = App.auth.getCurrentProfile();
 
@@ -94,7 +93,7 @@ App.ui = (() => {
     el.classList.remove("hidden");
   }
 
-  // 🔥 KLUCZOWA FUNKCJA — widoczność zależna od roli
+  // 🔥 Widok zależny od roli
   function setAuthView(isLoggedIn) {
     const sidebar = document.querySelector(".sidebar");
     if (!sidebar) return;
@@ -118,14 +117,22 @@ App.ui = (() => {
     const userItem = document.querySelector("[data-target='mainCard']");
 
     if (profile.role === "admin") {
+      // 🔥 Admin: Panel administratora, Wspólnoty, Nowe ogłoszenie
       adminItem.style.display = "block";
       wspolnotyItem.style.display = "block";
-      selectItem.style.display = "block";
-      ticketItem.style.display = "block";
       announcementItem.style.display = "block";
-      userItem.style.display = "block";
+
+      // Ukrywamy rzeczy „mieszkańca”
+      selectItem.style.display = "none";
+      ticketItem.style.display = "none";
+      userItem.style.display = "none";
+
       dom.adminCard?.classList.remove("hidden");
+      dom.mainCard?.classList.add("hidden");
+      dom.ticketForm?.classList.add("hidden");
+      dom.selectWspolnotaCard?.classList.add("hidden");
     } else {
+      // 🔒 Mieszkaniec
       adminItem.style.display = "none";
       wspolnotyItem.style.display = "none";
       announcementItem.style.display = "none";
@@ -135,14 +142,13 @@ App.ui = (() => {
       dom.pendingUsersList?.classList.add("hidden");
       dom.allUsersList?.classList.add("hidden");
 
-      // 🔥 „Wybór wspólnoty” tylko jeśli user NIE ma wspólnoty
+      // „Wybór wspólnoty” tylko jeśli user NIE ma wspólnoty
       if (!profile.wspolnota_id) {
         selectItem.style.display = "block";
       } else {
         selectItem.style.display = "none";
       }
 
-      // Zawsze dostępne:
       ticketItem.style.display = "block";
       userItem.style.display = "block";
     }
