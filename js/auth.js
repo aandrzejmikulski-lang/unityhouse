@@ -3,119 +3,74 @@ window.App = window.App || {};
 App.auth = (() => {
   let currentProfile = null;
 
-  function setCurrentProfile(p) {
-    currentProfile = p;
+  function init() {
+    const dom = App.ui.dom;
+    if (dom.btnLogin) dom.btnLogin.onclick = loginUser;
+    if (dom.btnSaveWspolnota) dom.btnSaveWspolnota.onclick = saveWspolnotaForUser;
+  }
+
+  function setCurrentProfile(profile) {
+    currentProfile = profile;
   }
 
   function getCurrentProfile() {
     return currentProfile;
   }
 
-  function getDom() {
-    return App.ui?.dom || {};
-  }
-
-  function init() {
-    const {
-      goToLogin,
-      goToRegister,
-      btnLogin,
-      btnRegister,
-      btnLogoutTop
-    } = getDom();
-
-    if (goToLogin) goToLogin.onclick = () => App.ui?.showLoginTab?.();
-    if (goToRegister) goToRegister.onclick = () => App.ui?.showRegisterTab?.();
-
-    if (btnLogin) btnLogin.onclick = loginUser;
-    if (btnRegister) btnRegister.onclick = registerUser;
-    if (btnLogoutTop) btnLogoutTop.onclick = logoutUser;
-  }
-
   async function loginUser() {
-    const { loginEmail, loginPassword, loginMessage } = getDom();
-
-    const email = loginEmail?.value.trim();
-    const password = loginPassword?.value.trim();
-
-    currentProfile = null;
+    const dom = App.ui.dom;
+    const email = dom.loginEmail.value.trim();
+    const password = dom.loginPassword.value.trim();
 
     if (!email || !password) {
-      App.ui?.showMessage?.(loginMessage, "Uzupełnij wszystkie pola.", "error");
+      App.ui.showMessage(dom.loginMessage, "Podaj e-mail i hasło.", "error");
       return;
     }
 
-    try {
-      const { data, error } = await App.supabase.auth.signInWithPassword({ email, password });
+    App.ui.showLoader();
+    App.ui.showMessage(dom.loginMessage, "Logowanie…", "info");
 
-      if (error) {
-        console.error("Supabase Auth Error:", error);
-        App.ui?.showMessage?.(loginMessage, `Błąd: ${error.message}`, "error");
-        return;
-      }
-
-      if (!data.session) {
-        App.ui?.showMessage?.(loginMessage, "Nie udało się utworzyć sesji.", "error");
-        return;
-      }
-
-      App.ui?.showMessage?.(loginMessage, "Logowanie pomyślne — trwa wczytywanie profilu...", "success");
-
-    } catch (err) {
-      console.error("Nieoczekiwany błąd logowania:", err);
-      App.ui?.showMessage?.(loginMessage, "Nieoczekiwany błąd logowania.", "error");
-    }
-  }
-
-  async function registerUser() {
-    const { registerEmail, registerPassword, registerFullname, registerMessage } = getDom();
-
-    const email = registerEmail?.value.trim();
-    const password = registerPassword?.value.trim();
-    const fullname = registerFullname?.value.trim();
-
-    if (!email || !password || !fullname) {
-      App.ui?.showMessage?.(registerMessage, "Uzupełnij wszystkie pola.", "error");
-      return;
-    }
-
-    const { data, error } = await App.supabase.auth.signUp({
+    const { data, error } = await App.supabase.auth.signInWithPassword({
       email,
-      password,
-      options: { data: { fullname } }
+      password
     });
 
     if (error) {
-      console.error("Supabase SignUp Error:", error);
-      App.ui?.showMessage?.(registerMessage, `Błąd: ${error.message}`, "error");
+      console.error("Błąd logowania:", error);
+      App.ui.showMessage(dom.loginMessage, "Błędny e-mail lub hasło.", "error");
+      App.ui.hideLoader();
       return;
     }
 
-    if (data.user) {
-      await App.supabase.from("profiles").insert({
-        id: data.user.id,
-        fullname,
-        email: data.user.email,
-        role: "user",
-        approved: false,
-        wspolnota_id: null
-      });
-
-      App.ui?.showMessage?.(registerMessage, "Sprawdź e-mail i potwierdź konto.", "success");
-    }
+    App.ui.showMessage(dom.loginMessage, "Logowanie pomyślne — trwa wczytywanie profilu…", "info");
   }
 
-  async function logoutUser() {
-    currentProfile = null;
-    await App.supabase.auth.signOut();
+  async function saveWspolnotaForUser() {
+    const dom = App.ui.dom;
+    const profile = getCurrentProfile();
+    const wsp = dom.wspolnotaSelect.value;
+
+    if (!profile || !wsp) return;
+
+    const { error } = await App.supabase
+      .from("profiles")
+      .update({ wspolnota_id: wsp })
+      .eq("id", profile.id);
+
+    if (error) {
+      console.error("Błąd zapisu wspólnoty:", error);
+      return;
+    }
+
+    currentProfile = { ...profile, wspolnota_id: wsp };
+    App.ui.showSection("mainCard");
+    App.tickets.loadTicketsUser(wsp);
+    App.announcements.loadAnnouncementsUser();
   }
 
   return {
     init,
-    loginUser,
-    registerUser,
-    logoutUser,
-    getCurrentProfile,
-    setCurrentProfile
+    setCurrentProfile,
+    getCurrentProfile
   };
 })();
