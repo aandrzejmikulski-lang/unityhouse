@@ -126,7 +126,7 @@
         </div>
 
         <!-- OGŁOSZENIA ADMIN -->
-     <div id="adminAnnouncementsCard" class="card fade-in">
+        <div id="adminAnnouncementsCard" class="card fade-in">
 
           <h2>Ogłoszenia — admin</h2>
 
@@ -140,6 +140,17 @@
           <div class="field">
             <span>Treść ogłoszenia</span>
             <textarea id="announcementContent" placeholder="Treść"></textarea>
+          </div>
+
+          <!-- 🔥 DODANE POLA DATY -->
+          <div class="field">
+            <span>Wyświetlaj od</span>
+            <input type="date" id="announcementFrom" />
+          </div>
+
+          <div class="field">
+            <span>Wyświetlaj do</span>
+            <input type="date" id="announcementTo" />
           </div>
 
           <div class="field">
@@ -191,12 +202,12 @@
 
   <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="js/ui.js?v=1" defer></script>
-<script src="js/auth.js?v=1" defer></script>
-<script src="js/profiles.js?v=1" defer></script>
-<script src="js/tickets.js?v=1" defer></script>
-<script src="js/announcements.js?v=1" defer></script>
-<script src="js/main.js?v=1"></script>
+  <script src="js/ui.js?v=1" defer></script>
+  <script src="js/auth.js?v=1" defer></script>
+  <script src="js/profiles.js?v=1" defer></script>
+  <script src="js/tickets.js?v=1" defer></script>
+  <script src="js/announcements.js?v=1" defer></script>
+  <script src="js/main.js?v=1"></script>
 
 </body>
 </html>
