@@ -38,7 +38,6 @@ App.auth = (() => {
     const email = loginEmail?.value.trim();
     const password = loginPassword?.value.trim();
 
-    // 🔥 FIX — zawsze czyścimy stary profil
     currentProfile = null;
 
     if (!email || !password) {
@@ -46,14 +45,26 @@ App.auth = (() => {
       return;
     }
 
-    const { error } = await App.supabase.auth.signInWithPassword({ email, password });
+    try {
+      const { data, error } = await App.supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      App.ui?.showMessage?.(loginMessage, "Błędny e-mail lub hasło.", "error");
-      return;
+      if (error) {
+        console.error("Supabase Auth Error:", error);
+        App.ui?.showMessage?.(loginMessage, `Błąd: ${error.message}`, "error");
+        return;
+      }
+
+      if (!data.session) {
+        App.ui?.showMessage?.(loginMessage, "Nie udało się utworzyć sesji.", "error");
+        return;
+      }
+
+      App.ui?.showMessage?.(loginMessage, "Logowanie pomyślne — trwa wczytywanie profilu...", "success");
+
+    } catch (err) {
+      console.error("Nieoczekiwany błąd logowania:", err);
+      App.ui?.showMessage?.(loginMessage, "Nieoczekiwany błąd logowania.", "error");
     }
-
-    App.ui?.showMessage?.(loginMessage, "Logowanie...", "success");
   }
 
   async function registerUser() {
@@ -75,7 +86,8 @@ App.auth = (() => {
     });
 
     if (error) {
-      App.ui?.showMessage?.(registerMessage, "Błąd rejestracji.", "error");
+      console.error("Supabase SignUp Error:", error);
+      App.ui?.showMessage?.(registerMessage, `Błąd: ${error.message}`, "error");
       return;
     }
 
@@ -94,7 +106,7 @@ App.auth = (() => {
   }
 
   async function logoutUser() {
-    currentProfile = null;   // ← FIX
+    currentProfile = null;
     await App.supabase.auth.signOut();
   }
 
