@@ -1,74 +1,81 @@
 window.App = window.App || {};
 
 App.ui = (() => {
-  const dom = {
-    loginCard: document.getElementById("loginCard"),
-    mainCard: document.getElementById("mainCard"),
-    adminCard: document.getElementById("adminCard"),
-    wspolnotaCard: document.getElementById("wspolnotaCard"),
-    selectWspolnotaCard: document.getElementById("selectWspolnotaCard"),
-    ticketForm: document.getElementById("ticketForm"),
-    announcementForm: document.getElementById("announcementForm"),
 
-    loginMessage: document.getElementById("loginMessage"),
-    registerMessage: document.getElementById("registerMessage"),
+  // 🔥 DOM pobierany dynamicznie — zawsze aktualny, nigdy null
+  function getDom() {
+    return {
+      loginCard: document.getElementById("loginCard"),
+      mainCard: document.getElementById("mainCard"),
+      adminCard: document.getElementById("adminCard"),
+      wspolnotaCard: document.getElementById("wspolnotaCard"),
+      selectWspolnotaCard: document.getElementById("selectWspolnotaCard"),
+      ticketForm: document.getElementById("ticketForm"),
+      announcementForm: document.getElementById("announcementForm"),
 
-    loginEmail: document.getElementById("loginEmail"),
-    loginPassword: document.getElementById("loginPassword"),
-    registerEmail: document.getElementById("registerEmail"),
-    registerPassword: document.getElementById("registerPassword"),
-    registerFullname: document.getElementById("registerFullname"),
+      loginMessage: document.getElementById("loginMessage"),
+      registerMessage: document.getElementById("registerMessage"),
 
-    goToLogin: document.getElementById("goToLogin"),
-    goToRegister: document.getElementById("goToRegister"),
-    loginForm: document.getElementById("loginForm"),
-    registerCard: document.getElementById("registerCard"),
+      loginEmail: document.getElementById("loginEmail"),
+      loginPassword: document.getElementById("loginPassword"),
+      registerEmail: document.getElementById("registerEmail"),
+      registerPassword: document.getElementById("registerPassword"),
+      registerFullname: document.getElementById("registerFullname"),
 
-    wspolnotaDropdown: document.getElementById("wspolnotaDropdown"),
-    wspolnotaMessage: document.getElementById("wspolnotaMessage"),
+      goToLogin: document.getElementById("goToLogin"),
+      goToRegister: document.getElementById("goToRegister"),
+      loginForm: document.getElementById("loginForm"),
+      registerCard: document.getElementById("registerCard"),
 
-    pendingUsersList: document.getElementById("pendingUsersList"),
-    allUsersList: document.getElementById("allUsersList"),
+      wspolnotaDropdown: document.getElementById("wspolnotaDropdown"),
+      wspolnotaMessage: document.getElementById("wspolnotaMessage"),
 
-    ticketTitle: document.getElementById("ticketTitle"),
-    ticketDesc: document.getElementById("ticketDesc"),
-    ticketFile: document.getElementById("ticketFile"),
-    ticketList: document.getElementById("ticketList"),
-    adminTickets: document.getElementById("adminTickets"),
+      pendingUsersList: document.getElementById("pendingUsersList"),
+      allUsersList: document.getElementById("allUsersList"),
 
-    ticketModal: document.getElementById("ticketModal"),
-    modalTicketTitle: document.getElementById("modalTicketTitle"),
-    modalTicketDesc: document.getElementById("modalTicketDesc"),
-    modalTicketStatus: document.getElementById("modalTicketStatus"),
-    modalTicketFiles: document.getElementById("modalTicketFiles"),
+      ticketTitle: document.getElementById("ticketTitle"),
+      ticketDesc: document.getElementById("ticketDesc"),
+      ticketFile: document.getElementById("ticketFile"),
+      ticketList: document.getElementById("ticketList"),
+      adminTickets: document.getElementById("adminTickets"),
 
-    btnStatusNowe: document.getElementById("btnStatusNowe"),
-    btnStatusWTrakcie: document.getElementById("btnStatusWTrakcie"),
-    btnStatusZamkniete: document.getElementById("btnStatusZamkniete"),
+      ticketModal: document.getElementById("ticketModal"),
+      modalTicketTitle: document.getElementById("modalTicketTitle"),
+      modalTicketDesc: document.getElementById("modalTicketDesc"),
+      modalTicketStatus: document.getElementById("modalTicketStatus"),
+      modalTicketFiles: document.getElementById("modalTicketFiles"),
 
-    btnAddTicket: document.getElementById("btnAddTicket"),
-    btnCancelTicket: document.getElementById("btnCancelTicket"),
-    btnSaveTicket: document.getElementById("btnSaveTicket"),
-    btnSaveWspolnota: document.getElementById("btnSaveWspolnota"),
-    btnLogin: document.getElementById("btnLogin"),
-    btnRegister: document.getElementById("btnRegister"),
+      btnStatusNowe: document.getElementById("btnStatusNowe"),
+      btnStatusWTrakcie: document.getElementById("btnStatusWTrakcie"),
+      btnStatusZamkniete: document.getElementById("btnStatusZamkniete"),
 
-    announcementTitle: document.getElementById("announcementTitle"),
-    announcementContent: document.getElementById("announcementContent"),
-    announcementGlobal: document.getElementById("announcementGlobal"),
-    announcementFrom: document.getElementById("announcementFrom"),
-    announcementTo: document.getElementById("announcementTo"),
+      btnAddTicket: document.getElementById("btnAddTicket"),
+      btnCancelTicket: document.getElementById("btnCancelTicket"),
+      btnSaveTicket: document.getElementById("btnSaveTicket"),
+      btnSaveWspolnota: document.getElementById("btnSaveWspolnota"),
+      btnLogin: document.getElementById("btnLogin"),
+      btnRegister: document.getElementById("btnRegister"),
 
-    btnAddAnnouncement: document.getElementById("btnAddAnnouncement"),
-    btnCancelAnnouncement: document.getElementById("btnCancelAnnouncement"),
-    btnSaveAnnouncement: document.getElementById("btnSaveAnnouncement"),
+      announcementTitle: document.getElementById("announcementTitle"),
+      announcementContent: document.getElementById("announcementContent"),
+      announcementGlobal: document.getElementById("announcementGlobal"),
+      announcementFrom: document.getElementById("announcementFrom"),
+      announcementTo: document.getElementById("announcementTo"),
 
-    userAnnouncements: document.getElementById("userAnnouncements"),
-    adminAnnouncements: document.getElementById("adminAnnouncements"),
+      btnAddAnnouncement: document.getElementById("btnAddAnnouncement"),
+      btnCancelAnnouncement: document.getElementById("btnCancelAnnouncement"),
+      btnSaveAnnouncement: document.getElementById("btnSaveAnnouncement"),
 
-    btnLogoutTop: document.getElementById("btnLogoutTop")
-  };
+      userAnnouncements: document.getElementById("userAnnouncements"),
+      adminAnnouncements: document.getElementById("adminAnnouncements"),
 
+      btnLogoutTop: document.getElementById("btnLogoutTop")
+    };
+  }
+
+  // ============================
+  // SEKCJE
+  // ============================
   function showSection(id) {
     const profile = App.auth.getCurrentProfile();
 
@@ -77,13 +84,16 @@ App.ui = (() => {
       id = "mainCard";
     }
 
-    document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
+    document.querySelectorAll("main .card")
+      .forEach(sec => sec.classList.add("hidden"));
+
     const el = document.getElementById(id);
     if (el) el.classList.remove("hidden");
   }
 
   function hideAllPanels() {
-    document.querySelectorAll("main .card").forEach(sec => sec.classList.add("hidden"));
+    document.querySelectorAll("main .card")
+      .forEach(sec => sec.classList.add("hidden"));
   }
 
   function showMessage(el, text, type = "info") {
@@ -93,19 +103,22 @@ App.ui = (() => {
     el.classList.remove("hidden");
   }
 
-  // 🔥 Widok zależny od roli
+  // ============================
+  // WIDOK ZALEŻNY OD ROLI
+  // ============================
   function setAuthView(isLoggedIn) {
+    const dom = getDom();
     const sidebar = document.querySelector(".sidebar");
     if (!sidebar) return;
 
     if (!isLoggedIn) {
       sidebar.classList.add("hidden");
-      dom.btnLogoutTop.classList.add("hidden");
+      dom.btnLogoutTop?.classList.add("hidden");
       return;
     }
 
     sidebar.classList.remove("hidden");
-    dom.btnLogoutTop.classList.remove("hidden");
+    dom.btnLogoutTop?.classList.remove("hidden");
 
     const profile = App.auth.getCurrentProfile();
 
@@ -117,32 +130,19 @@ App.ui = (() => {
     const userItem = document.querySelector("[data-target='mainCard']");
 
     if (profile.role === "admin") {
-      // 🔥 Admin: Panel administratora, Wspólnoty, Nowe ogłoszenie
       adminItem.style.display = "block";
       wspolnotyItem.style.display = "block";
       announcementItem.style.display = "block";
 
-      // Ukrywamy rzeczy „mieszkańca”
       selectItem.style.display = "none";
       ticketItem.style.display = "none";
       userItem.style.display = "none";
 
-      dom.adminCard?.classList.remove("hidden");
-      dom.mainCard?.classList.add("hidden");
-      dom.ticketForm?.classList.add("hidden");
-      dom.selectWspolnotaCard?.classList.add("hidden");
     } else {
-      // 🔒 Mieszkaniec
       adminItem.style.display = "none";
       wspolnotyItem.style.display = "none";
       announcementItem.style.display = "none";
-      dom.adminCard?.classList.add("hidden");
-      dom.adminAnnouncements?.classList.add("hidden");
-      dom.announcementForm?.classList.add("hidden");
-      dom.pendingUsersList?.classList.add("hidden");
-      dom.allUsersList?.classList.add("hidden");
 
-      // „Wybór wspólnoty” tylko jeśli user NIE ma wspólnoty
       if (!profile.wspolnota_id) {
         selectItem.style.display = "block";
       } else {
@@ -154,7 +154,11 @@ App.ui = (() => {
     }
   }
 
+  // ============================
+  // TABS
+  // ============================
   function showLoginTab() {
+    const dom = getDom();
     dom.goToLogin.classList.add("active");
     dom.goToRegister.classList.remove("active");
     dom.loginForm.classList.remove("hidden");
@@ -162,13 +166,19 @@ App.ui = (() => {
   }
 
   function showRegisterTab() {
+    const dom = getDom();
     dom.goToLogin.classList.remove("active");
     dom.goToRegister.classList.add("active");
     dom.loginForm.classList.add("hidden");
     dom.registerCard.classList.remove("hidden");
   }
 
+  // ============================
+  // INIT
+  // ============================
   function init() {
+    const dom = getDom();
+
     const closeModal = document.getElementById("closeModal");
     if (closeModal) closeModal.onclick = () => dom.ticketModal.classList.add("hidden");
 
@@ -184,6 +194,8 @@ App.ui = (() => {
     setAuthView,
     showLoginTab,
     showRegisterTab,
-    dom
+
+    // 🔥 dynamiczny DOM
+    get dom() { return getDom(); }
   };
 })();
