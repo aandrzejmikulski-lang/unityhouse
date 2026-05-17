@@ -8,26 +8,29 @@
   <!-- STYLE -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- SUPABASE (musi być załadowane jako pierwsze, bez defer) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-
-  <!-- AUTOMATYCZNE WERSJONOWANIE SKRYPTÓW APLIKACJI -->
+  <!-- SUPABASE LOADER (bezpieczna inicjalizacja) -->
   <script>
-    const v = Date.now();
-    const scripts = [
-      "js/ui.js",
-      "js/auth.js",
-      "js/profiles.js",
-      "js/tickets.js",
-      "js/announcements.js",
-      "js/main.js"
-    ];
-    scripts.forEach(src => {
-      const s = document.createElement("script");
-      s.src = `${src}?v=${v}`;
-      s.defer = true;
-      document.head.appendChild(s);
-    });
+    const loadSupabase = document.createElement("script");
+    loadSupabase.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
+    loadSupabase.onload = () => {
+      console.log("✅ Supabase załadowane — inicjalizacja aplikacji...");
+      const v = Date.now();
+      const scripts = [
+        "js/ui.js",
+        "js/auth.js",
+        "js/profiles.js",
+        "js/tickets.js",
+        "js/announcements.js",
+        "js/main.js"
+      ];
+      scripts.forEach(src => {
+        const s = document.createElement("script");
+        s.src = `${src}?v=${v}`;
+        s.defer = true;
+        document.head.appendChild(s);
+      });
+    };
+    document.head.appendChild(loadSupabase);
   </script>
 </head>
 
@@ -209,20 +212,4 @@
 
       <!-- MODAL ZGŁOSZENIA -->
       <div id="ticketModal" class="modal hidden">
-        <div class="modal-content">
-          <button id="closeModal" class="modal-close">×</button>
-          <h2 id="modalTicketTitle"></h2>
-          <p id="modalTicketDesc"></p>
-          <p id="modalTicketStatus"></p>
-          <div id="modalTicketFiles"></div>
-
-          <button id="btnStatusNowe" class="btn ghost">Nowe</button>
-          <button id="btnStatusWTrakcie" class="btn ghost">W trakcie</button>
-          <button id="btnStatusZamkniete" class="btn ghost">Zamknięte</button>
-        </div>
-      </div>
-
-    </main>
-  </div>
-</body>
-</html>
+        <div class="modal-content
