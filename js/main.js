@@ -115,6 +115,9 @@ window.addEventListener("DOMContentLoaded", async () => {
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
 
+      // 🔥 KLUCZOWA POPRAWKA — odsłaniamy kartę ogłoszeń admina
+      document.getElementById("adminAnnouncementsCard")?.classList.remove("hidden");
+
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
       App.tickets.loadTicketsAdmin();
