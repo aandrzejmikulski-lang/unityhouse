@@ -1,7 +1,6 @@
 // =============================================
 // UNITY HOUSE — MAIN MODULE
-// Inicjalizacja Supabase, sesje, routing,
-// start aplikacji i spinanie modułów
+// Routing, sesje, inicjalizacja modułów
 // =============================================
 
 window.App = window.App || {};
@@ -9,35 +8,31 @@ window.App = window.App || {};
 window.addEventListener("DOMContentLoaded", async () => {
 
   // ---------------------------------------------
-  // 1. INICJALIZACJA SUPABASE
+  // SUPABASE
   // ---------------------------------------------
   App.supabase = supabase.createClient(
     "https://vswonxgsaqnhzsmzexzh.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk"
+    "TWÓJ_KEY_TUTAJ"
   );
 
   console.log("Supabase initialized");
 
   // ---------------------------------------------
-  // 2. INICJALIZACJA MODUŁÓW (dopiero po DOM)
+  // INICJALIZACJA MODUŁÓW
   // ---------------------------------------------
-  if (App.ui && App.auth && App.tickets && App.announcements && App.profiles) {
-    App.ui.init();
-    App.auth.init();
-    App.tickets.init();
-    App.announcements.init();
-  } else {
-    console.error("❌ Niektóre moduły nie zostały załadowane.");
-  }
+  App.ui.init();
+  App.auth.init();
+  App.profiles.init?.();
+  App.tickets.init?.();
+  App.announcements.init?.();
 
   // ---------------------------------------------
-  // 3. OBSŁUGA ZMIAN SESJI
+  // OBSŁUGA SESJI
   // ---------------------------------------------
   App.supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("Auth event:", event);
 
     if (event === "SIGNED_OUT") {
-      App.ui.hideAllPanels();
       App.ui.showSection("loginCard");
       return;
     }
@@ -48,12 +43,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ---------------------------------------------
-  // 4. START APLIKACJI — SPRAWDZENIE SESJI
+  // START
   // ---------------------------------------------
   await handleSession();
 
   // ---------------------------------------------
-  // FUNKCJE WEWNĘTRZNE
+  // FUNKCJE
   // ---------------------------------------------
   async function handleSession() {
     App.ui.showLoader();
@@ -66,7 +61,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Pobranie profilu
     const { data: profile } = await App.supabase
       .from("profiles")
       .select("*")
@@ -76,13 +70,15 @@ window.addEventListener("DOMContentLoaded", async () => {
     App.auth.setCurrentProfile(profile);
 
     App.ui.hideLoader();
-
     route(profile);
   }
 
   function route(profile) {
+    console.log("Routing profile:", profile);
+
     App.ui.hideAllPanels();
 
+    // 1. Konto niezatwierdzone
     if (!profile.approved) {
       App.ui.showSection("loginCard");
       document.getElementById("loginMessage").innerText =
@@ -90,12 +86,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (!profile.wspolnota_id) {
+    // 2. Użytkownik bez wspólnoty (ale NIE admin)
+    if (!profile.wspolnota_id && profile.role !== "admin") {
       App.ui.showSection("selectWspolnotaCard");
       App.profiles.loadWspolnotyDropdown();
       return;
     }
 
+    // 3. Admin
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
       App.profiles.loadPendingUsers();
@@ -105,7 +103,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Użytkownik
+    // 4. Normalny użytkownik
     App.ui.showSection("mainCard");
     App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
