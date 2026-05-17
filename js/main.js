@@ -31,7 +31,21 @@ window.addEventListener("DOMContentLoaded", async () => {
   App.profiles.init?.();
   App.tickets.init?.();
   App.announcements.init?.();
-
+  // ---------------------------------------------
+  // LOGOUT
+  // ---------------------------------------------
+  const btnLogout = document.getElementById("btnLogout");
+  if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
+      try {
+        await App.supabase.auth.signOut();
+        window.sessionStorage.clear();
+        App.ui.showSection("loginCard");
+      } catch (e) {
+        console.warn("Błąd wylogowania:", e);
+      }
+    });
+  }
   // ---------------------------------------------
   // OBSŁUGA SESJI
   // ---------------------------------------------
