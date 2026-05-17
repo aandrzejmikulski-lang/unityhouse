@@ -114,6 +114,8 @@ App.supabase = supabase.createClient(
 
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
+
+      // 🔧 DODANE: ukryj "Logowanie"
       document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
@@ -130,6 +132,8 @@ App.supabase = supabase.createClient(
 
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
+
+    // 🔧 DODANE: ukryj "Logowanie"
     document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
