@@ -1,51 +1,50 @@
-window.App = window.App || {};
+// =============================================
+// UNITY HOUSE — TICKETS MODULE
+// Zgłoszenia użytkownika, zgłoszenia admina,
+// modal, statusy, upload plików
+// =============================================
 
+window.App = window.App || {};
 App.tickets = (() => {
 
-  function init() {
-    const dom = App.ui.dom;
+  // ---------------------------------------------
+  // TWORZENIE ZGŁOSZENIA
+  // ---------------------------------------------
+  async function createTicket() {
+    const title = document.getElementById("ticketTitle").value.trim();
+    const desc = document.getElementById("ticketDesc").value.trim();
+    const fileInput = document.getElementById("ticketFile");
 
-    if (dom.btnSaveTicket) dom.btnSaveTicket.onclick = saveTicket;
-    if (dom.btnStatusNowe) dom.btnStatusNowe.onclick = () => updateStatus("nowe");
-    if (dom.btnStatusWTrakcie) dom.btnStatusWTrakcie.onclick = () => updateStatus("w_trakcie");
-    if (dom.btnStatusZamkniete) dom.btnStatusZamkniete.onclick = () => updateStatus("zamkniete");
-
-    if (dom.filterWspolnota) dom.filterWspolnota.onchange = loadTicketsAdmin;
-  }
-
-  async function saveTicket() {
-    const dom = App.ui.dom;
     const profile = App.auth.getCurrentProfile();
-
-    const title = dom.ticketTitle.value.trim();
-    const desc = dom.ticketDesc.value.trim();
-    const file = dom.ticketFile.files[0] || null;
+    if (!profile || !profile.wspolnota_id) return;
 
     if (!title || !desc) {
-      alert("Uzupełnij tytuł i opis.");
+      alert("Uzupełnij tytuł i opis zgłoszenia.");
       return;
     }
 
+    App.ui.showLoader();
+
     let fileUrl = null;
 
-    if (file) {
-      const fileName = `${profile.id}_${Date.now()}_${file.name}`;
-      const { data: upload, error: uploadErr } = await App.supabase.storage
-        .from("tickets")
+    // Upload pliku jeśli istnieje
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const fileName = `${Date.now()}_${file.name}`;
+
+      const { data, error } = await App.supabase.storage
+        .from("tickets-files")
         .upload(fileName, file);
 
-      if (uploadErr) {
-        console.error(uploadErr);
+      if (error) {
+        console.error("Upload error:", error);
       } else {
-        const { data: urlData } = App.supabase.storage
-          .from("tickets")
-          .getPublicUrl(fileName);
-
-        fileUrl = urlData.publicUrl;
+        fileUrl = data.path;
       }
     }
 
-    const { error } = await App.supabase.from("tickets").insert({
+    // Zapis zgłoszenia
+    await App.supabase.from("tickets").insert({
       title,
       description: desc,
       wspolnota_id: profile.wspolnota_id,
@@ -54,156 +53,170 @@ App.tickets = (() => {
       file_url: fileUrl
     });
 
-    if (error) {
-      console.error(error);
-      alert("Błąd zapisu zgłoszenia.");
-      return;
-    }
+    App.ui.hideLoader();
 
-    App.ui.showSection("mainCard");
+    // Reset formularza
+    document.getElementById("ticketTitle").value = "";
+    document.getElementById("ticketDesc").value = "";
+    document.getElementById("ticketFile").value = "";
+
     loadTicketsUser(profile.wspolnota_id);
   }
 
+  // ---------------------------------------------
+  // ŁADOWANIE ZGŁOSZEŃ UŻYTKOWNIKA
+  // ---------------------------------------------
   async function loadTicketsUser(wspolnotaId) {
-    const dom = App.ui.dom;
+    const container = document.getElementById("ticketList");
+    if (!container) return;
+
+    container.innerHTML = `<p class="muted">Ładowanie...</p>`;
+
+    const profile = App.auth.getCurrentProfile();
+    if (!profile) return;
 
     const { data, error } = await App.supabase
       .from("tickets")
-      .select("*, profiles(fullname)")
-      .eq("wspolnota_id", wspolnotaId)
+      .select("*")
+      .eq("user_id", profile.id)
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error(error);
-      dom.ticketList.innerHTML = "<p>Błąd ładowania zgłoszeń.</p>";
+      container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
       return;
     }
 
-    if (!data || data.length === 0) {
-      dom.ticketList.innerHTML = "<p>Brak zgłoszeń.</p>";
+    if (!data.length) {
+      container.innerHTML = `<p class="muted">Brak zgłoszeń.</p>`;
       return;
     }
 
-    dom.ticketList.innerHTML = data.map(renderTicketItem).join("");
-    attachTicketClickHandlers(data);
+    container.innerHTML = data
+      .map(t => ticketItemHTML(t))
+      .join("");
   }
 
+  // ---------------------------------------------
+  // ŁADOWANIE ZGŁOSZEŃ ADMINA
+  // ---------------------------------------------
   async function loadTicketsAdmin() {
-    const dom = App.ui.dom;
-    const wsp = dom.filterWspolnota.value;
+    const container = document.getElementById("adminTickets");
+    if (!container) return;
+
+    container.innerHTML = `<p class="muted">Ładowanie...</p>`;
+
+    const wspolnotaFilter = document.getElementById("filterWspolnota").value;
 
     let query = App.supabase
       .from("tickets")
       .select("*, profiles(fullname)")
       .order("created_at", { ascending: false });
 
-    if (wsp && wsp !== "") {
-      query = query.eq("wspolnota_id", wsp);
+    if (wspolnotaFilter) {
+      query = query.eq("wspolnota_id", wspolnotaFilter);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error("Błąd ładowania zgłoszeń admina:", error);
-      dom.adminTickets.innerHTML = "<p>Błąd ładowania zgłoszeń.</p>";
+      container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
       return;
     }
 
-    if (!data || data.length === 0) {
-      dom.adminTickets.innerHTML = "<p>Brak zgłoszeń.</p>";
+    if (!data.length) {
+      container.innerHTML = `<p class="muted">Brak zgłoszeń.</p>`;
       return;
     }
 
-    dom.adminTickets.innerHTML = data.map(renderTicketItem).join("");
-    attachTicketClickHandlers(data);
+    container.innerHTML = data
+      .map(t => ticketItemAdminHTML(t))
+      .join("");
   }
 
-  function renderTicketItem(t) {
+  // ---------------------------------------------
+  // HTML ZGŁOSZENIA (USER)
+  // ---------------------------------------------
+  function ticketItemHTML(t) {
     return `
-      <div class="ticket-item" data-id="${t.id}">
-        <h4>${t.title}</h4>
-        <p>${t.description}</p>
-        <p><strong>Status:</strong> ${formatStatus(t.status)}</p>
-        <p><strong>Autor:</strong> ${t.profiles?.fullname || "?"}</p>
-        ${t.file_url ? `<a href="${t.file_url}" target="_blank">Załącznik</a>` : ""}
+      <div class="announcementItem" onclick="App.tickets.openTicketModal('${t.id}')">
+        <b>${t.title}</b><br>
+        <small>Status: ${t.status}</small><br>
+        <small>${new Date(t.created_at).toLocaleString()}</small>
       </div>
     `;
   }
 
-  function formatStatus(s) {
-    switch (s) {
-      case "nowe": return "🟢 Nowe";
-      case "w_trakcie": return "🟡 W trakcie";
-      case "zamkniete": return "🔴 Zamknięte";
-      default: return s;
-    }
+  // ---------------------------------------------
+  // HTML ZGŁOSZENIA (ADMIN)
+  // ---------------------------------------------
+  function ticketItemAdminHTML(t) {
+    return `
+      <div class="announcementItem" onclick="App.tickets.openTicketModal('${t.id}')">
+        <b>${t.title}</b><br>
+        <small>Użytkownik: ${t.profiles?.fullname || "—"}</small><br>
+        <small>Status: ${t.status}</small><br>
+        <small>${new Date(t.created_at).toLocaleString()}</small>
+      </div>
+    `;
   }
 
-  function attachTicketClickHandlers(data) {
-    data.forEach(t => {
-      const el = document.querySelector(`.ticket-item[data-id="${t.id}"]`);
-      if (!el) return;
-      el.onclick = () => openModal(t);
-    });
-  }
+  // ---------------------------------------------
+  // OTWIERANIE MODALA ZGŁOSZENIA
+  // ---------------------------------------------
+  async function openTicketModal(ticketId) {
+    App.ui.openModal();
 
-  function openModal(ticket) {
-    const dom = App.ui.dom;
-
-    dom.modalTicketTitle.textContent = ticket.title;
-    dom.modalTicketDesc.textContent = ticket.description;
-    dom.modalTicketStatus.textContent = "Status: " + formatStatus(ticket.status);
-
-    dom.modalTicketFiles.innerHTML = ticket.file_url
-      ? `<a href="${ticket.file_url}" target="_blank">Pobierz załącznik</a>`
-      : "<p>Brak załączników</p>";
-
-    dom.ticketModal.dataset.id = ticket.id;
-    dom.ticketModal.classList.remove("hidden");
-  }
-
-  async function updateStatus(newStatus) {
-    const dom = App.ui.dom;
-    const id = dom.ticketModal.dataset.id;
-
-    const { error } = await App.supabase
+    const { data, error } = await App.supabase
       .from("tickets")
-      .update({ status: newStatus })
-      .eq("id", id);
+      .select("*")
+      .eq("id", ticketId)
+      .single();
 
-    if (error) {
-      console.error(error);
-      alert("Błąd zmiany statusu.");
-      return;
-    }
+    if (error) return;
 
-    dom.ticketModal.classList.add("hidden");
+    document.getElementById("modalTicketTitle").innerText = data.title;
+    document.getElementById("modalTicketDesc").innerText = data.description;
+    document.getElementById("modalTicketStatus").innerText = "Status: " + data.status;
+
+    const filesContainer = document.getElementById("modalTicketFiles");
+    filesContainer.innerHTML = data.file_url
+      ? `<a href="https://YOUR-PROJECT.supabase.co/storage/v1/object/public/tickets-files/${data.file_url}" target="_blank" class="btn ghost">Pobierz załącznik</a>`
+      : `<p class="muted">Brak załączników</p>`;
+
+    // Podpinamy statusy
+    document.getElementById("btnStatusNowe").onclick = () => updateStatus(ticketId, "nowe");
+    document.getElementById("btnStatusWTrakcie").onclick = () => updateStatus(ticketId, "w_trakcie");
+    document.getElementById("btnStatusZamkniete").onclick = () => updateStatus(ticketId, "zamkniete");
+  }
+
+  // ---------------------------------------------
+  // ZMIANA STATUSU
+  // ---------------------------------------------
+  async function updateStatus(ticketId, status) {
+    await App.supabase
+      .from("tickets")
+      .update({ status })
+      .eq("id", ticketId);
+
+    App.ui.closeModal();
     loadTicketsAdmin();
   }
 
-  async function loadWspolnotyFilter() {
-    const dom = App.ui.dom;
-
-    const { data, error } = await App.supabase
-      .from("wspolnoty")
-      .select("*")
-      .order("nazwa");
-
-    if (error) {
-      console.error("Błąd ładowania wspólnot:", error);
-      return;
-    }
-
-    dom.filterWspolnota.innerHTML = `
-      <option value="">Wszystkie wspólnoty</option>
-      ${data.map(w => `<option value="${w.id}">${w.nazwa}</option>`).join("")}
-    `;
+  // ---------------------------------------------
+  // INICJALIZACJA
+  // ---------------------------------------------
+  function init() {
+    const btn = document.getElementById("btnSaveTicket");
+    if (btn) btn.onclick = createTicket;
   }
 
   return {
     init,
+    createTicket,
     loadTicketsUser,
     loadTicketsAdmin,
-    loadWspolnotyFilter
+    openTicketModal,
+    updateStatus
   };
+
 })();
