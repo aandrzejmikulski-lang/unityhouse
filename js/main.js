@@ -1,5 +1,5 @@
 // ===============================================
-// UNITY HOUSE — main.js (STABLE VERSION)
+// UNITY HOUSE — main.js (STABLE FIXED VERSION)
 // ===============================================
 
 window.App = window.App || {};
@@ -58,8 +58,9 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
   if (AUTH_LOCK) return;
   AUTH_LOCK = true;
 
-  // 🔥 Jeśli Supabase mówi SIGNED_OUT → natychmiast reset
+  // 🔥 SIGNED_OUT → pełny reset profilu
   if (event === "SIGNED_OUT") {
+    App.auth.setCurrentProfile(null);   // ← FIX
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
     App.ui?.showLoginTab?.();
@@ -68,9 +69,10 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
 
-  // 🔥 Jeśli sesja jest NULL → wymuszone wylogowanie
+  // 🔥 Brak sesji → reset profilu
   if (!session) {
     console.warn("Brak aktywnej sesji — reset");
+    App.auth.setCurrentProfile(null);   // ← FIX
     await App.supabase.auth.signOut();
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
@@ -79,6 +81,9 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
     AUTH_LOCK = false;
     return;
   }
+
+  // 🔥 ZAWSZE czyścimy profil przed pobraniem nowego
+  App.auth.setCurrentProfile(null);   // ← FIX
 
   // Pobranie profilu
   const { data: profile, error } = await App.supabase
@@ -89,6 +94,7 @@ App.supabase.auth.onAuthStateChange(async (event, session) => {
 
   if (error || !profile) {
     console.error("Błąd profilu:", error);
+    App.auth.setCurrentProfile(null);
     await App.supabase.auth.signOut();
     App.ui?.hideAllPanels?.();
     App.ui?.showSection?.("loginCard");
