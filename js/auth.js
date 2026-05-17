@@ -1,76 +1,185 @@
-window.App = window.App || {};
+// =============================================
+// UNITY HOUSE — AUTH MODULE
+// Logowanie, wylogowanie, pobieranie profilu,
+// routing po zalogowaniu, wybór wspólnoty
+// =============================================
 
+window.App = window.App || {};
 App.auth = (() => {
+
   let currentProfile = null;
 
+  function setCurrentProfile(p) {
+    currentProfile = p;
+  }
+
+  function getDom() {
+    return {
+      loginEmail: document.getElementById("loginEmail"),
+      loginPassword: document.getElementById("loginPassword"),
+      loginMessage: document.getElementById("loginMessage"),
+
+      registerEmail: document.getElementById("registerEmail"),
+      registerPassword: document.getElementById("registerPassword"),
+      registerFullname: document.getElementById("registerFullname"),
+      registerMessage: document.getElementById("registerMessage"),
+
+      wspolnotaSelect: document.getElementById("wspolnotaSelect"),
+      btnSaveWspolnota: document.getElementById("btnSaveWspolnota"),
+
+      btnLogin: document.getElementById("btnLogin"),
+      btnLogout: document.getElementById("btnLogout"),
+    };
+  }
+
+  // ---------------------------------------------
+  // INICJALIZACJA
+  // ---------------------------------------------
   function init() {
-    const dom = App.ui.dom;
+    const dom = getDom();
+
     if (dom.btnLogin) dom.btnLogin.onclick = loginUser;
-    if (dom.btnSaveWspolnota) dom.btnSaveWspolnota.onclick = saveWspolnotaForUser;
+    if (dom.btnLogout) dom.btnLogout.onclick = logoutUser;
+    if (dom.btnSaveWspolnota) dom.btnSaveWspolnota.onclick = saveWspolnota;
   }
 
-  function setCurrentProfile(profile) {
-    currentProfile = profile;
-  }
-
-  function getCurrentProfile() {
-    return currentProfile;
-  }
-
+  // ---------------------------------------------
+  // LOGOWANIE
+  // ---------------------------------------------
   async function loginUser() {
-    const dom = App.ui.dom;
-    const email = dom.loginEmail.value.trim();
-    const password = dom.loginPassword.value.trim();
+    const { loginEmail, loginPassword, loginMessage } = getDom();
+
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value.trim();
 
     if (!email || !password) {
-      App.ui.showMessage(dom.loginMessage, "Podaj e-mail i hasło.", "error");
+      App.ui.showMessage(loginMessage, "Uzupełnij wszystkie pola.", "error");
       return;
     }
 
     App.ui.showLoader();
-    App.ui.showMessage(dom.loginMessage, "Logowanie…", "info");
 
-    const { data, error } = await App.supabase.auth.signInWithPassword({
+    const { error } = await App.supabase.auth.signInWithPassword({
       email,
       password
     });
 
     if (error) {
-      console.error("Błąd logowania:", error);
-      App.ui.showMessage(dom.loginMessage, "Błędny e-mail lub hasło.", "error");
+      App.ui.hideLoader();
+      App.ui.showMessage(loginMessage, "Błędny e-mail lub hasło.", "error");
+      return;
+    }
+
+    App.ui.showMessage(loginMessage, "Logowanie...", "success");
+
+    await loadProfileAfterLogin();
+  }
+
+  // ---------------------------------------------
+  // POBRANIE PROFILU PO ZALOGOWANIU
+  // ---------------------------------------------
+  async function loadProfileAfterLogin() {
+    const { data: { user } } = await App.supabase.auth.getUser();
+
+    if (!user) {
       App.ui.hideLoader();
       return;
     }
 
-    App.ui.showMessage(dom.loginMessage, "Logowanie pomyślne — trwa wczytywanie profilu…", "info");
+    const { data: profile } = await App.supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    currentProfile = profile;
+
+    App.ui.hideLoader();
+    routeAfterLogin(profile);
   }
 
-  async function saveWspolnotaForUser() {
-    const dom = App.ui.dom;
-    const profile = getCurrentProfile();
-    const wsp = dom.wspolnotaSelect.value;
+  // ---------------------------------------------
+  // ROUTING PO ZALOGOWANIU
+  // ---------------------------------------------
+  function routeAfterLogin(profile) {
+    App.ui.hideAllPanels();
 
-    if (!profile || !wsp) return;
-
-    const { error } = await App.supabase
-      .from("profiles")
-      .update({ wspolnota_id: wsp })
-      .eq("id", profile.id);
-
-    if (error) {
-      console.error("Błąd zapisu wspólnoty:", error);
+    if (!profile.approved) {
+      App.ui.showSection("loginCard");
+      App.ui.showMessage(
+        document.getElementById("loginMessage"),
+        "Twoje konto czeka na zatwierdzenie.",
+        "error"
+      );
       return;
     }
 
-    currentProfile = { ...profile, wspolnota_id: wsp };
+    if (!profile.wspolnota_id) {
+      App.ui.showSection("selectWspolnotaCard");
+      App.profiles.loadWspolnotyDropdown();
+      return;
+    }
+
+    if (profile.role === "admin") {
+      App.ui.showSection("adminCard");
+      App.profiles.loadPendingUsers();
+      App.profiles.loadAllUsers();
+      App.tickets.loadTicketsAdmin();
+      App.announcements.loadAnnouncementsAdmin();
+      return;
+    }
+
     App.ui.showSection("mainCard");
-    App.tickets.loadTicketsUser(wsp);
+    App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
+  }
+
+  // ---------------------------------------------
+  // ZAPIS WYBRANEJ WSPÓLNOTY
+  // ---------------------------------------------
+  async function saveWspolnota() {
+    const dom = getDom();
+    const wspolnotaId = dom.wspolnotaSelect.value;
+
+    if (!wspolnotaId) return;
+
+    const { data: { user } } = await App.supabase.auth.getUser();
+
+    await App.supabase
+      .from("profiles")
+      .update({ wspolnota_id: wspolnotaId })
+      .eq("id", user.id);
+
+    currentProfile.wspolnota_id = wspolnotaId;
+
+    routeAfterLogin(currentProfile);
+  }
+
+  // ---------------------------------------------
+  // WYLOGOWANIE
+  // ---------------------------------------------
+  async function logoutUser() {
+    await App.supabase.auth.signOut();
+    currentProfile = null;
+
+    App.ui.hideAllPanels();
+    App.ui.showSection("loginCard");
+  }
+
+  // ---------------------------------------------
+  // GETTER PROFILU
+  // ---------------------------------------------
+  function getCurrentProfile() {
+    return currentProfile;
   }
 
   return {
     init,
+    loginUser,
+    logoutUser,
+    getCurrentProfile,
     setCurrentProfile,
-    getCurrentProfile
+    saveWspolnota
   };
+
 })();
