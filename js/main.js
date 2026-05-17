@@ -114,6 +114,7 @@ App.supabase = supabase.createClient(
 
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
+      document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
@@ -129,6 +130,7 @@ App.supabase = supabase.createClient(
 
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
+    document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
