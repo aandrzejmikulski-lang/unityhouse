@@ -1,11 +1,6 @@
-// ===============================================
-// UNITY HOUSE — main.js (FINAL STABLE VERSION)
-// ===============================================
-
 window.App = window.App || {};
 App.supabase = null;
 
-// 🔥 Usuń wszystkie stare sesje Supabase (problem: raz działa, raz nie działa)
 try {
   Object.keys(localStorage)
     .filter(k => k.includes("sb-") && k.includes("-auth-token"))
@@ -17,9 +12,6 @@ try {
 
 let AUTH_LOCK = false;
 
-// ===============================================
-// INICJALIZACJA SUPABASE
-// ===============================================
 function initSupabaseClient() {
   if (!window.supabase) {
     console.error("Supabase nie jest dostępne (supabase is not defined).");
@@ -33,7 +25,6 @@ function initSupabaseClient() {
 
   console.log("✅ Klient Supabase utworzony:", App.supabase);
 
-  // 🔥 Jeśli sesja jest niekompletna → wymuś wylogowanie
   App.supabase.auth.getSession().then(({ data }) => {
     if (!data.session || !data.session.user) {
       console.log("⚠️ Wykryto niekompletną sesję — wylogowuję");
@@ -41,20 +32,16 @@ function initSupabaseClient() {
     }
   });
 
-  // Inicjalizacja modułów
   App.ui?.init?.();
   App.auth?.init?.();
   App.profiles?.init?.();
   App.tickets?.init?.();
   App.announcements?.init?.();
 
-  App.ui?.hideAllPanels?.();
-  App.ui?.showSection?.("loginCard");
-  App.ui?.showLoginTab?.();
+  App.ui.hideAllPanels();
+  App.ui.showSection("loginCard");
+  App.ui.showLoginTab();
 
-  // ===============================================
-  // OBSŁUGA ZMIAN STANU SESJI
-  // ===============================================
   App.supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("AUTH STATE:", event, session);
 
@@ -63,15 +50,17 @@ function initSupabaseClient() {
 
     if (event === "SIGNED_OUT") {
       App.auth.setCurrentProfile(null);
-      App.ui?.hideAllPanels?.();
-      App.ui?.showSection?.("loginCard");
-      App.ui?.showLoginTab?.();
-      App.ui?.setAuthView?.(false);
+      App.ui.hideAllPanels();
+      App.ui.showSection("loginCard");
+      App.ui.showLoginTab();
+      App.ui.setAuthView(false);
+      App.ui.hideLoader();
       AUTH_LOCK = false;
       return;
     }
 
     if (!session) {
+      App.ui.hideLoader();
       AUTH_LOCK = false;
       return;
     }
@@ -87,10 +76,11 @@ function initSupabaseClient() {
     if (error || !profile) {
       console.error("Błąd profilu:", error);
       await App.supabase.auth.signOut();
-      App.ui?.hideAllPanels?.();
-      App.ui?.showSection?.("loginCard");
-      App.ui?.showLoginTab?.();
-      App.ui?.setAuthView?.(false);
+      App.ui.hideAllPanels();
+      App.ui.showSection("loginCard");
+      App.ui.showLoginTab();
+      App.ui.setAuthView(false);
+      App.ui.hideLoader();
       AUTH_LOCK = false;
       return;
     }
@@ -98,64 +88,62 @@ function initSupabaseClient() {
     App.auth.setCurrentProfile(profile);
 
     if (!profile.approved) {
-      App.ui?.hideAllPanels?.();
-      App.ui?.showSection?.("loginCard");
-      App.ui?.showLoginTab?.();
-      App.ui?.showMessage?.(
+      App.ui.hideAllPanels();
+      App.ui.showSection("loginCard");
+      App.ui.showLoginTab();
+      App.ui.showMessage(
         App.ui.dom.loginMessage,
         "Twoje konto czeka na zatwierdzenie.",
         "error"
       );
+      App.ui.hideLoader();
       AUTH_LOCK = false;
       return;
     }
 
     if (profile.role === "user" && !profile.wspolnota_id) {
-      App.ui?.setAuthView?.(true);
-      App.ui?.hideAllPanels?.();
-      App.ui?.showSection?.("selectWspolnotaCard");
-      App.profiles?.loadWspolnotyDropdown?.();
+      App.ui.setAuthView(true);
+      App.ui.hideAllPanels();
+      App.ui.showSection("selectWspolnotaCard");
+      App.profiles.loadWspolnotyDropdown();
+      App.ui.hideLoader();
       AUTH_LOCK = false;
       return;
     }
 
     setTimeout(() => {
-      App.ui?.setAuthView?.(true);
-      App.ui?.hideAllPanels?.();
+      App.ui.setAuthView(true);
+      App.ui.hideAllPanels();
 
       if (profile.role === "admin") {
         console.log("ADMIN VIEW aktywny");
-        App.ui?.showSection?.("adminCard");
+        App.ui.showSection("adminCard");
 
-        App.profiles?.loadPendingUsers?.();
-        App.profiles?.loadAllUsers?.();
+        App.profiles.loadPendingUsers();
+        App.profiles.loadAllUsers();
 
-        App.tickets?.loadWspolnotyFilter?.();
-        App.tickets?.loadTicketsAdmin?.();
+        App.tickets.loadWspolnotyFilter();
+        App.tickets.loadTicketsAdmin();
 
-        App.announcements?.loadAnnouncementsAdmin?.();
-
+        App.announcements.loadAnnouncementsAdmin();
       } else {
         console.log("USER VIEW aktywny");
-        App.ui?.showSection?.("mainCard");
+        App.ui.showSection("mainCard");
 
-        App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
-        App.announcements?.loadAnnouncementsUser?.();
+        App.tickets.loadTicketsUser(profile.wspolnota_id);
+        App.announcements.loadAnnouncementsUser();
       }
 
+      App.ui.hideLoader();
       AUTH_LOCK = false;
     }, 300);
   });
 }
 
-// ===============================================
-// START — po pełnym załadowaniu strony
-// ===============================================
 window.addEventListener("load", () => {
   console.log("🌐 Strona załadowana — start aplikacji");
   initSupabaseClient();
 
-  // Sidebar
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       const profile = App.auth.getCurrentProfile();
