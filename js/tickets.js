@@ -7,19 +7,15 @@ App.tickets = (() => {
   }
 
   function init() {
-    const profile = App.auth.getCurrentProfile();
     const { btnAddTicket, btnCancelTicket, btnSaveTicket } = getDom();
 
     if (btnAddTicket) btnAddTicket.onclick = () => App.ui.showSection("ticketForm");
     if (btnCancelTicket) btnCancelTicket.onclick = () => App.ui.showSection("mainCard");
     if (btnSaveTicket) btnSaveTicket.onclick = saveTicket;
 
-    // 🔥 Filtr wspólnot tylko dla admina
-    if (profile?.role === "admin") {
-      loadWspolnotyFilter();
-      const filter = document.getElementById("filterWspolnota");
-      if (filter) filter.onchange = loadTicketsAdmin;
-    }
+    // 🔥 Zawsze podpina onchange — rola sprawdzana w loadTicketsAdmin
+    const filter = document.getElementById("filterWspolnota");
+    if (filter) filter.onchange = loadTicketsAdmin;
   }
 
   // ============================
@@ -34,10 +30,17 @@ App.tickets = (() => {
 
     sel.innerHTML = `<option value="">Wszystkie wspólnoty</option>`;
 
-    const { data } = await App.supabase
+    const { data, error } = await App.supabase
       .from("wspolnoty")
       .select("id, nazwa")
       .order("nazwa");
+
+    if (error) {
+      console.error("Błąd ładowania wspólnot do filtra:", error);
+      return;
+    }
+
+    if (!data || !data.length) return;
 
     data.forEach(w => {
       const opt = document.createElement("option");
@@ -237,7 +240,6 @@ App.tickets = (() => {
       .eq("id", ticketId)
       .single();
 
-    // 🔥 Mieszkaniec może otworzyć TYLKO swoje zgłoszenia
     if (!isAdmin && ticket.user_id !== profile.id) {
       ticketModal.classList.add("hidden");
       alert("Nie masz dostępu do tego zgłoszenia.");
@@ -272,7 +274,6 @@ App.tickets = (() => {
       }
     }
 
-    // 🔥 Przyciski statusu tylko dla admina
     btnStatusNowe.style.display = isAdmin ? "inline-block" : "none";
     btnStatusWTrakcie.style.display = isAdmin ? "inline-block" : "none";
     btnStatusZamkniete.style.display = isAdmin ? "inline-block" : "none";
