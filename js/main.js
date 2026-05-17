@@ -1,11 +1,20 @@
 // ===============================================
-// UNITY HOUSE — main.js (FINAL WORKING VERSION)
+// UNITY HOUSE — main.js (FINAL STABLE VERSION)
 // ===============================================
 
 window.App = window.App || {};
 App.supabase = null;
 
-// 🔥 Blokada podwójnego wywołania Supabase
+// 🔥 Usuń wszystkie stare sesje Supabase (problem: raz działa, raz nie działa)
+try {
+  Object.keys(localStorage)
+    .filter(k => k.includes("sb-") && k.includes("-auth-token"))
+    .forEach(k => localStorage.removeItem(k));
+  console.log("🧹 Wyczyściłem stare sesje Supabase");
+} catch (e) {
+  console.warn("Nie udało się wyczyścić sesji:", e);
+}
+
 let AUTH_LOCK = false;
 
 // ===============================================
@@ -24,7 +33,15 @@ function initSupabaseClient() {
 
   console.log("✅ Klient Supabase utworzony:", App.supabase);
 
-  // Po utworzeniu klienta — inicjalizacja modułów
+  // 🔥 Jeśli sesja jest niekompletna → wymuś wylogowanie
+  App.supabase.auth.getSession().then(({ data }) => {
+    if (!data.session || !data.session.user) {
+      console.log("⚠️ Wykryto niekompletną sesję — wylogowuję");
+      App.supabase.auth.signOut();
+    }
+  });
+
+  // Inicjalizacja modułów
   App.ui?.init?.();
   App.auth?.init?.();
   App.profiles?.init?.();
@@ -35,7 +52,9 @@ function initSupabaseClient() {
   App.ui?.showSection?.("loginCard");
   App.ui?.showLoginTab?.();
 
-  // Nasłuchiwanie zmian stanu autoryzacji
+  // ===============================================
+  // OBSŁUGA ZMIAN STANU SESJI
+  // ===============================================
   App.supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("AUTH STATE:", event, session);
 
@@ -52,7 +71,7 @@ function initSupabaseClient() {
       return;
     }
 
-    if (!session && event !== "SIGNED_OUT") {
+    if (!session) {
       AUTH_LOCK = false;
       return;
     }
@@ -67,7 +86,6 @@ function initSupabaseClient() {
 
     if (error || !profile) {
       console.error("Błąd profilu:", error);
-      App.auth.setCurrentProfile(null);
       await App.supabase.auth.signOut();
       App.ui?.hideAllPanels?.();
       App.ui?.showSection?.("loginCard");
@@ -123,12 +141,6 @@ function initSupabaseClient() {
 
         App.tickets?.loadTicketsUser?.(profile.wspolnota_id);
         App.announcements?.loadAnnouncementsUser?.();
-
-        document.querySelector("#adminCard")?.classList.add("hidden");
-        document.querySelector("#announcementForm")?.classList.add("hidden");
-        document.querySelector("#adminAnnouncements")?.classList.add("hidden");
-        document.querySelector("#pendingUsersList")?.classList.add("hidden");
-        document.querySelector("#allUsersList")?.classList.add("hidden");
       }
 
       AUTH_LOCK = false;
@@ -140,10 +152,10 @@ function initSupabaseClient() {
 // START — po pełnym załadowaniu strony
 // ===============================================
 window.addEventListener("load", () => {
-  console.log("DOM w pełni załadowany — inicjalizacja Supabase...");
+  console.log("🌐 Strona załadowana — start aplikacji");
   initSupabaseClient();
 
-  // Sidebar — aktywacja na klik
+  // Sidebar
   document.querySelectorAll(".sidebar-item").forEach(item => {
     item.addEventListener("click", () => {
       const profile = App.auth.getCurrentProfile();
