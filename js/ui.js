@@ -1,115 +1,112 @@
+// =============================================
+// UNITY HOUSE — UI MODULE
+// Zarządza widokami, loaderem, modalami, sidebarami
+// =============================================
+
 window.App = window.App || {};
+App.ui = {};
 
-App.ui = (() => {
-  const dom = {
-    loginCard: document.querySelector("#loginCard"),
-    selectWspolnotaCard: document.querySelector("#selectWspolnotaCard"),
-    mainCard: document.querySelector("#mainCard"),
-    adminCard: document.querySelector("#adminCard"),
-    userAnnouncementsCard: document.querySelector("#userAnnouncementsCard"),
-    adminTicketsCard: document.querySelector("#adminTicketsCard"),
-    adminAnnouncementsCard: document.querySelector("#adminAnnouncementsCard"),
-    adminUsersCard: document.querySelector("#adminUsersCard"),
+// ---------------------------------------------
+// REFERENCJE DO ELEMENTÓW
+// ---------------------------------------------
+App.ui.refs = {
+  loader: document.getElementById("loaderOverlay"),
+  modal: document.getElementById("ticketModal"),
+  modalClose: document.getElementById("btnCloseModal"),
+  sidebarItems: document.querySelectorAll(".sidebar-item"),
+};
 
-    loginMessage: document.querySelector("#loginMessage"),
-    loginEmail: document.querySelector("#loginEmail"),
-    loginPassword: document.querySelector("#loginPassword"),
-    btnLogin: document.querySelector("#btnLogin"),
+// ---------------------------------------------
+// LOADER
+// ---------------------------------------------
+App.ui.showLoader = function () {
+  App.ui.refs.loader.classList.remove("hidden");
+};
 
-    wspolnotaSelect: document.querySelector("#wspolnotaSelect"),
-    btnSaveWspolnota: document.querySelector("#btnSaveWspolnota"),
+App.ui.hideLoader = function () {
+  App.ui.refs.loader.classList.add("hidden");
+};
 
-    ticketList: document.querySelector("#ticketList"),
-    ticketTitle: document.querySelector("#ticketTitle"),
-    ticketDesc: document.querySelector("#ticketDesc"),
-    ticketFile: document.querySelector("#ticketFile"),
-    btnSaveTicket: document.querySelector("#btnSaveTicket"),
+// ---------------------------------------------
+// UKRYWANIE WSZYSTKICH PANELI
+// ---------------------------------------------
+App.ui.hideAllPanels = function () {
+  const sections = document.querySelectorAll("section, .modal, .card");
+  sections.forEach((el) => el.classList.add("hidden"));
+};
 
-    filterWspolnota: document.querySelector("#filterWspolnota"),
-    adminTickets: document.querySelector("#adminTickets"),
+// ---------------------------------------------
+// POKAZYWANIE KONKRETNEGO PANELU
+// ---------------------------------------------
+App.ui.showSection = function (id) {
+  App.ui.hideAllPanels();
+  const el = document.getElementById(id);
+  if (el) el.classList.remove("hidden");
+};
 
-    announcementTitle: document.querySelector("#announcementTitle"),
-    announcementContent: document.querySelector("#announcementContent"),
-    announcementWspolnoty: document.querySelector("#announcementWspolnoty"),
-    btnAddAnnouncement: document.querySelector("#btnAddAnnouncement"),
-    adminAnnouncements: document.querySelector("#adminAnnouncements"),
-    userAnnouncements: document.querySelector("#userAnnouncements"),
-
-    pendingUsersList: document.querySelector("#pendingUsersList"),
-    allUsersList: document.querySelector("#allUsersList"),
-
-    ticketModal: document.querySelector("#ticketModal"),
-    modalTicketTitle: document.querySelector("#modalTicketTitle"),
-    modalTicketDesc: document.querySelector("#modalTicketDesc"),
-    modalTicketStatus: document.querySelector("#modalTicketStatus"),
-    modalTicketFiles: document.querySelector("#modalTicketFiles"),
-    btnStatusNowe: document.querySelector("#btnStatusNowe"),
-    btnStatusWTrakcie: document.querySelector("#btnStatusWTrakcie"),
-    btnStatusZamkniete: document.querySelector("#btnStatusZamkniete"),
-    btnCloseModal: document.querySelector("#btnCloseModal"),
-
-    loaderOverlay: document.querySelector("#loaderOverlay")
-  };
-
-  function init() {
-    if (dom.btnCloseModal) {
-      dom.btnCloseModal.onclick = () => dom.ticketModal.classList.add("hidden");
+// ---------------------------------------------
+// SIDEBAR — AKTYWNY ELEMENT
+// ---------------------------------------------
+App.ui.setActiveSidebar = function (targetId) {
+  App.ui.refs.sidebarItems.forEach((item) => {
+    if (item.dataset.target === targetId) {
+      item.classList.add("active");
+    } else {
+      item.classList.remove("active");
     }
+  });
+};
+
+// ---------------------------------------------
+// SIDEBAR — OBSŁUGA KLIKNIĘĆ
+// ---------------------------------------------
+App.ui.initSidebar = function () {
+  App.ui.refs.sidebarItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      const target = item.dataset.target;
+      App.ui.setActiveSidebar(target);
+      App.ui.showSection(target);
+    });
+  });
+};
+
+// ---------------------------------------------
+// MODAL — OTWIERANIE
+// ---------------------------------------------
+App.ui.openModal = function () {
+  App.ui.refs.modal.classList.remove("hidden");
+};
+
+// ---------------------------------------------
+// MODAL — ZAMYKANIE
+// ---------------------------------------------
+App.ui.closeModal = function () {
+  App.ui.refs.modal.classList.add("hidden");
+};
+
+// ---------------------------------------------
+// MODAL — OBSŁUGA PRZYCISKU X
+// ---------------------------------------------
+App.ui.refs.modalClose.addEventListener("click", () => {
+  App.ui.closeModal();
+});
+
+// ---------------------------------------------
+// KLIKNIĘCIE POZA MODALEM
+// ---------------------------------------------
+window.addEventListener("click", (e) => {
+  if (e.target === App.ui.refs.modal) {
+    App.ui.closeModal();
   }
+});
 
-  function showSection(id) {
-    [
-      dom.loginCard,
-      dom.selectWspolnotaCard,
-      dom.mainCard,
-      dom.adminCard,
-      dom.userAnnouncementsCard,
-      dom.adminTicketsCard,
-      dom.adminAnnouncementsCard,
-      dom.adminUsersCard
-    ].forEach(el => el && el.classList.add("hidden"));
+// ---------------------------------------------
+// INICJALIZACJA UI
+// ---------------------------------------------
+App.ui.init = function () {
+  App.ui.initSidebar();
+  App.ui.hideAllPanels();
+  App.ui.showSection("loginCard");
+};
 
-    const el = document.querySelector(`#${id}`);
-    if (el) el.classList.remove("hidden");
-  }
-
-  function hideAllPanels() {
-    [dom.mainCard, dom.adminCard, dom.userAnnouncementsCard].forEach(el => el && el.classList.add("hidden"));
-  }
-
-  function showLoginTab() {
-    showSection("loginCard");
-  }
-
-  function setAuthView(isAuth) {
-    if (!isAuth) {
-      showSection("loginCard");
-    }
-  }
-
-  function showMessage(container, text, type = "info") {
-    if (!container) return;
-    container.textContent = text;
-    container.className = type;
-  }
-
-  function showLoader() {
-    dom.loaderOverlay?.classList.remove("hidden");
-  }
-
-  function hideLoader() {
-    dom.loaderOverlay?.classList.add("hidden");
-  }
-
-  return {
-    dom,
-    init,
-    showSection,
-    hideAllPanels,
-    showLoginTab,
-    setAuthView,
-    showMessage,
-    showLoader,
-    hideLoader
-  };
-})();
+console.log("UI module loaded");
