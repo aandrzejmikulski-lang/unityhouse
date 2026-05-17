@@ -2,7 +2,6 @@ window.App = window.App || {};
 
 App.ui = (() => {
 
-  // 🔥 DOM pobierany dynamicznie — zawsze aktualny, nigdy null
   function getDom() {
     return {
       loginCard: document.getElementById("loginCard"),
@@ -73,14 +72,10 @@ App.ui = (() => {
     };
   }
 
-  // ============================
-  // SEKCJE
-  // ============================
   function showSection(id) {
     const profile = App.auth.getCurrentProfile();
 
     if (id === "adminCard" && profile?.role !== "admin") {
-      console.warn("User próbował wejść do adminCard — zablokowano");
       id = "mainCard";
     }
 
@@ -103,9 +98,6 @@ App.ui = (() => {
     el.classList.remove("hidden");
   }
 
-  // ============================
-  // WIDOK ZALEŻNY OD ROLI
-  // ============================
   function setAuthView(isLoggedIn) {
     const dom = getDom();
     const sidebar = document.querySelector(".sidebar");
@@ -154,9 +146,6 @@ App.ui = (() => {
     }
   }
 
-  // ============================
-  // TABS
-  // ============================
   function showLoginTab() {
     const dom = getDom();
     dom.goToLogin.classList.add("active");
@@ -173,9 +162,6 @@ App.ui = (() => {
     dom.registerCard.classList.remove("hidden");
   }
 
-  // ============================
-  // INIT
-  // ============================
   function init() {
     const dom = getDom();
 
@@ -194,8 +180,6 @@ App.ui = (() => {
     setAuthView,
     showLoginTab,
     showRegisterTab,
-
-    // 🔥 dynamiczny DOM
     get dom() { return getDom(); }
   };
 })();
