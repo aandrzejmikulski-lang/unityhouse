@@ -96,7 +96,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       .eq("id", user.id)
       .single();
 
- if (error || !profile) {
+if (error || !profile) {
   console.warn("Błąd pobierania profilu:", error);
   App.ui.hideLoader();
   App.ui.showSection("loginCard");
@@ -105,9 +105,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   return;
 }
 
-} // ← ZAMYKA handleSession
+  // ← TU NIC NIE DODAJESZ
+
+  // po tym normalnie leci dalej:
+  App.auth.setCurrentProfile(profile);
+  App.ui.hideLoader();
+  route(profile);
+}
 
 function route(profile) {
+
 
   function route(profile) {
     console.log("Routing profile:", profile);
