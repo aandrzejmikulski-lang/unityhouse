@@ -64,6 +64,9 @@ App.auth = (() => {
       return;
     }
 
+    // 🔥 POKAŻ SIDEBAR PO UDANYM LOGOWANIU
+    document.querySelector(".sidebar")?.classList.add("show");
+
     App.ui.showMessage(loginMessage, "Logowanie...", "success");
   }
 
@@ -73,6 +76,9 @@ App.auth = (() => {
   async function logoutUser() {
     await App.supabase.auth.signOut();
     currentProfile = null;
+
+    // 🔥 SCHOWAJ SIDEBAR PO WYLOGOWANIU
+    document.querySelector(".sidebar")?.classList.remove("show");
 
     App.ui.hideAllPanels();
     App.ui.showSection("loginCard");
