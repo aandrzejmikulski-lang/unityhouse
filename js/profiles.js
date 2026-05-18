@@ -35,8 +35,8 @@ App.profiles = (() => {
   // ŁADOWANIE WSPÓLNOT DO OGŁOSZEŃ (ADMIN)
   // ---------------------------------------------
   async function loadWspolnotyForAnnouncements() {
-    const select = document.getElementById("announcementWspolnoty");
-    if (!select) return; // w HTML jeszcze nie ma tego elementu
+    const select = document.getElementById("announcementWspolnota");
+    if (!select) return;
 
     const { data, error } = await App.supabase
       .from("wspolnoty")
@@ -45,7 +45,9 @@ App.profiles = (() => {
 
     if (error) return;
 
-    select.innerHTML = data
+    const base = `<option value="">Wszystkie wspólnoty</option>`;
+
+    select.innerHTML = base + data
       .map(w => `<option value="${w.id}">${w.nazwa}</option>`)
       .join("");
   }
