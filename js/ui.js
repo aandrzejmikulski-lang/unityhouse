@@ -67,10 +67,9 @@ App.ui.initSidebar = function () {
 
       App.ui.setActiveSidebar(target);
 
-      // 🔧 Pobierz profil poprawnie
       const profile = App.auth.getCurrentProfile();
 
-      // 🔧 Admin ma własny panel ogłoszeń — ale w HTML nie ma adminAnnouncementsCard
+      // 🔥 ADMIN → kliknięcie "Ogłoszenia" otwiera panel admina
       if (profile?.role === "admin" && target === "userAnnouncementsCard") {
         App.ui.showSection("adminCard");
         return;
@@ -128,11 +127,11 @@ App.ui.init = function () {
   App.ui.hideAllPanels();
   App.ui.showSection("loginCard");
 
-  // 🔧 Ukryj sidebar i przycisk Wyloguj przed logowaniem
+  // 🔥 Ukryj sidebar i logout przed logowaniem
   const sidebar = document.querySelector(".sidebar");
   const btnLogout = document.getElementById("btnLogout");
 
-  if (sidebar) sidebar.classList.remove("show"); // ukryty
+  if (sidebar) sidebar.classList.remove("show");
   if (btnLogout) btnLogout.classList.add("hidden");
 };
 
