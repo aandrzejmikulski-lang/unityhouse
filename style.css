@@ -6,8 +6,8 @@
 :root {
   --bg: #05060a;
   --bg-elevated: rgba(15, 23, 42, 0.55);
-  --glass: rgba(15, 23, 42, 0.35);
-  --glass-strong: rgba(15, 23, 42, 0.55);
+  --glass: rgba(255, 255, 255, 0.18); /* JAŚNIEJSZY SIDEBAR */
+  --glass-strong: rgba(255, 255, 255, 0.35);
 
   --border-subtle: rgba(129, 140, 248, 0.15);
   --border-strong: rgba(129, 140, 248, 0.35);
@@ -63,7 +63,7 @@ body {
 }
 
 /* =========================================
-   FLOATING GLASS SIDEBAR
+   FLOATING GLASS SIDEBAR — JASNY
    ========================================= */
 
 .sidebar {
@@ -82,12 +82,12 @@ body {
   margin: 20px;
   padding: 28px 22px;
 
-  background: var(--glass);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: var(--radius-lg);
 
   backdrop-filter: blur(22px);
-  box-shadow: var(--shadow-glass), var(--shadow-glow);
+  box-shadow: 0 0 35px rgba(255,255,255,0.15), var(--shadow-glow);
 
   display: flex;
   flex-direction: column;
@@ -96,22 +96,17 @@ body {
   animation: fadeIn 0.5s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .logo {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #e5e7eb;
+  color: #1e293b;
   text-align: center;
   margin-bottom: 10px;
 }
 
-/* SIDEBAR NAV */
+/* SIDEBAR NAV — JASNY */
 
 .sidebar-nav {
   display: flex;
@@ -123,24 +118,24 @@ body {
   padding: 12px 16px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.02);
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.35);
   border: 1px solid transparent;
 
   transition: all var(--transition-fast);
 }
 
 .sidebar-item:hover {
-  background: var(--accent-soft);
-  color: var(--text);
-  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.55);
+  color: #0f172a;
+  border-color: rgba(255,255,255,0.6);
   transform: translateX(4px);
 }
 
 .sidebar-item.active {
-  background: var(--accent-soft);
+  background: rgba(255, 255, 255, 0.65);
   border-left: 3px solid var(--accent);
-  color: var(--text);
+  color: #0f172a;
   padding-left: 13px;
 }
 
@@ -161,14 +156,8 @@ body {
   height: 100vh;
 }
 
-.content h1 {
-  margin: 0 0 24px;
-  font-size: 28px;
-  letter-spacing: 0.02em;
-}
-
 /* =========================================
-   CARDS
+   KARTY — DOMYŚLNIE CIEMNE (dla login)
    ========================================= */
 
 .card {
@@ -185,15 +174,41 @@ body {
   transition: all var(--transition-med);
 }
 
-.card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-glass), var(--shadow-glow);
-}
-
 .card h2,
 .card h3 {
   margin: 0 0 14px;
   color: #e0e7ff;
+}
+
+/* =========================================
+   JASNE KARTY — PANEL USERA
+   ========================================= */
+
+.user-light {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 0 25px rgba(0,0,0,0.12) !important;
+}
+
+.user-light h2,
+.user-light h3 {
+  color: #1e293b !important;
+}
+
+.user-light input,
+.user-light textarea,
+.user-light select {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.user-light input:focus,
+.user-light textarea:focus,
+.user-light select:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.25) !important;
 }
 
 /* =========================================
@@ -210,28 +225,6 @@ body {
 .field span {
   font-size: 12px;
   color: var(--text-muted);
-}
-
-input,
-textarea,
-select {
-  background: rgba(15, 23, 42, 0.75);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  padding: 12px 14px;
-  color: var(--text);
-  font-size: 14px;
-  outline: none;
-
-  transition: all var(--transition-fast);
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
-  background: rgba(15, 23, 42, 0.95);
 }
 
 /* =========================================
@@ -262,170 +255,8 @@ select:focus {
   font-weight: 500;
 }
 
-.btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 40px var(--accent-strong);
-}
-
-.btn.ghost {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border-subtle);
-}
-
-.btn.ghost:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--border-strong);
-}
-
-/* FULL WIDTH BUTTON */
-
-.btn.full {
-  width: 100%;
-}
-
 /* =========================================
-   ANNOUNCEMENTS
-   ========================================= */
-
-.announcementItem {
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-glass);
-
-  transition: all var(--transition-fast);
-}
-
-.announcementItem:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glass), var(--shadow-glow);
-}
-
-.announcementItem b {
-  color: #a5b4fc;
-}
-
-.announcementItem small {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-/* =========================================
-   MODAL
-   ========================================= */
-
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-.modal-content {
-  background: var(--glass-strong);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 28px;
-  width: 480px;
-  max-width: 90%;
-  box-shadow: var(--shadow-glass), var(--shadow-glow);
-  backdrop-filter: blur(18px);
-}
-
-.modal-close {
-  float: right;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* =========================================
-   UTILS
-   ========================================= */
-
-.hidden {
-  display: none !important;
-}
-
-.muted {
-  color: var(--text-muted);
-}
-
-/* =========================================
-   SCROLLBAR
-   ========================================= */
-
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--accent-soft);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
-}
-
-/* =========================================
-   FILE INPUT
-   ========================================= */
-
-input[type="file"] {
-  padding: 10px;
-  background: rgba(15, 23, 42, 0.55);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-}
-
-input[type="file"]::-webkit-file-upload-button {
-  background: var(--accent-soft);
-  border: 1px solid var(--border-subtle);
-  color: var(--text);
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-input[type="file"]::-webkit-file-upload-button:hover {
-  background: var(--accent);
-  border-color: var(--border-strong);
-}
-
-/* =========================================
-   ANIMATIONS
-   ========================================= */
-
-.fade-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-.slide-up {
-  animation: slideUp 0.35s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* =========================================
-   HYBRID LIGHT ADMIN PANEL (PROPOZYCJA C)
+   ADMIN PANEL — HYBRID LIGHT
    ========================================= */
 
 .admin-panel {
