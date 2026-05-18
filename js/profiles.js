@@ -8,7 +8,7 @@ window.App = window.App || {};
 App.profiles = (() => {
 
   // ---------------------------------------------
-  // ŁADOWANIE LISTY WSPÓLNOT DO DROPDOWNU
+  // ŁADOWANIE LISTY WSPÓLNOT DO DROPDOWNU (USER)
   // ---------------------------------------------
   async function loadWspolnotyDropdown() {
     const select = document.getElementById("wspolnotaSelect");
@@ -36,7 +36,7 @@ App.profiles = (() => {
   // ---------------------------------------------
   async function loadWspolnotyForAnnouncements() {
     const select = document.getElementById("announcementWspolnoty");
-    if (!select) return;
+    if (!select) return; // w HTML jeszcze nie ma tego elementu
 
     const { data, error } = await App.supabase
       .from("wspolnoty")
@@ -54,7 +54,7 @@ App.profiles = (() => {
   // ŁADOWANIE LISTY UŻYTKOWNIKÓW OCZEKUJĄCYCH
   // ---------------------------------------------
   async function loadPendingUsers() {
-    const container = document.getElementById("pendingUsersList");
+    const container = document.getElementById("pending-users-list");
     if (!container) return;
 
     container.innerHTML = `<p class="muted">Ładowanie...</p>`;
@@ -102,7 +102,7 @@ App.profiles = (() => {
   // ŁADOWANIE WSZYSTKICH UŻYTKOWNIKÓW
   // ---------------------------------------------
   async function loadAllUsers() {
-    const container = document.getElementById("allUsersList");
+    const container = document.getElementById("all-users-list");
     if (!container) return;
 
     container.innerHTML = `<p class="muted">Ładowanie...</p>`;
