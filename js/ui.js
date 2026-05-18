@@ -64,17 +64,25 @@ App.ui.initSidebar = function () {
   App.ui.refs.sidebarItems.forEach((item) => {
     item.addEventListener("click", () => {
       const target = item.dataset.target;
+      const profile = App.auth.getCurrentProfile();
 
       App.ui.setActiveSidebar(target);
 
-      const profile = App.auth.getCurrentProfile();
-
-      // 🔥 ADMIN → kliknięcie "Ogłoszenia" otwiera panel admina
-      if (profile?.role === "admin" && target === "userAnnouncementsCard") {
-        App.ui.showSection("adminCard");
+      // 🔥 ADMIN — pełna obsługa 4 sekcji
+      if (profile?.role === "admin") {
+        App.ui.showSection(target);
         return;
       }
 
+      // 🔥 USER — tylko 2 sekcje
+      if (profile?.role === "user") {
+        if (target === "userAnnouncementsCard" || target === "userTicketsCard") {
+          App.ui.showSection(target);
+        }
+        return;
+      }
+
+      // fallback
       App.ui.showSection(target);
     });
   });
