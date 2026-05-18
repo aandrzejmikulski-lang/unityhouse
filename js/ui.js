@@ -1,126 +1,158 @@
 // =============================================
-// UNITY HOUSE — AUTH MODULE (POPRAWIONY)
-// Logowanie, wylogowanie, pobieranie profilu
+// UNITY HOUSE — UI MODULE
+// Modal, loader, sekcje, sidebar, komunikaty
 // =============================================
 
 window.App = window.App || {};
-App.auth = (() => {
+App.ui = (() => {
 
-  let currentProfile = null;
+  // ---------------------------------------------
+  // DYNAMICZNY MODAL (DZIAŁA ZAWSZE)
+  // ---------------------------------------------
+  function showModal(html) {
+    let modal = document.getElementById("globalModal");
 
-  function setCurrentProfile(p) {
-    currentProfile = p;
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "globalModal";
+      modal.className = "modalWrapper";
+
+      modal.innerHTML = `
+        <div class="modalOverlay"></div>
+        <div class="modalBox">
+          <div id="modalContent"></div>
+          <button class="btn ghost closeModal">Zamknij</button>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      modal.querySelector(".modalOverlay").onclick = hideModal;
+      modal.querySelector(".closeModal").onclick = hideModal;
+    }
+
+    modal.querySelector("#modalContent").innerHTML = html;
+    modal.style.display = "flex";
   }
 
-  function getCurrentProfile() {
-    return currentProfile;
+  function hideModal() {
+    const modal = document.getElementById("globalModal");
+    if (modal) modal.style.display = "none";
   }
 
-  function getDom() {
-    return {
-      loginEmail: document.getElementById("loginEmail"),
-      loginPassword: document.getElementById("loginPassword"),
-      loginMessage: document.getElementById("loginMessage"),
+  // ---------------------------------------------
+  // LOADER
+  // ---------------------------------------------
+  function showLoader() {
+    let loader = document.getElementById("globalLoader");
+    if (!loader) {
+      loader = document.createElement("div");
+      loader.id = "globalLoader";
+      loader.className = "loaderOverlay";
+      loader.innerHTML = `<div class="loader"></div>`;
+      document.body.appendChild(loader);
+    }
+    loader.style.display = "flex";
+  }
 
-      btnLogin: document.getElementById("btnLogin"),
-      btnLogout: document.getElementById("btnLogout"),
-    };
+  function hideLoader() {
+    const loader = document.getElementById("globalLoader");
+    if (loader) loader.style.display = "none";
+  }
+
+  // ---------------------------------------------
+  // KOMUNIKATY
+  // ---------------------------------------------
+  function showMessage(msg, type = "info") {
+    let box = document.getElementById("globalMessage");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "globalMessage";
+      box.className = "messageBox";
+      document.body.appendChild(box);
+    }
+
+    box.innerHTML = msg;
+    box.className = `messageBox ${type}`;
+    box.style.display = "block";
+
+    setTimeout(() => {
+      box.style.display = "none";
+    }, 3000);
+  }
+
+  // ---------------------------------------------
+  // POKAZYWANIE SEKCJI
+  // ---------------------------------------------
+  function hideAllPanels() {
+    document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
+  }
+
+  function showSection(id) {
+    hideAllPanels();
+    const el = document.getElementById(id);
+    if (el) el.style.display = "block";
+  }
+
+  // ---------------------------------------------
+  // SIDEBAR
+  // ---------------------------------------------
+  function initSidebar() {
+    const btn = document.getElementById("sidebarToggle");
+    const sidebar = document.getElementById("sidebar");
+
+    if (btn && sidebar) {
+      btn.onclick = () => {
+        sidebar.classList.toggle("open");
+      };
+    }
+  }
+
+  // ---------------------------------------------
+  // LOGOWANIE / REJESTRACJA
+  // ---------------------------------------------
+  function setAuthView(view) {
+    const login = document.getElementById("loginPanel");
+    const register = document.getElementById("registerPanel");
+
+    if (!login || !register) return;
+
+    if (view === "login") {
+      login.style.display = "block";
+      register.style.display = "none";
+    } else {
+      login.style.display = "none";
+      register.style.display = "block";
+    }
+  }
+
+  function showLoginTab() {
+    setAuthView("login");
+  }
+
+  function showRegisterTab() {
+    setAuthView("register");
   }
 
   // ---------------------------------------------
   // INIT
   // ---------------------------------------------
   function init() {
-    const dom = getDom();
-
-    if (dom.btnLogin) dom.btnLogin.onclick = loginUser;
-
-    if (dom.btnLogout) {
-      dom.btnLogout.onclick = () => {
-        logoutUser();
-      };
-    }
-
-    App.supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN") {
-        if (currentProfile?.role === "admin") {
-          App.ui.showSection("adminAnnouncementsCard");
-        } else {
-          App.ui.showSection("userAnnouncementsCard");
-        }
-      }
-
-      if (event === "SIGNED_OUT") {
-        App.ui.hideAllPanels();
-        App.ui.showSection("loginCard");
-      }
-    });
-  }
-
-  // ---------------------------------------------
-  // LOGIN
-  // ---------------------------------------------
-  async function loginUser() {
-    const { loginEmail, loginPassword, loginMessage } = getDom();
-
-    const email = loginEmail.value.trim();
-    const password = loginPassword.value.trim();
-
-    if (!email || !password) {
-      App.ui.showMessage("Uzupełnij wszystkie pola.", "error");
-      return;
-    }
-
-    App.ui.showLoader();
-
-    const { data, error } = await App.supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      App.ui.hideLoader();
-      App.ui.showMessage("Błędny e-mail lub hasło.", "error");
-      return;
-    }
-
-    const { data: { user } } = await App.supabase.auth.getUser();
-
-    const { data: profileData } = await App.supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    setCurrentProfile(profileData);
-
-    if (profileData.role === "admin") {
-      App.ui.showSection("adminAnnouncementsCard");
-    } else {
-      App.ui.showSection("userAnnouncementsCard");
-    }
-
-    App.ui.hideLoader();
-    App.ui.showMessage("Logowanie...", "success");
-  }
-
-  // ---------------------------------------------
-  // LOGOUT
-  // ---------------------------------------------
-  async function logoutUser() {
-    await App.supabase.auth.signOut();
-    currentProfile = null;
-
-    App.ui.hideAllPanels();
-    App.ui.showSection("loginCard");
+    initSidebar();
   }
 
   return {
     init,
-    loginUser,
-    logoutUser,
-    getCurrentProfile,
-    setCurrentProfile
+    showModal,
+    hideModal,
+    showLoader,
+    hideLoader,
+    showMessage,
+    showSection,
+    hideAllPanels,
+    setAuthView,
+    showLoginTab,
+    showRegisterTab
   };
 
 })();
