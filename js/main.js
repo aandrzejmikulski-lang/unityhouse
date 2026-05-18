@@ -118,6 +118,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     App.ui.hideAllPanels();
 
+    // ukryj login
+    document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
+
+    // pokaż sidebar
+    document.querySelector(".sidebar")?.classList.remove("hidden");
+
+    // pokaż wylogowanie
+    document.getElementById("btnLogout")?.classList.remove("hidden");
+
+    // konto niezatwierdzone
     if (!profile.approved) {
       App.ui.showSection("loginCard");
       document.getElementById("loginMessage").innerText =
@@ -125,17 +135,19 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // brak wspólnoty (user)
     if (!profile.wspolnota_id && profile.role !== "admin") {
       App.ui.showSection("selectWspolnotaCard");
       App.profiles.loadWspolnotyDropdown();
       return;
     }
 
+    // ADMIN
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
 
-      document.querySelector(".sidebar")?.classList.remove("hidden");
-      document.getElementById("btnLogout")?.classList.remove("hidden");
+      // admin widzi panel admina
+      document.querySelector('[data-target="adminCard"]')?.classList.remove("hidden");
 
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
@@ -144,10 +156,11 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // USER
     App.ui.showSection("mainCard");
 
-    document.querySelector(".sidebar")?.classList.remove("hidden");
-    document.getElementById("btnLogout")?.classList.remove("hidden");
+    // user NIE widzi panelu admina
+    document.querySelector('[data-target="adminCard"]')?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
