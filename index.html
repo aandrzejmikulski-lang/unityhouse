@@ -29,7 +29,7 @@
           <div class="sidebar-item active" data-target="loginCard">Logowanie</div>
           <div class="sidebar-item" data-target="mainCard">Zgłoszenia</div>
           <div class="sidebar-item" data-target="userAnnouncementsCard">Ogłoszenia</div>
-          <div class="sidebar-item" data-target="adminCard">Panel admina</div>
+          <div class="sidebar-item" data-target="adminCard">Administracja</div>
         </nav>
 
         <button id="btnLogout" class="btn ghost logout-btn">Wyloguj</button>
@@ -110,27 +110,31 @@
         </div>
       </section>
 
-      <!-- PANEL ADMINA -->
-      <section id="adminCard" class="hidden">
+      <!-- PANEL ADMINA (JASNY) -->
+      <section id="adminCard" class="hidden admin-panel">
 
-        <!-- ZGŁOSZENIA ADMIN -->
-        <div id="adminTicketsCard" class="card fade-in hidden">
-          <h2>Zgłoszenia — admin</h2>
+        <h2 class="admin-title">Unity House — Administracja</h2>
 
-          <div class="field">
-            <span>Filtr wspólnoty</span>
-            <select id="filterWspolnota"></select>
-          </div>
+        <!-- UŻYTKOWNICY -->
+        <div class="admin-section">
+          <h3 class="admin-subtitle">Użytkownicy oczekujący</h3>
+          <div id="pendingUsersList" class="admin-list"></div>
+        </div>
 
+        <div class="admin-section">
+          <h3 class="admin-subtitle">Wszyscy użytkownicy</h3>
+          <div id="allUsersList" class="admin-list"></div>
+        </div>
+
+        <!-- ZGŁOSZENIA -->
+        <div class="admin-section">
+          <h3 class="admin-subtitle">Zgłoszenia</h3>
           <div id="adminTickets"></div>
         </div>
 
-        <!-- OGŁOSZENIA ADMIN -->
-        <div id="adminAnnouncementsCard" class="card fade-in">
-
-          <h2>Ogłoszenia — admin</h2>
-
-          <h3>Nowe ogłoszenie</h3>
+        <!-- OGŁOSZENIA -->
+        <div class="admin-section">
+          <h3 class="admin-subtitle">Nowe ogłoszenie</h3>
 
           <div class="field">
             <span>Tytuł ogłoszenia</span>
@@ -142,7 +146,6 @@
             <textarea id="announcementContent" placeholder="Treść"></textarea>
           </div>
 
-          <!-- 🔥 DODANE POLA DATY -->
           <div class="field">
             <span>Wyświetlaj od</span>
             <input type="date" id="announcementFrom" />
@@ -154,27 +157,14 @@
           </div>
 
           <div class="field">
-            <span>Wybierz wspólnoty (CTRL + klik = wiele)</span>
+            <span>Wybierz wspólnoty</span>
             <select id="announcementWspolnoty" multiple></select>
           </div>
 
-          <button id="btnAddAnnouncement" class="btn primary full">Dodaj ogłoszenie</button>
+          <button id="btnAddAnnouncement" class="admin-btn">Dodaj ogłoszenie</button>
 
-          <hr />
-
-          <h3>Lista ogłoszeń</h3>
-          <div id="adminAnnouncements"></div>
-        </div>
-
-        <!-- UŻYTKOWNICY ADMIN -->
-        <div id="adminUsersCard" class="card fade-in hidden">
-          <h2>Użytkownicy</h2>
-
-          <h3>Oczekujący</h3>
-          <div id="pendingUsersList"></div>
-
-          <h3>Wszyscy</h3>
-          <div id="allUsersList"></div>
+          <h3 class="admin-subtitle">Lista ogłoszeń</h3>
+          <div id="adminAnnouncements" class="admin-list"></div>
         </div>
 
       </section>
@@ -209,7 +199,6 @@
   <script src="js/tickets.js?v=1" defer></script>
   <script src="js/announcements.js?v=1" defer></script>
 
-  <!-- MAIN MUSI BYĆ NA KOŃCU I TEŻ Z DEFER -->
   <script src="js/main.js?v=1" defer></script>
 
 </body>
