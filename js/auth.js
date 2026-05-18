@@ -37,8 +37,41 @@ App.auth = (() => {
     const dom = getDom();
 
     if (dom.btnLogin) dom.btnLogin.onclick = loginUser;
-    if (dom.btnLogout) dom.btnLogout.onclick = logoutUser;
+
+    if (dom.btnLogout) {
+      dom.btnLogout.onclick = () => {
+        console.log("Kliknięto WYLOGUJ");
+        logoutUser();
+      };
+    }
+
     if (dom.btnSaveWspolnota) dom.btnSaveWspolnota.onclick = saveWspolnota;
+
+    // 🔥 Nasłuchiwanie zmian sesji Supabase
+    App.supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth event:", event);
+
+      if (event === "SIGNED_IN") {
+        document.querySelector(".sidebar")?.classList.remove("hidden");
+        document.querySelector(".sidebar")?.classList.add("show");
+        document.getElementById("btnLogout")?.classList.remove("hidden");
+
+        if (currentProfile?.role === "admin") {
+          App.ui.showSection("adminAnnouncementsCard");
+        } else {
+          App.ui.showSection("userAnnouncementsCard");
+        }
+      }
+
+      if (event === "SIGNED_OUT") {
+        document.querySelector(".sidebar")?.classList.remove("show");
+        document.querySelector(".sidebar")?.classList.add("hidden");
+        document.getElementById("btnLogout")?.classList.add("hidden");
+
+        App.ui.hideAllPanels();
+        App.ui.showSection("loginCard");
+      }
+    });
   }
 
   // ---------------------------------------------
@@ -82,27 +115,33 @@ App.auth = (() => {
     setCurrentProfile(profileData);
 
     // ---------------------------------------------
-    // 🔥 POKAŻ SIDEBAR
+    // 🔥 POKAŻ SIDEBAR I PANEL
     // ---------------------------------------------
+    document.querySelector(".sidebar")?.classList.remove("hidden");
     document.querySelector(".sidebar")?.classList.add("show");
     document.getElementById("btnLogout")?.classList.remove("hidden");
 
     App.ui.hideLoader();
     App.ui.showMessage(loginMessage, "Logowanie...", "success");
 
-    // Domyślny panel po logowaniu
-    App.ui.showSection("mainCard");
+    // 🔥 Wybór panelu zależnie od roli
+    if (profileData.role === "admin") {
+      App.ui.showSection("adminAnnouncementsCard");
+    } else {
+      App.ui.showSection("userAnnouncementsCard");
+    }
   }
 
   // ---------------------------------------------
   // WYLOGOWANIE
   // ---------------------------------------------
   async function logoutUser() {
+    console.log("Wylogowywanie...");
     await App.supabase.auth.signOut();
     currentProfile = null;
 
-    // 🔥 SCHOWAJ SIDEBAR
     document.querySelector(".sidebar")?.classList.remove("show");
+    document.querySelector(".sidebar")?.classList.add("hidden");
     document.getElementById("btnLogout")?.classList.add("hidden");
 
     App.ui.hideAllPanels();
