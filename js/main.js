@@ -22,8 +22,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   );
 
-  console.log("Supabase initialized");
-
   // ---------------------------------------------
   // INICJALIZACJA MODUŁÓW
   // ---------------------------------------------
@@ -34,7 +32,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   App.announcements.init?.();
 
   // ---------------------------------------------
-  // SPRAWDZENIE SESJI NA START
+  // PRZYWRÓCENIE SESJI
   // ---------------------------------------------
   await restoreSession();
 
@@ -52,7 +50,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // pobierz profil
     const { data: profile, error } = await App.supabase
       .from("profiles")
       .select("*")
@@ -60,7 +57,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       .single();
 
     if (error || !profile) {
-      console.warn("Błąd pobierania profilu:", error);
       App.ui.hideLoader();
       App.ui.showSection("loginCard");
       return;
@@ -68,7 +64,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     App.auth.setCurrentProfile(profile);
 
-    // routing zależnie od roli
     if (profile.role === "admin") {
       App.ui.showAdminSidebar();
       App.ui.showSection("adminAnnouncementsCard");
@@ -82,7 +77,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       App.ui.showUserSidebar();
       App.ui.showSection("userAnnouncementsCard");
 
-      App.tickets.loadTicketsUser?.(profile.wspolnota_id);
+      App.tickets.loadTicketsUser?.();
       App.announcements.loadAnnouncementsUser?.();
     }
 
