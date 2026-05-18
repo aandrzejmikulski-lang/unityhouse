@@ -1,158 +1,192 @@
 // =============================================
-// UNITY HOUSE — UI MODULE
-// Modal, loader, sekcje, sidebar, komunikaty
+// UNITY HOUSE — TICKETS MODULE (FINAL)
+// Zgłoszenia użytkowników + panel admina
 // =============================================
 
 window.App = window.App || {};
-App.ui = (() => {
+App.tickets = (() => {
 
   // ---------------------------------------------
-  // DYNAMICZNY MODAL (DZIAŁA ZAWSZE)
+  // TWORZENIE ZGŁOSZENIA (USER)
   // ---------------------------------------------
-  function showModal(html) {
-    let modal = document.getElementById("globalModal");
+  async function createTicket() {
+    const title = document.getElementById("ticketTitle")?.value.trim();
+    const description = document.getElementById("ticketDescription")?.value.trim();
+    const wspolnota = document.getElementById("ticketWspolnota")?.value;
 
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "globalModal";
-      modal.className = "modalWrapper";
+    if (!title || !description || !wspolnota) {
+      App.ui.showMessage("Uzupełnij wszystkie pola.", "error");
+      return;
+    }
 
-      modal.innerHTML = `
-        <div class="modalOverlay"></div>
-        <div class="modalBox">
-          <div id="modalContent"></div>
-          <button class="btn ghost closeModal">Zamknij</button>
+    App.ui.showLoader();
+
+    const user = App.auth.getCurrentProfile();
+    if (!user) {
+      App.ui.hideLoader();
+      App.ui.showMessage("Brak profilu użytkownika.", "error");
+      return;
+    }
+
+    const { error } = await App.supabase.from("tickets").insert({
+      title,
+      description,
+      wspolnota_id: wspolnota,
+      user_id: user.id,
+      status: "nowe",
+      created_at: new Date().toISOString()
+    });
+
+    App.ui.hideLoader();
+
+    if (error) {
+      App.ui.showMessage("Błąd podczas tworzenia zgłoszenia.", "error");
+      return;
+    }
+
+    App.ui.showMessage("Zgłoszenie wysłane.", "success");
+    loadUserTickets();
+  }
+
+  // ---------------------------------------------
+  // ŁADOWANIE ZGŁOSZEŃ UŻYTKOWNIKA
+  // ---------------------------------------------
+  async function loadUserTickets() {
+    const list = document.getElementById("userTicketsList");
+    if (!list) return;
+
+    list.innerHTML = `<p>Ładowanie...</p>`;
+
+    const user = App.auth.getCurrentProfile();
+    if (!user) {
+      list.innerHTML = `<p>Brak profilu użytkownika.</p>`;
+      return;
+    }
+
+    const { data, error } = await App.supabase
+      .from("tickets")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      list.innerHTML = `<p>Błąd ładowania zgłoszeń.</p>`;
+      return;
+    }
+
+    if (!data.length) {
+      list.innerHTML = `<p>Brak zgłoszeń.</p>`;
+      return;
+    }
+
+    list.innerHTML = data
+      .map(t => `
+        <div class="ticketItem">
+          <div><b>${t.title}</b></div>
+          <div>${t.description}</div>
+          <div>Status: <b>${t.status}</b></div>
+          <div class="ticketDate">${new Date(t.created_at).toLocaleString()}</div>
         </div>
-      `;
+      `)
+      .join("");
+  }
 
-      document.body.appendChild(modal);
+  // ---------------------------------------------
+  // ŁADOWANIE WSZYSTKICH ZGŁOSZEŃ (ADMIN)
+  // ---------------------------------------------
+  async function loadAllTickets() {
+    const list = document.getElementById("adminTicketsList");
+    if (!list) return;
 
-      modal.querySelector(".modalOverlay").onclick = hideModal;
-      modal.querySelector(".closeModal").onclick = hideModal;
+    list.innerHTML = `<p>Ładowanie...</p>`;
+
+    const wspolnota = document.getElementById("adminTicketsWspolnota")?.value;
+
+    let query = App.supabase
+      .from("tickets")
+      .select("*, profiles(fullname), wspolnoty(nazwa)")
+      .order("created_at", { ascending: false });
+
+    if (wspolnota) {
+      query = query.eq("wspolnota_id", wspolnota);
     }
 
-    modal.querySelector("#modalContent").innerHTML = html;
-    modal.style.display = "flex";
-  }
+    const { data, error } = await query;
 
-  function hideModal() {
-    const modal = document.getElementById("globalModal");
-    if (modal) modal.style.display = "none";
-  }
-
-  // ---------------------------------------------
-  // LOADER
-  // ---------------------------------------------
-  function showLoader() {
-    let loader = document.getElementById("globalLoader");
-    if (!loader) {
-      loader = document.createElement("div");
-      loader.id = "globalLoader";
-      loader.className = "loaderOverlay";
-      loader.innerHTML = `<div class="loader"></div>`;
-      document.body.appendChild(loader);
-    }
-    loader.style.display = "flex";
-  }
-
-  function hideLoader() {
-    const loader = document.getElementById("globalLoader");
-    if (loader) loader.style.display = "none";
-  }
-
-  // ---------------------------------------------
-  // KOMUNIKATY
-  // ---------------------------------------------
-  function showMessage(msg, type = "info") {
-    let box = document.getElementById("globalMessage");
-    if (!box) {
-      box = document.createElement("div");
-      box.id = "globalMessage";
-      box.className = "messageBox";
-      document.body.appendChild(box);
+    if (error) {
+      list.innerHTML = `<p>Błąd ładowania zgłoszeń.</p>`;
+      return;
     }
 
-    box.innerHTML = msg;
-    box.className = `messageBox ${type}`;
-    box.style.display = "block";
-
-    setTimeout(() => {
-      box.style.display = "none";
-    }, 3000);
-  }
-
-  // ---------------------------------------------
-  // POKAZYWANIE SEKCJI
-  // ---------------------------------------------
-  function hideAllPanels() {
-    document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
-  }
-
-  function showSection(id) {
-    hideAllPanels();
-    const el = document.getElementById(id);
-    if (el) el.style.display = "block";
-  }
-
-  // ---------------------------------------------
-  // SIDEBAR
-  // ---------------------------------------------
-  function initSidebar() {
-    const btn = document.getElementById("sidebarToggle");
-    const sidebar = document.getElementById("sidebar");
-
-    if (btn && sidebar) {
-      btn.onclick = () => {
-        sidebar.classList.toggle("open");
-      };
+    if (!data.length) {
+      list.innerHTML = `<p>Brak zgłoszeń.</p>`;
+      return;
     }
+
+    list.innerHTML = data
+      .map(t => `
+        <div class="ticketItem admin">
+          <div><b>${t.title}</b></div>
+          <div>${t.description}</div>
+          <div>Użytkownik: <b>${t.profiles?.fullname || "?"}</b></div>
+          <div>Wspólnota: <b>${t.wspolnoty?.nazwa || "?"}</b></div>
+          <div>Status: <b>${t.status}</b></div>
+          <button class="btn small" onclick="App.tickets.openStatusModal('${t.id}', '${t.status}')">Zmień status</button>
+        </div>
+      `)
+      .join("");
   }
 
   // ---------------------------------------------
-  // LOGOWANIE / REJESTRACJA
+  // MODAL ZMIANY STATUSU
   // ---------------------------------------------
-  function setAuthView(view) {
-    const login = document.getElementById("loginPanel");
-    const register = document.getElementById("registerPanel");
+  function openStatusModal(id, current) {
+    App.ui.showModal(`
+      <h3>Zmień status zgłoszenia</h3>
+      <select id="newStatus">
+        <option value="nowe" ${current === "nowe" ? "selected" : ""}>Nowe</option>
+        <option value="w trakcie" ${current === "w trakcie" ? "selected" : ""}>W trakcie</option>
+        <option value="zakończone" ${current === "zakończone" ? "selected" : ""}>Zakończone</option>
+      </select>
+      <button class="btn" onclick="App.tickets.updateStatus('${id}')">Zapisz</button>
+    `);
+  }
 
-    if (!login || !register) return;
+  // ---------------------------------------------
+  // AKTUALIZACJA STATUSU (ADMIN)
+  // ---------------------------------------------
+  async function updateStatus(id) {
+    const newStatus = document.getElementById("newStatus")?.value;
+    if (!newStatus) return;
 
-    if (view === "login") {
-      login.style.display = "block";
-      register.style.display = "none";
-    } else {
-      login.style.display = "none";
-      register.style.display = "block";
+    App.ui.showLoader();
+
+    const { error } = await App.supabase
+      .from("tickets")
+      .update({ status: newStatus })
+      .eq("id", id);
+
+    App.ui.hideLoader();
+    App.ui.hideModal();
+
+    if (error) {
+      App.ui.showMessage("Błąd aktualizacji statusu.", "error");
+      return;
     }
-  }
 
-  function showLoginTab() {
-    setAuthView("login");
-  }
-
-  function showRegisterTab() {
-    setAuthView("register");
+    App.ui.showMessage("Status zaktualizowany.", "success");
+    loadAllTickets();
   }
 
   // ---------------------------------------------
-  // INIT
+  // PUBLIC API
   // ---------------------------------------------
-  function init() {
-    initSidebar();
-  }
-
   return {
-    init,
-    showModal,
-    hideModal,
-    showLoader,
-    hideLoader,
-    showMessage,
-    showSection,
-    hideAllPanels,
-    setAuthView,
-    showLoginTab,
-    showRegisterTab
+    createTicket,
+    loadUserTickets,
+    loadAllTickets,
+    openStatusModal,
+    updateStatus
   };
 
 })();
