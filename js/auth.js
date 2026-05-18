@@ -1,5 +1,5 @@
 // =============================================
-// UNITY HOUSE — AUTH MODULE
+// UNITY HOUSE — AUTH MODULE (POPRAWIONY)
 // Logowanie, wylogowanie, pobieranie profilu
 // =============================================
 
@@ -44,16 +44,13 @@ App.auth = (() => {
     App.supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN") {
         if (currentProfile?.role === "admin") {
-          App.ui.showAdminSidebar();
           App.ui.showSection("adminAnnouncementsCard");
         } else {
-          App.ui.showUserSidebar();
           App.ui.showSection("userAnnouncementsCard");
         }
       }
 
       if (event === "SIGNED_OUT") {
-        App.ui.hideSidebar();
         App.ui.hideAllPanels();
         App.ui.showSection("loginCard");
       }
@@ -70,7 +67,7 @@ App.auth = (() => {
     const password = loginPassword.value.trim();
 
     if (!email || !password) {
-      App.ui.showMessage(loginMessage, "Uzupełnij wszystkie pola.", "error");
+      App.ui.showMessage("Uzupełnij wszystkie pola.", "error");
       return;
     }
 
@@ -83,7 +80,7 @@ App.auth = (() => {
 
     if (error) {
       App.ui.hideLoader();
-      App.ui.showMessage(loginMessage, "Błędny e-mail lub hasło.", "error");
+      App.ui.showMessage("Błędny e-mail lub hasło.", "error");
       return;
     }
 
@@ -98,15 +95,13 @@ App.auth = (() => {
     setCurrentProfile(profileData);
 
     if (profileData.role === "admin") {
-      App.ui.showAdminSidebar();
       App.ui.showSection("adminAnnouncementsCard");
     } else {
-      App.ui.showUserSidebar();
       App.ui.showSection("userAnnouncementsCard");
     }
 
     App.ui.hideLoader();
-    App.ui.showMessage(loginMessage, "Logowanie...", "success");
+    App.ui.showMessage("Logowanie...", "success");
   }
 
   // ---------------------------------------------
@@ -116,7 +111,6 @@ App.auth = (() => {
     await App.supabase.auth.signOut();
     currentProfile = null;
 
-    App.ui.hideSidebar();
     App.ui.hideAllPanels();
     App.ui.showSection("loginCard");
   }
