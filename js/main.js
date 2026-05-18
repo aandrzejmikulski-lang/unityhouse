@@ -1,5 +1,5 @@
 // =============================================
-// UNITY HOUSE — MAIN MODULE
+// UNITY HOUSE — MAIN MODULE (POPRAWIONY)
 // Inicjalizacja Supabase + modułów
 // =============================================
 
@@ -64,17 +64,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     App.auth.setCurrentProfile(profile);
 
+    // ---------------------------------------------
+    // ADMIN
+    // ---------------------------------------------
     if (profile.role === "admin") {
-      App.ui.showAdminSidebar();
       App.ui.showSection("adminAnnouncementsCard");
 
       App.profiles.loadPendingUsers?.();
       App.profiles.loadAllUsers?.();
       App.tickets.loadTicketsAdmin?.();
       App.announcements.loadAnnouncementsAdmin?.();
+    }
 
-    } else {
-      App.ui.showUserSidebar();
+    // ---------------------------------------------
+    // USER
+    // ---------------------------------------------
+    else {
       App.ui.showSection("userAnnouncementsCard");
 
       App.tickets.loadTicketsUser?.();
