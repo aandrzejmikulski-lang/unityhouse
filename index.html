@@ -4,202 +4,141 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unity House — Panel</title>
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <!-- LOADER -->
-  <div id="loaderOverlay" class="hidden">
-    <div class="loader-box">
-      <div class="spinner"></div>
-      <p>Unity House — trwa wczytywanie…</p>
-    </div>
-  </div>
-
-  <!-- APP SHELL -->
   <div class="app-shell">
-
     <!-- SIDEBAR -->
-    <aside class="sidebar">
+    <aside class="sidebar hidden">
       <div class="sidebar-glass">
         <div class="logo">UNITY HOUSE</div>
+        <ul class="sidebar-nav">
+          <!-- UŻYTKOWNIK -->
+          <li class="sidebar-item" data-target="userAnnouncementsCard">Ogłoszenia</li>
+          <li class="sidebar-item" data-target="userTicketsCard">Zgłoszenia</li>
 
-        <nav class="sidebar-nav">
-          <div class="sidebar-item active" data-target="loginCard">Logowanie</div>
-          <div class="sidebar-item" data-target="mainCard">Zgłoszenia</div>
-          <div class="sidebar-item" data-target="userAnnouncementsCard">Ogłoszenia</div>
-          <div class="sidebar-item" data-target="adminCard">Administracja</div>
-        </nav>
+          <!-- ADMIN -->
+          <li class="sidebar-item" data-target="adminAnnouncementsCard">Ogłoszenia</li>
+          <li class="sidebar-item" data-target="adminTicketsCard">Zgłoszenia</li>
+          <li class="sidebar-item" data-target="adminUsersCard">Użytkownicy</li>
+          <li class="sidebar-item" data-target="adminCommunitiesCard">Wspólnoty</li>
+        </ul>
 
-        <button id="btnLogout" class="btn ghost logout-btn">Wyloguj</button>
+        <button id="btnLogout" class="btn logout-btn hidden">Wyloguj</button>
       </div>
     </aside>
 
     <!-- CONTENT -->
     <main class="content">
+      <!-- LOGIN -->
+      <section id="loginCard" class="card">
+        <h2>Logowanie</h2>
+        <div class="field">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" placeholder="adres@domena.pl" />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Hasło</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" />
+        </div>
+        <button id="btnLogin" class="btn primary">Zaloguj</button>
+        <p id="loginMessage" class="muted"></p>
+      </section>
 
-      <!-- LOGOWANIE -->
-      <section id="loginCard">
-        <div class="card fade-in">
-          <h2>Logowanie</h2>
-          <div id="loginMessage" class="muted"></div>
-
-          <div class="field">
-            <span>E-mail</span>
-            <input id="loginEmail" type="email" placeholder="Twój e-mail" />
-          </div>
-
-          <div class="field">
-            <span>Hasło</span>
-            <input id="loginPassword" type="password" placeholder="Hasło" />
-          </div>
-
-          <button id="btnLogin" class="btn primary full">Zaloguj</button>
+      <!-- UŻYTKOWNIK — OGŁOSZENIA -->
+      <section id="userAnnouncementsCard" class="hidden user-light">
+        <h2>Ogłoszenia</h2>
+        <div id="user-announcements-list">
+          <!-- Lista ogłoszeń -->
         </div>
       </section>
 
-      <!-- WYBÓR WSPÓLNOTY -->
-      <section id="selectWspolnotaCard" class="hidden">
-        <div class="card fade-in">
-          <h2>Wybierz wspólnotę</h2>
-
-          <div class="field">
-            <select id="wspolnotaSelect"></select>
-          </div>
-
-          <button id="btnSaveWspolnota" class="btn primary full">Zapisz</button>
+      <!-- UŻYTKOWNIK — ZGŁOSZENIA -->
+      <section id="userTicketsCard" class="hidden user-light">
+        <h2>Twoje zgłoszenia</h2>
+        <div id="user-tickets-list">
+          <!-- Lista zgłoszeń -->
         </div>
       </section>
 
-      <!-- PANEL USERA (JASNY) -->
-      <section id="mainCard" class="hidden">
-        <div class="card user-light fade-in">
-          <h2>Twoje zgłoszenia</h2>
-          <div id="ticketList"></div>
-        </div>
-
-        <div class="card user-light fade-in">
-          <h3>Nowe zgłoszenie</h3>
-
-          <div class="form-row">
-            <div class="field">
-              <span>Tytuł zgłoszenia</span>
-              <input id="ticketTitle" placeholder="Tytuł" />
-            </div>
-
-            <div class="field">
-              <span>Opis zgłoszenia</span>
-              <textarea id="ticketDesc" placeholder="Opis"></textarea>
-            </div>
-          </div>
-
+      <!-- ADMIN — OGŁOSZENIA -->
+      <section id="adminAnnouncementsCard" class="hidden user-light">
+        <h2>Ogłoszenia — Administrator</h2>
+        <div id="admin-announcements-form">
           <div class="field">
-            <input id="ticketFile" type="file" />
+            <label for="announcementTitle">Tytuł ogłoszenia</label>
+            <input type="text" id="announcementTitle" placeholder="Tytuł" />
           </div>
-
-          <button id="btnSaveTicket" class="btn primary full">Wyślij zgłoszenie</button>
+          <div class="field">
+            <label for="announcementContent">Treść ogłoszenia</label>
+            <textarea id="announcementContent" rows="4" placeholder="Treść ogłoszenia"></textarea>
+          </div>
+          <button id="btnAddAnnouncement" class="btn primary">Dodaj ogłoszenie</button>
+        </div>
+        <div id="admin-announcements-list">
+          <!-- Lista ogłoszeń -->
         </div>
       </section>
 
-      <!-- OGŁOSZENIA USERA (JASNE) -->
-      <section id="userAnnouncementsCard" class="hidden">
-        <div class="card user-light fade-in">
-          <h2>Ogłoszenia</h2>
-          <div id="userAnnouncements"></div>
+      <!-- ADMIN — ZGŁOSZENIA -->
+      <section id="adminTicketsCard" class="hidden user-light">
+        <h2>Zgłoszenia mieszkańców</h2>
+        <div id="admin-tickets-list">
+          <!-- Lista zgłoszeń -->
         </div>
       </section>
 
-      <!-- PANEL ADMINA (JASNY) -->
-      <section id="adminCard" class="hidden admin-panel">
-
-        <h2 class="admin-title">Unity House — Administracja</h2>
-
-        <!-- UŻYTKOWNICY -->
-        <div class="admin-section">
-          <h3 class="admin-subtitle">Użytkownicy oczekujący</h3>
-          <div id="pendingUsersList" class="admin-list"></div>
+      <!-- ADMIN — UŻYTKOWNICY -->
+      <section id="adminUsersCard" class="hidden user-light">
+        <h2>Użytkownicy</h2>
+        <div id="admin-pending-users">
+          <h3>Użytkownicy oczekujący</h3>
+          <div id="pending-users-list">Brak oczekujących użytkowników.</div>
         </div>
-
-        <div class="admin-section">
-          <h3 class="admin-subtitle">Wszyscy użytkownicy</h3>
-          <div id="allUsersList" class="admin-list"></div>
+        <div id="admin-all-users">
+          <h3>Wszyscy użytkownicy</h3>
+          <div id="all-users-list">
+            <!-- Lista użytkowników -->
+          </div>
         </div>
-
-        <!-- ZGŁOSZENIA -->
-        <div class="admin-section">
-          <h3 class="admin-subtitle">Zgłoszenia</h3>
-          <div id="adminTickets"></div>
-        </div>
-
-        <!-- OGŁOSZENIA -->
-        <div class="admin-section">
-          <h3 class="admin-subtitle">Nowe ogłoszenie</h3>
-
-          <div class="field">
-            <span>Tytuł ogłoszenia</span>
-            <input id="announcementTitle" placeholder="Tytuł" />
-          </div>
-
-          <div class="field">
-            <span>Treść ogłoszenia</span>
-            <textarea id="announcementContent" placeholder="Treść"></textarea>
-          </div>
-
-          <div class="field">
-            <span>Wyświetlaj od</span>
-            <input type="date" id="announcementFrom" />
-          </div>
-
-          <div class="field">
-            <span>Wyświetlaj do</span>
-            <input type="date" id="announcementTo" />
-          </div>
-
-          <div class="field">
-            <span>Wybierz wspólnoty</span>
-            <select id="announcementWspolnoty" multiple></select>
-          </div>
-
-          <button id="btnAddAnnouncement" class="admin-btn">Dodaj ogłoszenie</button>
-
-          <h3 class="admin-subtitle">Lista ogłoszeń</h3>
-          <div id="adminAnnouncements" class="admin-list"></div>
-        </div>
-
       </section>
 
-      <!-- MODAL ZGŁOSZENIA -->
-      <div id="ticketModal" class="modal hidden">
-        <div class="modal-content fade-in">
-          <button id="btnCloseModal" class="modal-close">&times;</button>
-
-          <h3 id="modalTicketTitle"></h3>
-          <p id="modalTicketDesc"></p>
-          <p id="modalTicketStatus"></p>
-          <div id="modalTicketFiles"></div>
-
-          <div class="form-row">
-            <button id="btnStatusNowe" class="btn ghost">Nowe</button>
-            <button id="btnStatusWTrakcie" class="btn ghost">W trakcie</button>
-            <button id="btnStatusZamkniete" class="btn ghost">Zamknięte</button>
+      <!-- ADMIN — WSPÓLNOTY -->
+      <section id="adminCommunitiesCard" class="hidden user-light">
+        <h2>Wspólnoty</h2>
+        <div id="admin-communities">
+          <div class="field">
+            <label for="communityName">Nazwa wspólnoty</label>
+            <input type="text" id="communityName" placeholder="Nazwa wspólnoty" />
+          </div>
+          <button id="btnAddCommunity" class="btn primary">Dodaj wspólnotę</button>
+          <div id="communities-list">
+            <!-- Lista wspólnot -->
           </div>
         </div>
-      </div>
-
+      </section>
     </main>
   </div>
 
-  <!-- SCRIPTS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" defer></script>
+  <!-- LOADER -->
+  <div id="loaderOverlay" class="hidden">
+    <div class="loader"></div>
+  </div>
 
-  <script src="js/ui.js?v=1" defer></script>
-  <script src="js/auth.js?v=1" defer></script>
-  <script src="js/profiles.js?v=1" defer></script>
-  <script src="js/tickets.js?v=1" defer></script>
-  <script src="js/announcements.js?v=1" defer></script>
+  <!-- MODAL -->
+  <div id="ticketModal" class="modal hidden">
+    <div class="modal-content">
+      <button id="btnCloseModal" class="btn">Zamknij</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
 
-  <script src="js/main.js?v=1" defer></script>
-
+  <script src="ui.js"></script>
+  <script src="auth.js"></script>
+  <script src="supabase.js"></script>
+  <script>
+    App.ui.init();
+    App.auth.init();
+  </script>
 </body>
 </html>
