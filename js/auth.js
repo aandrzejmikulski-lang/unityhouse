@@ -12,6 +12,10 @@ App.auth = (() => {
     currentProfile = p;
   }
 
+  function getCurrentProfile() {
+    return currentProfile;
+  }
+
   function getDom() {
     return {
       loginEmail: document.getElementById("loginEmail"),
@@ -53,7 +57,7 @@ App.auth = (() => {
 
     App.ui.showLoader();
 
-    const { error } = await App.supabase.auth.signInWithPassword({
+    const { data, error } = await App.supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -64,10 +68,30 @@ App.auth = (() => {
       return;
     }
 
-    // 🔥 POKAŻ SIDEBAR PO UDANYM LOGOWANIU
-    document.querySelector(".sidebar")?.classList.add("show");
+    // ---------------------------------------------
+    // 🔥 POBIERZ PROFIL UŻYTKOWNIKA
+    // ---------------------------------------------
+    const { data: { user } } = await App.supabase.auth.getUser();
 
+    const { data: profileData } = await App.supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    setCurrentProfile(profileData);
+
+    // ---------------------------------------------
+    // 🔥 POKAŻ SIDEBAR
+    // ---------------------------------------------
+    document.querySelector(".sidebar")?.classList.add("show");
+    document.getElementById("btnLogout")?.classList.remove("hidden");
+
+    App.ui.hideLoader();
     App.ui.showMessage(loginMessage, "Logowanie...", "success");
+
+    // Domyślny panel po logowaniu
+    App.ui.showSection("mainCard");
   }
 
   // ---------------------------------------------
@@ -77,8 +101,9 @@ App.auth = (() => {
     await App.supabase.auth.signOut();
     currentProfile = null;
 
-    // 🔥 SCHOWAJ SIDEBAR PO WYLOGOWANIU
+    // 🔥 SCHOWAJ SIDEBAR
     document.querySelector(".sidebar")?.classList.remove("show");
+    document.getElementById("btnLogout")?.classList.add("hidden");
 
     App.ui.hideAllPanels();
     App.ui.showSection("loginCard");
@@ -101,10 +126,6 @@ App.auth = (() => {
       .eq("id", user.id);
 
     currentProfile.wspolnota_id = wspolnotaId;
-  }
-
-  function getCurrentProfile() {
-    return currentProfile;
   }
 
   return {
