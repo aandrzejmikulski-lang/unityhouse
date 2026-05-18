@@ -180,8 +180,10 @@ App.tickets = (() => {
 
     const filesContainer = document.getElementById("modalTicketFiles");
     filesContainer.innerHTML = data.file_url
-      ? `<a href="https://YOUR-PROJECT.supabase.co/storage/v1/object/public/tickets-files/${data.file_url}" target="_blank" class="btn ghost">Pobierz załącznik</a>`
-      : `<p class="muted">Brak załączników</p>`;
+   filesContainer.innerHTML = data.file_url
+  ? `<a href="https://vswonxsgqanhzsmzexzh.supabase.co/storage/v1/object/public/tickets-files/${data.file_url}" target="_blank" class="btn ghost">Pobierz załącznik</a>`
+  : `<p class="muted">Brak załączników</p>`;
+
 
     // Podpinamy statusy
     document.getElementById("btnStatusNowe").onclick = () => updateStatus(ticketId, "nowe");
