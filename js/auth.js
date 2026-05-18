@@ -28,7 +28,7 @@ App.auth = (() => {
   }
 
   // ---------------------------------------------
-  // INICJALIZACJA
+  // INIT
   // ---------------------------------------------
   function init() {
     const dom = getDom();
@@ -37,15 +37,11 @@ App.auth = (() => {
 
     if (dom.btnLogout) {
       dom.btnLogout.onclick = () => {
-        console.log("Kliknięto WYLOGUJ");
         logoutUser();
       };
     }
 
-    // 🔥 Nasłuchiwanie zmian sesji Supabase
     App.supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth event:", event);
-
       if (event === "SIGNED_IN") {
         if (currentProfile?.role === "admin") {
           App.ui.showAdminSidebar();
@@ -65,7 +61,7 @@ App.auth = (() => {
   }
 
   // ---------------------------------------------
-  // LOGOWANIE
+  // LOGIN
   // ---------------------------------------------
   async function loginUser() {
     const { loginEmail, loginPassword, loginMessage } = getDom();
@@ -91,9 +87,6 @@ App.auth = (() => {
       return;
     }
 
-    // ---------------------------------------------
-    // 🔥 POBIERZ PROFIL UŻYTKOWNIKA
-    // ---------------------------------------------
     const { data: { user } } = await App.supabase.auth.getUser();
 
     const { data: profileData } = await App.supabase
@@ -104,9 +97,6 @@ App.auth = (() => {
 
     setCurrentProfile(profileData);
 
-    // ---------------------------------------------
-    // 🔥 POKAŻ SIDEBAR I PANEL
-    // ---------------------------------------------
     if (profileData.role === "admin") {
       App.ui.showAdminSidebar();
       App.ui.showSection("adminAnnouncementsCard");
@@ -120,10 +110,9 @@ App.auth = (() => {
   }
 
   // ---------------------------------------------
-  // WYLOGOWANIE
+  // LOGOUT
   // ---------------------------------------------
   async function logoutUser() {
-    console.log("Wylogowywanie...");
     await App.supabase.auth.signOut();
     currentProfile = null;
 
