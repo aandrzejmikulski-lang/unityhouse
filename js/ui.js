@@ -64,12 +64,15 @@ App.ui.initSidebar = function () {
   App.ui.refs.sidebarItems.forEach((item) => {
     item.addEventListener("click", () => {
       const target = item.dataset.target;
+
       App.ui.setActiveSidebar(target);
 
-      // 🔧 Poprawka: jeśli admin kliknie „Ogłoszenia”, pokaż jego wersję
-      const profile = App.auth?.currentProfile;
+      // 🔧 Pobierz profil poprawnie
+      const profile = App.auth.getCurrentProfile();
+
+      // 🔧 Admin ma własny panel ogłoszeń — ale w HTML nie ma adminAnnouncementsCard
       if (profile?.role === "admin" && target === "userAnnouncementsCard") {
-        App.ui.showSection("adminAnnouncementsCard");
+        App.ui.showSection("adminCard");
         return;
       }
 
@@ -125,10 +128,11 @@ App.ui.init = function () {
   App.ui.hideAllPanels();
   App.ui.showSection("loginCard");
 
-  // 🔧 Poprawka: ukryj sidebar i przycisk Wyloguj przed zalogowaniem
+  // 🔧 Ukryj sidebar i przycisk Wyloguj przed logowaniem
   const sidebar = document.querySelector(".sidebar");
   const btnLogout = document.getElementById("btnLogout");
-  if (sidebar) sidebar.classList.add("hidden");
+
+  if (sidebar) sidebar.classList.remove("show"); // ukryty
   if (btnLogout) btnLogout.classList.add("hidden");
 };
 
