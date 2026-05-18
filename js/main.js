@@ -1,6 +1,6 @@
 // =============================================
 // UNITY HOUSE — MAIN MODULE
-// Routing, sesje, inicjalizacja modułów
+// Inicjalizacja Supabase + modułów
 // =============================================
 
 window.App = window.App || {};
@@ -8,7 +8,7 @@ window.App = window.App || {};
 window.addEventListener("DOMContentLoaded", async () => {
 
   // ---------------------------------------------
-  // SUPABASE — KLIENT PODSTAWOWY
+  // SUPABASE — KLIENT
   // ---------------------------------------------
   App.supabase = supabase.createClient(
     "https://vswonxgsaqnhzsmzexzh.supabase.co",
@@ -34,52 +34,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   App.announcements.init?.();
 
   // ---------------------------------------------
-  // LOGOUT
+  // SPRAWDZENIE SESJI NA START
   // ---------------------------------------------
-  const btnLogout = document.getElementById("btnLogout");
-  if (btnLogout) {
-    btnLogout.addEventListener("click", async () => {
-      try {
-        await App.supabase.auth.signOut();
-        window.sessionStorage.clear();
-
-        App.ui.hideAllPanels();
-        document.querySelector(".sidebar")?.classList.add("hidden");
-        document.getElementById("btnLogout")?.classList.add("hidden");
-        App.ui.showSection("loginCard");
-      } catch (e) {
-        console.warn("Błąd wylogowania:", e);
-      }
-    });
-  }
-
-  // ---------------------------------------------
-  // OBSŁUGA SESJI
-  // ---------------------------------------------
-  App.supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log("Auth event:", event);
-
-    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-      await handleSession();
-    }
-
-    if (event === "SIGNED_OUT") {
-      App.ui.hideAllPanels();
-      document.querySelector(".sidebar")?.classList.add("hidden");
-      document.getElementById("btnLogout")?.classList.add("hidden");
-      App.ui.showSection("loginCard");
-    }
-  });
-
-  // ---------------------------------------------
-  // START
-  // ---------------------------------------------
-  await handleSession();
+  await restoreSession();
 
   // ---------------------------------------------
   // FUNKCJE
   // ---------------------------------------------
-  async function handleSession() {
+  async function restoreSession() {
     App.ui.showLoader();
 
     const { data: { user } } = await App.supabase.auth.getUser();
@@ -90,6 +52,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // pobierz profil
     const { data: profile, error } = await App.supabase
       .from("profiles")
       .select("*")
@@ -100,76 +63,30 @@ window.addEventListener("DOMContentLoaded", async () => {
       console.warn("Błąd pobierania profilu:", error);
       App.ui.hideLoader();
       App.ui.showSection("loginCard");
-      document.getElementById("loginMessage").innerText =
-        "Błąd profilu użytkownika. Skontaktuj się z administratorem.";
       return;
     }
 
     App.auth.setCurrentProfile(profile);
-    App.ui.hideLoader();
-    route(profile);
-  }
 
-  // ---------------------------------------------
-  // ROUTING
-  // ---------------------------------------------
-  function route(profile) {
-    console.log("Routing profile:", profile);
-
-    App.ui.hideAllPanels();
-
-    // ukryj login
-    document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
-
-    // pokaż sidebar
-    document.querySelector(".sidebar")?.classList.remove("hidden");
-
-    // pokaż wylogowanie
-    document.getElementById("btnLogout")?.classList.remove("hidden");
-
-    // konto niezatwierdzone
-    if (!profile.approved) {
-      App.ui.showSection("loginCard");
-      document.getElementById("loginMessage").innerText =
-        "Twoje konto czeka na zatwierdzenie.";
-      return;
-    }
-
-    // brak wspólnoty (user)
-    if (!profile.wspolnota_id && profile.role !== "admin") {
-      App.ui.showSection("selectWspolnotaCard");
-      App.profiles.loadWspolnotyDropdown();
-      return;
-    }
-
-    // ADMIN
+    // routing zależnie od roli
     if (profile.role === "admin") {
-      App.ui.showSection("adminCard");
+      App.ui.showAdminSidebar();
+      App.ui.showSection("adminAnnouncementsCard");
 
-      // admin widzi tylko Administrację
-      document.querySelector('[data-target="adminCard"]')?.classList.remove("hidden");
+      App.profiles.loadPendingUsers?.();
+      App.profiles.loadAllUsers?.();
+      App.tickets.loadTicketsAdmin?.();
+      App.announcements.loadAnnouncementsAdmin?.();
 
-      // admin NIE widzi zgłoszeń użytkownika
-      document.querySelector('[data-target="mainCard"]')?.classList.add("hidden");
+    } else {
+      App.ui.showUserSidebar();
+      App.ui.showSection("userAnnouncementsCard");
 
-      // admin NIE widzi ogłoszeń użytkownika
-      document.querySelector('[data-target="announcementsCard"]')?.classList.add("hidden");
-
-      App.profiles.loadPendingUsers();
-      App.profiles.loadAllUsers();
-      App.tickets.loadTicketsAdmin();
-      App.announcements.loadAnnouncementsAdmin();
-      return;
+      App.tickets.loadTicketsUser?.(profile.wspolnota_id);
+      App.announcements.loadAnnouncementsUser?.();
     }
 
-    // USER
-    App.ui.showSection("mainCard");
-
-    // user NIE widzi administracji
-    document.querySelector('[data-target="adminCard"]')?.classList.add("hidden");
-
-    App.tickets.loadTicketsUser(profile.wspolnota_id);
-    App.announcements.loadAnnouncementsUser();
+    App.ui.hideLoader();
   }
 
 });
