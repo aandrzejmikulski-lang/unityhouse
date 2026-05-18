@@ -48,7 +48,7 @@
       <!-- UŻYTKOWNIK — OGŁOSZENIA -->
       <section id="userAnnouncementsCard" class="hidden user-light">
         <h2>Ogłoszenia</h2>
-        <div id="user-announcements-list">
+        <div id="userAnnouncementsList">
           <!-- Lista ogłoszeń -->
         </div>
       </section>
@@ -63,8 +63,8 @@
             <input type="text" id="ticketTitle" placeholder="Krótki opis problemu" />
           </div>
           <div class="field">
-            <label for="ticketDesc">Opis zgłoszenia</label>
-            <textarea id="ticketDesc" rows="4" placeholder="Opisz dokładnie problem"></textarea>
+            <label for="ticketDescription">Opis zgłoszenia</label>
+            <textarea id="ticketDescription" rows="4" placeholder="Opisz dokładnie problem"></textarea>
           </div>
           <div class="field">
             <label for="ticketFile">Załącznik (opcjonalnie)</label>
@@ -74,7 +74,7 @@
         </div>
 
         <h3>Twoje zgłoszenia</h3>
-        <div id="user-tickets-list">
+        <div id="userTicketsList">
           <!-- Lista zgłoszeń użytkownika -->
         </div>
       </section>
@@ -98,7 +98,6 @@
             <label for="announcementWspolnota">Wspólnota (opcjonalnie)</label>
             <select id="announcementWspolnota">
               <option value="">Wszystkie wspólnoty</option>
-              <!-- Uzupełniane z JS -->
             </select>
           </div>
 
@@ -113,7 +112,7 @@
           <button id="btnAddAnnouncement" class="btn primary">Dodaj ogłoszenie</button>
         </div>
 
-        <div id="admin-announcements-list">
+        <div id="adminAnnouncementsList">
           <!-- Lista ogłoszeń admina -->
         </div>
       </section>
@@ -123,16 +122,23 @@
         <h2>Zgłoszenia mieszkańców</h2>
 
         <div class="field" style="margin-bottom: 12px;">
+          <label for="adminTicketsWspolnota">Wspólnota</label>
+          <select id="adminTicketsWspolnota">
+            <option value="">Wszystkie</option>
+          </select>
+        </div>
+
+        <div class="field" style="margin-bottom: 12px;">
           <label for="adminTicketsStatusFilter">Filtr statusu</label>
           <select id="adminTicketsStatusFilter">
             <option value="">Wszystkie</option>
             <option value="nowe">Nowe</option>
-            <option value="w_trakcie">W trakcie</option>
-            <option value="zamkniete">Zamknięte</option>
+            <option value="w trakcie">W trakcie</option>
+            <option value="zakończone">Zakończone</option>
           </select>
         </div>
 
-        <div id="admin-tickets-list">
+        <div id="adminTicketsList">
           <!-- Lista zgłoszeń -->
         </div>
       </section>
@@ -142,11 +148,11 @@
         <h2>Użytkownicy</h2>
         <div id="admin-pending-users" class="card">
           <h3>Użytkownicy oczekujący</h3>
-          <div id="pending-users-list">Brak oczekujących użytkowników.</div>
+          <div id="pendingUsersList">Brak oczekujących użytkowników.</div>
         </div>
         <div id="admin-all-users" class="card">
           <h3>Wszyscy użytkownicy</h3>
-          <div id="all-users-list">
+          <div id="allUsersList">
             <!-- Lista użytkowników -->
           </div>
         </div>
@@ -161,7 +167,7 @@
             <input type="text" id="communityName" placeholder="Nazwa wspólnoty" />
           </div>
           <button id="btnAddCommunity" class="btn primary">Dodaj wspólnotę</button>
-          <div id="communities-list">
+          <div id="adminWspolnotyList">
             <!-- Lista wspólnot -->
           </div>
         </div>
