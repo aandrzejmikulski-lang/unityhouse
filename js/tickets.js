@@ -1,7 +1,7 @@
 // =============================================
 // UNITY HOUSE — TICKETS MODULE
 // Zgłoszenia użytkownika, zgłoszenia admina,
-// modal, statusy, upload plików
+// modal, statusy, upload plików + FILTRY
 // =============================================
 
 window.App = window.App || {};
@@ -27,7 +27,6 @@ App.tickets = (() => {
 
     let fileUrl = null;
 
-    // Upload pliku
     if (fileInput?.files.length > 0) {
       const file = fileInput.files[0];
       const fileName = `${Date.now()}_${file.name}`;
@@ -39,7 +38,6 @@ App.tickets = (() => {
       if (!error) fileUrl = data.path;
     }
 
-    // Zapis zgłoszenia
     await App.supabase.from("tickets").insert({
       title,
       description: desc,
@@ -51,7 +49,6 @@ App.tickets = (() => {
 
     App.ui.hideLoader();
 
-    // Reset formularza
     if (document.getElementById("ticketTitle")) document.getElementById("ticketTitle").value = "";
     if (document.getElementById("ticketDesc")) document.getElementById("ticketDesc").value = "";
     if (document.getElementById("ticketFile")) document.getElementById("ticketFile").value = "";
@@ -91,7 +88,7 @@ App.tickets = (() => {
   }
 
   // ---------------------------------------------
-  // ŁADOWANIE ZGŁOSZEŃ ADMINA
+  // ŁADOWANIE ZGŁOSZEŃ ADMINA Z FILTREM STATUSU
   // ---------------------------------------------
   async function loadTicketsAdmin() {
     const container = document.getElementById("admin-tickets-list");
@@ -99,10 +96,18 @@ App.tickets = (() => {
 
     container.innerHTML = `<p class="muted">Ładowanie...</p>`;
 
-    const { data, error } = await App.supabase
+    const statusFilter = document.getElementById("adminTicketsStatusFilter")?.value || "";
+
+    let query = App.supabase
       .from("tickets")
       .select("*, profiles(fullname)")
       .order("created_at", { ascending: false });
+
+    if (statusFilter) {
+      query = query.eq("status", statusFilter);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
@@ -121,10 +126,12 @@ App.tickets = (() => {
   // HTML ZGŁOSZENIA (USER)
   // ---------------------------------------------
   function ticketItemHTML(t) {
+    const statusLabel = statusToLabel(t.status);
+
     return `
       <div class="announcementItem" onclick="App.tickets.openTicketModal('${t.id}')">
         <b>${t.title}</b><br>
-        <small>Status: ${t.status}</small><br>
+        <small>${statusLabel}</small><br>
         <small>${new Date(t.created_at).toLocaleString()}</small>
       </div>
     `;
@@ -134,14 +141,32 @@ App.tickets = (() => {
   // HTML ZGŁOSZENIA (ADMIN)
   // ---------------------------------------------
   function ticketItemAdminHTML(t) {
+    const statusLabel = statusToLabel(t.status);
+
     return `
       <div class="announcementItem" onclick="App.tickets.openTicketModal('${t.id}')">
         <b>${t.title}</b><br>
         <small>Użytkownik: ${t.profiles?.fullname || "—"}</small><br>
-        <small>Status: ${t.status}</small><br>
+        <small>${statusLabel}</small><br>
         <small>${new Date(t.created_at).toLocaleString()}</small>
       </div>
     `;
+  }
+
+  // ---------------------------------------------
+  // MAPOWANIE STATUSU NA ŁADNĄ ETYKIETĘ
+  // ---------------------------------------------
+  function statusToLabel(status) {
+    switch (status) {
+      case "nowe":
+        return "🟢 Nowe";
+      case "w_trakcie":
+        return "🟡 W trakcie";
+      case "zamkniete":
+        return "🔴 Zamknięte";
+      default:
+        return status;
+    }
   }
 
   // ---------------------------------------------
@@ -156,10 +181,12 @@ App.tickets = (() => {
 
     if (error) return;
 
+    const statusLabel = statusToLabel(data.status);
+
     const html = `
       <h3>${data.title}</h3>
       <p>${data.description}</p>
-      <p><b>Status:</b> ${data.status}</p>
+      <p><b>Status:</b> ${statusLabel}</p>
 
       <h4>Załącznik:</h4>
       ${
@@ -192,11 +219,16 @@ App.tickets = (() => {
   }
 
   // ---------------------------------------------
-  // INICJALIZACJA
+  // INIT
   // ---------------------------------------------
   function init() {
     const btn = document.getElementById("btnSaveTicket");
     if (btn) btn.onclick = createTicket;
+
+    const statusFilter = document.getElementById("adminTicketsStatusFilter");
+    if (statusFilter) {
+      statusFilter.onchange = loadTicketsAdmin;
+    }
   }
 
   return {
