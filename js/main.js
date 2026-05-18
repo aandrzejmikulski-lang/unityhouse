@@ -8,26 +8,19 @@ window.App = window.App || {};
 window.addEventListener("DOMContentLoaded", async () => {
 
   // ---------------------------------------------
-  // SUPABASE
+  // SUPABASE — KLIENT PODSTAWOWY (bez nagłówków)
   // ---------------------------------------------
   App.supabase = supabase.createClient(
-  "https://vswonxgsaqnhzsmzexzh.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
-  {
-    auth: {
-      storage: window.sessionStorage,
-      persistSession: true,
-      autoRefreshToken: true
-    },
-    global: {
-      headers: {
-        apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        Authorization: `Bearer ${sessionStorage.getItem("sb-access-token")}`
+    "https://vswonxgsaqnhzsmzexzh.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
+    {
+      auth: {
+        storage: window.sessionStorage,
+        persistSession: true,
+        autoRefreshToken: true
       }
     }
-  }
-);
-
+  );
 
   console.log("Supabase initialized");
 
@@ -50,7 +43,6 @@ window.addEventListener("DOMContentLoaded", async () => {
         await App.supabase.auth.signOut();
         window.sessionStorage.clear();
 
-        // 🔥 RĘCZNE SPRZĄTANIE UI PRZY WYLOGOWANIU
         App.ui.hideAllPanels();
         document.querySelector(".sidebar")?.classList.add("hidden");
         document.getElementById("btnLogout")?.classList.add("hidden");
@@ -67,16 +59,36 @@ window.addEventListener("DOMContentLoaded", async () => {
   App.supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("Auth event:", event);
 
+    // 🔥 Po zalogowaniu — REKONSTRUKCJA klienta z tokenem
+    if (session) {
+      App.supabase = supabase.createClient(
+        "https://vswonxgsaqnhzsmzexzh.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
+        {
+          auth: {
+            storage: window.sessionStorage,
+            persistSession: true,
+            autoRefreshToken: true
+          },
+          global: {
+            headers: {
+              apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
+              Authorization: `Bearer ${session.access_token}`
+            }
+          }
+        }
+      );
+    }
+
+    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      await handleSession();
+    }
+
     if (event === "SIGNED_OUT") {
       App.ui.hideAllPanels();
       document.querySelector(".sidebar")?.classList.add("hidden");
       document.getElementById("btnLogout")?.classList.add("hidden");
       App.ui.showSection("loginCard");
-      return;
-    }
-
-    if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-      await handleSession();
     }
   });
 
@@ -99,11 +111,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const { data: profile } = await App.supabase
+    const { data: profile, error } = await App.supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single();
+
+    if (error) console.warn("Błąd pobierania profilu:", error);
 
     App.auth.setCurrentProfile(profile);
 
@@ -114,14 +128,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   function route(profile) {
     console.log("Routing profile:", profile);
 
-    // ---------------------------------------------
-    // GLOBALNE UKRYCIE WSZYSTKIEGO
-    // ---------------------------------------------
     App.ui.hideAllPanels();
 
-    // ---------------------------------------------
-    // 1. Konto niezatwierdzone
-    // ---------------------------------------------
     if (!profile.approved) {
       App.ui.showSection("loginCard");
       document.getElementById("loginMessage").innerText =
@@ -129,20 +137,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ---------------------------------------------
-    // 2. Użytkownik bez wspólnoty (ale NIE admin)
-    // ---------------------------------------------
     if (!profile.wspolnota_id && profile.role !== "admin") {
       App.ui.showSection("selectWspolnotaCard");
       App.profiles.loadWspolnotyDropdown();
       return;
     }
 
-    // ---------------------------------------------
-    // 3. ADMIN
-    // ---------------------------------------------
     if (profile.role === "admin") {
-      // pokaż tylko panel admina
       App.ui.showSection("adminCard");
       document.getElementById("adminCard")?.classList.remove("hidden");
       document.getElementById("mainCard")?.classList.add("hidden");
@@ -159,10 +160,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // ---------------------------------------------
-    // 4. NORMALNY UŻYTKOWNIK
-    // ---------------------------------------------
-    // pokaż tylko panel użytkownika
     App.ui.showSection("mainCard");
     document.getElementById("mainCard")?.classList.remove("hidden");
     document.getElementById("adminCard")?.classList.add("hidden");
