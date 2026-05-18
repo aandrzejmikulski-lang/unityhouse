@@ -6,7 +6,7 @@
 :root {
   --bg: #05060a;
   --bg-elevated: rgba(15, 23, 42, 0.55);
-  --glass: rgba(255, 255, 255, 0.18); /* JAŚNIEJSZY SIDEBAR */
+  --glass: rgba(255, 255, 255, 0.18);
   --glass-strong: rgba(255, 255, 255, 0.35);
 
   --border-subtle: rgba(129, 140, 248, 0.15);
@@ -31,13 +31,18 @@
 
   --font-sans: "Inter", "SF Pro Text", system-ui, sans-serif;
 }
-/* Naprawa widoczności sekcji */
+
+/* =========================================
+   NAPRAWA WIDOCZNOŚCI
+========================================= */
+
 section.hidden,
 div.hidden {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
 }
+
 /* RESET */
 
 *,
@@ -59,7 +64,7 @@ body {
 
 /* =========================================
    LAYOUT
-   ========================================= */
+========================================= */
 
 .app-shell {
   display: grid;
@@ -69,16 +74,20 @@ body {
 }
 
 /* =========================================
-   FLOATING GLASS SIDEBAR — JASNY
-   ========================================= */
+   SIDEBAR — POPRAWIONY
+========================================= */
 
 .sidebar {
   position: relative;
   padding: 0;
-  display: flex;
+  display: none; /* UKRYTY DOMYŚLNIE */
   align-items: stretch;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto; /* MUSI REAGOWAĆ */
+}
+
+.sidebar.show {
+  display: flex !important; /* POKAZYWANY PO LOGOWANIU */
 }
 
 .sidebar-glass {
@@ -112,7 +121,7 @@ body {
   margin-bottom: 10px;
 }
 
-/* SIDEBAR NAV — JASNY */
+/* SIDEBAR NAV */
 
 .sidebar-nav {
   display: flex;
@@ -153,8 +162,8 @@ body {
 }
 
 /* =========================================
-   CONTENT AREA
-   ========================================= */
+   CONTENT
+========================================= */
 
 .content {
   padding: 40px;
@@ -163,8 +172,8 @@ body {
 }
 
 /* =========================================
-   KARTY — DOMYŚLNIE CIEMNE (dla login)
-   ========================================= */
+   KARTY — CIEMNE (LOGIN)
+========================================= */
 
 .card {
   background: var(--glass-strong);
@@ -188,7 +197,7 @@ body {
 
 /* =========================================
    JASNE KARTY — PANEL USERA
-   ========================================= */
+========================================= */
 
 .user-light {
   background: #ffffff !important;
@@ -219,7 +228,7 @@ body {
 
 /* =========================================
    FIELDS
-   ========================================= */
+========================================= */
 
 .field {
   display: flex;
@@ -235,7 +244,7 @@ body {
 
 /* =========================================
    BUTTONS
-   ========================================= */
+========================================= */
 
 .btn {
   border-radius: 999px;
@@ -262,8 +271,8 @@ body {
 }
 
 /* =========================================
-   ADMIN PANEL — HYBRID LIGHT
-   ========================================= */
+   ADMIN PANEL — JASNY
+========================================= */
 
 .admin-panel {
   background: #f5f7fa;
