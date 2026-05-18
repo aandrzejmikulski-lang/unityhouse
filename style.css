@@ -423,3 +423,80 @@ input[type="file"]::-webkit-file-upload-button:hover {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* =========================================
+   HYBRID LIGHT ADMIN PANEL (PROPOZYCJA C)
+   ========================================= */
+
+.admin-panel {
+  background: #f5f7fa;
+  color: #1e293b;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 0 35px rgba(0,0,0,0.25);
+}
+
+.admin-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  letter-spacing: 0.02em;
+  color: #1e293b;
+}
+
+.admin-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.08);
+}
+
+.admin-subtitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 14px;
+}
+
+.admin-list {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.admin-btn {
+  background: linear-gradient(135deg, #d4af37, #facc15);
+  color: #1e293b;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: 0.2s ease;
+}
+
+.admin-btn:hover {
+  filter: brightness(1.1);
+}
+
+#adminCard input,
+#adminCard textarea,
+#adminCard select {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+}
+
+#adminCard input:focus,
+#adminCard textarea:focus,
+#adminCard select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
+}
