@@ -8,7 +8,7 @@ window.App = window.App || {};
 window.addEventListener("DOMContentLoaded", async () => {
 
   // ---------------------------------------------
-  // SUPABASE — KLIENT PODSTAWOWY (bez nagłówków)
+  // SUPABASE — KLIENT PODSTAWOWY (bez nagłówków!)
   // ---------------------------------------------
   App.supabase = supabase.createClient(
     "https://vswonxgsaqnhzsmzexzh.supabase.co",
@@ -58,27 +58,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   // ---------------------------------------------
   App.supabase.auth.onAuthStateChange(async (event, session) => {
     console.log("Auth event:", event);
-
-    // 🔥 Po zalogowaniu — REKONSTRUKCJA klienta z tokenem
-    if (session) {
-      App.supabase = supabase.createClient(
-        "https://vswonxgsaqnhzsmzexzh.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
-        {
-          auth: {
-            storage: window.sessionStorage,
-            persistSession: true,
-            autoRefreshToken: true
-          },
-          global: {
-            headers: {
-              apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzd29ueGdzYXFuaHpzbXpleHpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjQ2OTYsImV4cCI6MjA5NDI0MDY5Nn0.mBBGMqqSRQgtM9k0aOH1Nl3WdNRj3Xj9nY6TqJgsepk",
-              Authorization: `Bearer ${session.access_token}`
-            }
-          }
-        }
-      );
-    }
 
     if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
       await handleSession();
