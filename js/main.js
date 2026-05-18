@@ -146,8 +146,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
 
-      // admin widzi panel admina
+      // admin widzi tylko Administrację
       document.querySelector('[data-target="adminCard"]')?.classList.remove("hidden");
+
+      // admin NIE widzi zgłoszeń użytkownika
+      document.querySelector('[data-target="mainCard"]')?.classList.add("hidden");
+
+      // admin NIE widzi ogłoszeń użytkownika
+      document.querySelector('[data-target="announcementsCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
@@ -159,7 +165,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     // USER
     App.ui.showSection("mainCard");
 
-    // user NIE widzi panelu admina
+    // user NIE widzi administracji
     document.querySelector('[data-target="adminCard"]')?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
