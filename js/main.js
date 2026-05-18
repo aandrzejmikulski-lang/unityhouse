@@ -8,7 +8,7 @@ window.App = window.App || {};
 window.addEventListener("DOMContentLoaded", async () => {
 
   // ---------------------------------------------
-  // SUPABASE — KLIENT PODSTAWOWY (bez nagłówków!)
+  // SUPABASE — KLIENT PODSTAWOWY
   // ---------------------------------------------
   App.supabase = supabase.createClient(
     "https://vswonxgsaqnhzsmzexzh.supabase.co",
@@ -96,26 +96,23 @@ window.addEventListener("DOMContentLoaded", async () => {
       .eq("id", user.id)
       .single();
 
-if (error || !profile) {
-  console.warn("Błąd pobierania profilu:", error);
-  App.ui.hideLoader();
-  App.ui.showSection("loginCard");
-  document.getElementById("loginMessage").innerText =
-    "Błąd profilu użytkownika. Skontaktuj się z administratorem.";
-  return;
-}
+    if (error || !profile) {
+      console.warn("Błąd pobierania profilu:", error);
+      App.ui.hideLoader();
+      App.ui.showSection("loginCard");
+      document.getElementById("loginMessage").innerText =
+        "Błąd profilu użytkownika. Skontaktuj się z administratorem.";
+      return;
+    }
 
-  // ← TU NIC NIE DODAJESZ
+    App.auth.setCurrentProfile(profile);
+    App.ui.hideLoader();
+    route(profile);
+  }
 
-  // po tym normalnie leci dalej:
-  App.auth.setCurrentProfile(profile);
-  App.ui.hideLoader();
-  route(profile);
-}
-
-function route(profile) {
-
-
+  // ---------------------------------------------
+  // ROUTING
+  // ---------------------------------------------
   function route(profile) {
     console.log("Routing profile:", profile);
 
@@ -136,13 +133,9 @@ function route(profile) {
 
     if (profile.role === "admin") {
       App.ui.showSection("adminCard");
-      document.getElementById("adminCard")?.classList.remove("hidden");
-      document.getElementById("mainCard")?.classList.add("hidden");
-      document.getElementById("adminAnnouncementsCard")?.classList.remove("hidden");
 
       document.querySelector(".sidebar")?.classList.remove("hidden");
       document.getElementById("btnLogout")?.classList.remove("hidden");
-      document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
       App.profiles.loadPendingUsers();
       App.profiles.loadAllUsers();
@@ -152,13 +145,9 @@ function route(profile) {
     }
 
     App.ui.showSection("mainCard");
-    document.getElementById("mainCard")?.classList.remove("hidden");
-    document.getElementById("adminCard")?.classList.add("hidden");
-    document.getElementById("adminAnnouncementsCard")?.classList.add("hidden");
 
     document.querySelector(".sidebar")?.classList.remove("hidden");
     document.getElementById("btnLogout")?.classList.remove("hidden");
-    document.querySelector('[data-target="loginCard"]')?.classList.add("hidden");
 
     App.tickets.loadTicketsUser(profile.wspolnota_id);
     App.announcements.loadAnnouncementsUser();
