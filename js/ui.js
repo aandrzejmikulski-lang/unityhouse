@@ -1,146 +1,162 @@
 // =============================================
 // UNITY HOUSE — UI MODULE
-// Zarządza widokami, loaderem, modalami, sidebarami
+// Widoki, sidebar, przełączanie paneli, loader
 // =============================================
 
 window.App = window.App || {};
-App.ui = {};
+App.ui = (() => {
 
-// ---------------------------------------------
-// REFERENCJE DO ELEMENTÓW
-// ---------------------------------------------
-App.ui.refs = {
-  loader: document.getElementById("loaderOverlay"),
-  modal: document.getElementById("ticketModal"),
-  modalClose: document.getElementById("btnCloseModal"),
-  sidebarItems: document.querySelectorAll(".sidebar-item"),
-};
+  // ---------------------------------------------
+  // POBIERANIE ELEMENTÓW DOM
+  // ---------------------------------------------
+  function getDom() {
+    return {
+      sidebar: document.getElementById("sidebar"),
+      sidebarItems: document.querySelectorAll(".sidebar-item"),
 
-// ---------------------------------------------
-// LOADER
-// ---------------------------------------------
-App.ui.showLoader = function () {
-  App.ui.refs.loader.classList.remove("hidden");
-};
+      loaderOverlay: document.getElementById("loaderOverlay"),
 
-App.ui.hideLoader = function () {
-  App.ui.refs.loader.classList.add("hidden");
-};
+      modal: document.getElementById("ticketModal"),
+      modalBody: document.getElementById("modalBody"),
+      btnCloseModal: document.getElementById("btnCloseModal"),
 
-// ---------------------------------------------
-// UKRYWANIE WSZYSTKICH PANELI
-// ---------------------------------------------
-App.ui.hideAllPanels = function () {
-  const sections = document.querySelectorAll("section, .modal");
-  sections.forEach((el) => el.classList.add("hidden"));
-};
-
-// ---------------------------------------------
-// POKAZYWANIE KONKRETNEGO PANELU
-// ---------------------------------------------
-App.ui.showSection = function (id) {
-  App.ui.hideAllPanels();
-  const el = document.getElementById(id);
-  if (el) el.classList.remove("hidden");
-};
-
-// ---------------------------------------------
-// SIDEBAR — AKTYWNY ELEMENT
-// ---------------------------------------------
-App.ui.setActiveSidebar = function (targetId) {
-  App.ui.refs.sidebarItems.forEach((item) => {
-    if (item.dataset.target === targetId) {
-      item.classList.add("active");
-    } else {
-      item.classList.remove("active");
-    }
-  });
-};
-
-// ---------------------------------------------
-// SIDEBAR — OBSŁUGA KLIKNIĘĆ
-// ---------------------------------------------
-App.ui.initSidebar = function () {
-  App.ui.refs.sidebarItems.forEach((item) => {
-    item.addEventListener("click", () => {
-      const target = item.dataset.target;
-      const profile = App.auth.getCurrentProfile();
-
-      App.ui.setActiveSidebar(target);
-
-      // 🔥 ADMIN — pełna obsługa 4 sekcji
-      if (profile?.role === "admin") {
-        App.ui.showSection(target);
-        return;
-      }
-
-      // 🔥 USER — tylko 2 sekcje
-      if (profile?.role === "user") {
-        if (target === "userAnnouncementsCard" || target === "userTicketsCard") {
-          App.ui.showSection(target);
-        }
-        return;
-      }
-
-      // fallback
-      App.ui.showSection(target);
-    });
-  });
-};
-
-// ---------------------------------------------
-// MODAL — OTWIERANIE
-// ---------------------------------------------
-App.ui.openModal = function () {
-  App.ui.refs.modal.classList.remove("hidden");
-};
-
-// ---------------------------------------------
-// MODAL — ZAMYKANIE
-// ---------------------------------------------
-App.ui.closeModal = function () {
-  App.ui.refs.modal.classList.add("hidden");
-};
-
-// ---------------------------------------------
-// MODAL — OBSŁUGA PRZYCISKU X
-// ---------------------------------------------
-App.ui.refs.modalClose.addEventListener("click", () => {
-  App.ui.closeModal();
-});
-
-// ---------------------------------------------
-// KLIKNIĘCIE POZA MODALEM
-// ---------------------------------------------
-window.addEventListener("click", (e) => {
-  if (e.target === App.ui.refs.modal) {
-    App.ui.closeModal();
+      allSections: document.querySelectorAll("main section")
+    };
   }
-});
 
-// ---------------------------------------------
-// KOMUNIKATY
-// ---------------------------------------------
-App.ui.showMessage = function (element, text, type = "info") {
-  if (!element) return;
-  element.innerText = text;
-  element.className = `muted ${type}`;
-};
+  // ---------------------------------------------
+  // INICJALIZACJA UI
+  // ---------------------------------------------
+  function init() {
+    const dom = getDom();
 
-// ---------------------------------------------
-// INICJALIZACJA UI
-// ---------------------------------------------
-App.ui.init = function () {
-  App.ui.initSidebar();
-  App.ui.hideAllPanels();
-  App.ui.showSection("loginCard");
+    // Obsługa kliknięć w sidebarze
+    dom.sidebarItems.forEach(item => {
+      item.onclick = () => {
+        const target = item.dataset.target;
+        showSection(target);
+      };
+    });
 
-  // 🔥 Ukryj sidebar i logout przed logowaniem
-  const sidebar = document.querySelector(".sidebar");
-  const btnLogout = document.getElementById("btnLogout");
+    // Obsługa modala
+    if (dom.btnCloseModal) {
+      dom.btnCloseModal.onclick = hideModal;
+    }
+  }
 
-  if (sidebar) sidebar.classList.remove("show");
-  if (btnLogout) btnLogout.classList.add("hidden");
-};
+  // ---------------------------------------------
+  // POKAŻ PANEL
+  // ---------------------------------------------
+  function showSection(sectionId) {
+    const dom = getDom();
 
-console.log("UI module loaded");
+    dom.allSections.forEach(sec => sec.classList.add("hidden"));
+
+    const target = document.getElementById(sectionId);
+    if (target) target.classList.remove("hidden");
+  }
+
+  // ---------------------------------------------
+  // UKRYJ WSZYSTKIE PANELE
+  // ---------------------------------------------
+  function hideAllPanels() {
+    const dom = getDom();
+    dom.allSections.forEach(sec => sec.classList.add("hidden"));
+  }
+
+  // ---------------------------------------------
+  // POKAŻ SIDEBAR DLA USERA
+  // ---------------------------------------------
+  function showUserSidebar() {
+    const dom = getDom();
+
+    dom.sidebar.classList.remove("hidden");
+    dom.sidebar.classList.add("show");
+
+    document.querySelectorAll(".user-only").forEach(el => el.style.display = "block");
+    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+  }
+
+  // ---------------------------------------------
+  // POKAŻ SIDEBAR DLA ADMINA
+  // ---------------------------------------------
+  function showAdminSidebar() {
+    const dom = getDom();
+
+    dom.sidebar.classList.remove("hidden");
+    dom.sidebar.classList.add("show");
+
+    document.querySelectorAll(".user-only").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "block");
+  }
+
+  // ---------------------------------------------
+  // SCHOWAJ SIDEBAR
+  // ---------------------------------------------
+  function hideSidebar() {
+    const dom = getDom();
+    dom.sidebar.classList.remove("show");
+    dom.sidebar.classList.add("hidden");
+  }
+
+  // ---------------------------------------------
+  // LOADER
+  // ---------------------------------------------
+  function showLoader() {
+    const dom = getDom();
+    dom.loaderOverlay.classList.remove("hidden");
+  }
+
+  function hideLoader() {
+    const dom = getDom();
+    dom.loaderOverlay.classList.add("hidden");
+  }
+
+  // ---------------------------------------------
+  // KOMUNIKATY
+  // ---------------------------------------------
+  function showMessage(element, text, type = "info") {
+    if (!element) return;
+
+    element.textContent = text;
+    element.className = `muted ${type}`;
+
+    setTimeout(() => {
+      element.textContent = "";
+      element.className = "muted";
+    }, 3000);
+  }
+
+  // ---------------------------------------------
+  // MODAL
+  // ---------------------------------------------
+  function showModal(htmlContent) {
+    const dom = getDom();
+    dom.modalBody.innerHTML = htmlContent;
+    dom.modal.classList.remove("hidden");
+  }
+
+  function hideModal() {
+    const dom = getDom();
+    dom.modal.classList.add("hidden");
+    dom.modalBody.innerHTML = "";
+  }
+
+  // ---------------------------------------------
+  // EKSPORT FUNKCJI
+  // ---------------------------------------------
+  return {
+    init,
+    showSection,
+    hideAllPanels,
+    showUserSidebar,
+    showAdminSidebar,
+    hideSidebar,
+    showLoader,
+    hideLoader,
+    showMessage,
+    showModal,
+    hideModal
+  };
+
+})();
