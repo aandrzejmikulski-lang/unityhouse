@@ -6,12 +6,9 @@
 window.App = window.App || {};
 App.ui = (() => {
 
-  // ---------------------------------------------
-  // POBIERANIE ELEMENTÓW DOM
-  // ---------------------------------------------
   function getDom() {
     return {
-      sidebar: document.getElementById("sidebar"),
+      sidebar: document.querySelector(".sidebar"),
       sidebarItems: document.querySelectorAll(".sidebar-item"),
 
       loaderOverlay: document.getElementById("loaderOverlay"),
@@ -25,12 +22,11 @@ App.ui = (() => {
   }
 
   // ---------------------------------------------
-  // INICJALIZACJA UI
+  // INIT
   // ---------------------------------------------
   function init() {
     const dom = getDom();
 
-    // Obsługa kliknięć w sidebarze
     dom.sidebarItems.forEach(item => {
       item.onclick = () => {
         const target = item.dataset.target;
@@ -38,14 +34,13 @@ App.ui = (() => {
       };
     });
 
-    // Obsługa modala
     if (dom.btnCloseModal) {
       dom.btnCloseModal.onclick = hideModal;
     }
   }
 
   // ---------------------------------------------
-  // POKAŻ PANEL
+  // SHOW SECTION
   // ---------------------------------------------
   function showSection(sectionId) {
     const dom = getDom();
@@ -57,7 +52,7 @@ App.ui = (() => {
   }
 
   // ---------------------------------------------
-  // UKRYJ WSZYSTKIE PANELE
+  // HIDE ALL PANELS
   // ---------------------------------------------
   function hideAllPanels() {
     const dom = getDom();
@@ -65,7 +60,7 @@ App.ui = (() => {
   }
 
   // ---------------------------------------------
-  // POKAŻ SIDEBAR DLA USERA
+  // SIDEBAR — USER
   // ---------------------------------------------
   function showUserSidebar() {
     const dom = getDom();
@@ -73,12 +68,14 @@ App.ui = (() => {
     dom.sidebar.classList.remove("hidden");
     dom.sidebar.classList.add("show");
 
-    document.querySelectorAll(".user-only").forEach(el => el.style.display = "block");
-    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".sidebar-item").forEach(el => el.style.display = "none");
+
+    document.querySelector('[data-target="userAnnouncementsCard"]').style.display = "block";
+    document.querySelector('[data-target="userTicketsCard"]').style.display = "block";
   }
 
   // ---------------------------------------------
-  // POKAŻ SIDEBAR DLA ADMINA
+  // SIDEBAR — ADMIN
   // ---------------------------------------------
   function showAdminSidebar() {
     const dom = getDom();
@@ -86,12 +83,16 @@ App.ui = (() => {
     dom.sidebar.classList.remove("hidden");
     dom.sidebar.classList.add("show");
 
-    document.querySelectorAll(".user-only").forEach(el => el.style.display = "none");
-    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "block");
+    document.querySelectorAll(".sidebar-item").forEach(el => el.style.display = "none");
+
+    document.querySelector('[data-target="adminAnnouncementsCard"]').style.display = "block";
+    document.querySelector('[data-target="adminTicketsCard"]').style.display = "block";
+    document.querySelector('[data-target="adminUsersCard"]').style.display = "block";
+    document.querySelector('[data-target="adminCommunitiesCard"]').style.display = "block";
   }
 
   // ---------------------------------------------
-  // SCHOWAJ SIDEBAR
+  // HIDE SIDEBAR
   // ---------------------------------------------
   function hideSidebar() {
     const dom = getDom();
@@ -113,7 +114,7 @@ App.ui = (() => {
   }
 
   // ---------------------------------------------
-  // KOMUNIKATY
+  // MESSAGE
   // ---------------------------------------------
   function showMessage(element, text, type = "info") {
     if (!element) return;
@@ -130,9 +131,9 @@ App.ui = (() => {
   // ---------------------------------------------
   // MODAL
   // ---------------------------------------------
-  function showModal(htmlContent) {
+  function showModal(html) {
     const dom = getDom();
-    dom.modalBody.innerHTML = htmlContent;
+    dom.modalBody.innerHTML = html;
     dom.modal.classList.remove("hidden");
   }
 
@@ -142,9 +143,6 @@ App.ui = (() => {
     dom.modalBody.innerHTML = "";
   }
 
-  // ---------------------------------------------
-  // EKSPORT FUNKCJI
-  // ---------------------------------------------
   return {
     init,
     showSection,
