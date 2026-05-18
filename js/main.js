@@ -96,13 +96,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       .eq("id", user.id)
       .single();
 
-    if (error) console.warn("Błąd pobierania profilu:", error);
-
-    App.auth.setCurrentProfile(profile);
-
-    App.ui.hideLoader();
-    route(profile);
-  }
+    if (error || !profile) {
+  console.warn("Błąd pobierania profilu:", error);
+  App.ui.hideLoader();
+  App.ui.showSection("loginCard");
+  document.getElementById("loginMessage").innerText =
+    "Błąd profilu użytkownika. Skontaktuj się z administratorem.";
+  return;
+}
 
   function route(profile) {
     console.log("Routing profile:", profile);
