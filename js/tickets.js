@@ -8,15 +8,15 @@ window.App = window.App || {};
 App.tickets = (() => {
 
   // ---------------------------------------------
-  // TWORZENIE ZGŁOSZENIA
+  // TWORZENIE ZGŁOSZENIA (USER)
   // ---------------------------------------------
   async function createTicket() {
-    const title = document.getElementById("ticketTitle").value.trim();
-    const desc = document.getElementById("ticketDesc").value.trim();
+    const title = document.getElementById("ticketTitle")?.value.trim();
+    const desc = document.getElementById("ticketDesc")?.value.trim();
     const fileInput = document.getElementById("ticketFile");
 
     const profile = App.auth.getCurrentProfile();
-    if (!profile || !profile.wspolnota_id) return;
+    if (!profile) return;
 
     if (!title || !desc) {
       alert("Uzupełnij tytuł i opis zgłoszenia.");
@@ -27,8 +27,8 @@ App.tickets = (() => {
 
     let fileUrl = null;
 
-    // Upload pliku jeśli istnieje
-    if (fileInput.files.length > 0) {
+    // Upload pliku
+    if (fileInput?.files.length > 0) {
       const file = fileInput.files[0];
       const fileName = `${Date.now()}_${file.name}`;
 
@@ -36,11 +36,7 @@ App.tickets = (() => {
         .from("tickets-files")
         .upload(fileName, file);
 
-      if (error) {
-        console.error("Upload error:", error);
-      } else {
-        fileUrl = data.path;
-      }
+      if (!error) fileUrl = data.path;
     }
 
     // Zapis zgłoszenia
@@ -56,18 +52,18 @@ App.tickets = (() => {
     App.ui.hideLoader();
 
     // Reset formularza
-    document.getElementById("ticketTitle").value = "";
-    document.getElementById("ticketDesc").value = "";
-    document.getElementById("ticketFile").value = "";
+    if (document.getElementById("ticketTitle")) document.getElementById("ticketTitle").value = "";
+    if (document.getElementById("ticketDesc")) document.getElementById("ticketDesc").value = "";
+    if (document.getElementById("ticketFile")) document.getElementById("ticketFile").value = "";
 
-    loadTicketsUser(profile.wspolnota_id);
+    loadTicketsUser();
   }
 
   // ---------------------------------------------
   // ŁADOWANIE ZGŁOSZEŃ UŻYTKOWNIKA
   // ---------------------------------------------
-  async function loadTicketsUser(wspolnotaId) {
-    const container = document.getElementById("ticketList");
+  async function loadTicketsUser() {
+    const container = document.getElementById("user-tickets-list");
     if (!container) return;
 
     container.innerHTML = `<p class="muted">Ładowanie...</p>`;
@@ -91,32 +87,22 @@ App.tickets = (() => {
       return;
     }
 
-    container.innerHTML = data
-      .map(t => ticketItemHTML(t))
-      .join("");
+    container.innerHTML = data.map(ticketItemHTML).join("");
   }
 
   // ---------------------------------------------
   // ŁADOWANIE ZGŁOSZEŃ ADMINA
   // ---------------------------------------------
   async function loadTicketsAdmin() {
-    const container = document.getElementById("adminTickets");
+    const container = document.getElementById("admin-tickets-list");
     if (!container) return;
 
     container.innerHTML = `<p class="muted">Ładowanie...</p>`;
 
-    const wspolnotaFilter = document.getElementById("filterWspolnota").value;
-
-    let query = App.supabase
+    const { data, error } = await App.supabase
       .from("tickets")
       .select("*, profiles(fullname)")
       .order("created_at", { ascending: false });
-
-    if (wspolnotaFilter) {
-      query = query.eq("wspolnota_id", wspolnotaFilter);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       container.innerHTML = `<p class="muted">Błąd ładowania</p>`;
@@ -128,9 +114,7 @@ App.tickets = (() => {
       return;
     }
 
-    container.innerHTML = data
-      .map(t => ticketItemAdminHTML(t))
-      .join("");
+    container.innerHTML = data.map(ticketItemAdminHTML).join("");
   }
 
   // ---------------------------------------------
@@ -161,11 +145,9 @@ App.tickets = (() => {
   }
 
   // ---------------------------------------------
-  // OTWIERANIE MODALA ZGŁOSZENIA
+  // OTWIERANIE MODALA
   // ---------------------------------------------
   async function openTicketModal(ticketId) {
-    App.ui.openModal();
-
     const { data, error } = await App.supabase
       .from("tickets")
       .select("*")
@@ -174,21 +156,26 @@ App.tickets = (() => {
 
     if (error) return;
 
-    document.getElementById("modalTicketTitle").innerText = data.title;
-    document.getElementById("modalTicketDesc").innerText = data.description;
-    document.getElementById("modalTicketStatus").innerText = "Status: " + data.status;
+    const html = `
+      <h3>${data.title}</h3>
+      <p>${data.description}</p>
+      <p><b>Status:</b> ${data.status}</p>
 
-    const filesContainer = document.getElementById("modalTicketFiles");
-    filesContainer.innerHTML = data.file_url
-   filesContainer.innerHTML = data.file_url
-  ? `<a href="https://vswonxsgqanhzsmzexzh.supabase.co/storage/v1/object/public/tickets-files/${data.file_url}" target="_blank" class="btn ghost">Pobierz załącznik</a>`
-  : `<p class="muted">Brak załączników</p>`;
+      <h4>Załącznik:</h4>
+      ${
+        data.file_url
+          ? `<a href="https://vswonxgsaqnhzsmzexzh.supabase.co/storage/v1/object/public/tickets-files/${data.file_url}" target="_blank" class="btn ghost">Pobierz</a>`
+          : `<p class="muted">Brak załączników</p>`
+      }
 
+      <hr>
 
-    // Podpinamy statusy
-    document.getElementById("btnStatusNowe").onclick = () => updateStatus(ticketId, "nowe");
-    document.getElementById("btnStatusWTrakcie").onclick = () => updateStatus(ticketId, "w_trakcie");
-    document.getElementById("btnStatusZamkniete").onclick = () => updateStatus(ticketId, "zamkniete");
+      <button class="btn" onclick="App.tickets.updateStatus('${ticketId}', 'nowe')">Nowe</button>
+      <button class="btn" onclick="App.tickets.updateStatus('${ticketId}', 'w_trakcie')">W trakcie</button>
+      <button class="btn" onclick="App.tickets.updateStatus('${ticketId}', 'zamkniete')">Zamknięte</button>
+    `;
+
+    App.ui.showModal(html);
   }
 
   // ---------------------------------------------
@@ -200,7 +187,7 @@ App.tickets = (() => {
       .update({ status })
       .eq("id", ticketId);
 
-    App.ui.closeModal();
+    App.ui.hideModal();
     loadTicketsAdmin();
   }
 
